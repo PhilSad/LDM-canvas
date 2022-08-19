@@ -115,7 +115,6 @@ parser.add_argument('--ddpm', dest='ddpm', action='store_true') # turn on to use
 
 args = parser.parse_args()
 
-
 def fetch(url_or_path):
     if str(url_or_path).startswith('http://') or str(url_or_path).startswith('https://'):
         r = requests.get(url_or_path)
@@ -149,6 +148,8 @@ class MakeCutouts(nn.Module):
         return torch.cat(cutouts)
 
 
+
+
 def spherical_dist_loss(x, y):
     x = F.normalize(x, dim=-1)
     y = F.normalize(y, dim=-1)
@@ -162,81 +163,306 @@ def tv_loss(input):
     y_diff = input[..., 1:, :-1] - input[..., :-1, :-1]
     return (x_diff**2 + y_diff**2).mean([1, 2, 3])
 
-device = torch.device('cuda:0' if (torch.cuda.is_available() and not args.cpu) else 'cpu')
-print('Using device:', device)
-
-model_state_dict = torch.load(args.model_path, map_location='cpu')
-
-model_params = {
-    'attention_resolutions': '32,16,8',
-    'class_cond': False,
-    'diffusion_steps': 1000,
-    'rescale_timesteps': True,
-    'timestep_respacing': '27',  # Modify this value to decrease the number of
-                                 # timesteps.
-    'image_size': 32,
-    'learn_sigma': False,
-    'noise_schedule': 'linear',
-    'num_channels': 320,
-    'num_heads': 8,
-    'num_res_blocks': 2,
-    'resblock_updown': False,
-    'use_fp16': False,
-    'use_scale_shift_norm': False,
-    'clip_embed_dim': 768 if 'clip_proj.weight' in model_state_dict else None,
-    'image_condition': True if model_state_dict['input_blocks.0.0.weight'].shape[1] == 8 else False,
-    'super_res_condition': True if 'external_block.0.0.weight' in model_state_dict else False,
-}
-
-if args.ddpm:
-    model_params['timestep_respacing'] = 1000
-if args.ddim:
-    if args.steps:
-        model_params['timestep_respacing'] = 'ddim'+str(args.steps)
-    else:
-        model_params['timestep_respacing'] = 'ddim50'
-elif args.steps:
-    model_params['timestep_respacing'] = str(args.steps)
-
-model_config = model_and_diffusion_defaults()
-model_config.update(model_params)
-
-if args.cpu:
-    model_config['use_fp16'] = False
-
-# Load models
-model, diffusion = create_model_and_diffusion(**model_config)
-model.load_state_dict(model_state_dict, strict=False)
-model.requires_grad_(args.clip_guidance).eval().to(device)
-
-if model_config['use_fp16']:
-    model.convert_to_fp16()
-else:
-    model.convert_to_fp32()
-
-def set_requires_grad(model, value):
-    for param in model.parameters():
-        param.requires_grad = value
-
-# vae
-ldm = torch.load(args.kl_path, map_location="cpu")
-ldm.to(device)
-ldm.eval()
-ldm.requires_grad_(args.clip_guidance)
-set_requires_grad(ldm, args.clip_guidance)
-
-bert = BERTEmbedder(1280, 32)
-sd = torch.load(args.bert_path, map_location="cpu")
-bert.load_state_dict(sd)
-
-bert.to(device)
-bert.half().eval()
-set_requires_grad(bert, False)
-
-# clip
-clip_model, clip_preprocess = clip.load('ViT-L/14', device=device, jit=False)
-clip_model.eval().requires_grad_(False)
-normalize = transforms.Normalize(mean=[0.48145466, 0.4578275, 0.40821073], std=[0.26862954, 0.26130258, 0.27577711])
 
 
-def do_run()
+
+class Access_Model:
+    def __init__(self, args):
+        self.device = torch.device('cuda:0' if (torch.cuda.is_available() and not args.cpu) else 'cpu')
+        print('Using device:', self.device)
+
+        model_state_dict = torch.load(args.model_path, map_location='cpu')
+
+        self.model_params = {
+            'attention_resolutions': '32,16,8',
+            'class_cond': False,
+            'diffusion_steps': 1000,
+            'rescale_timesteps': True,
+            'timestep_respacing': '27',  # Modify this value to decrease the number of
+                                        # timesteps.
+            'image_size': 32,
+            'learn_sigma': False,
+            'noise_schedule': 'linear',
+            'num_channels': 320,
+            'num_heads': 8,
+            'num_res_blocks': 2,
+            'resblock_updown': False,
+            'use_fp16': False,
+            'use_scale_shift_norm': False,
+            'clip_embed_dim': 768 if 'clip_proj.weight' in model_state_dict else None,
+            'image_condition': True if model_state_dict['input_blocks.0.0.weight'].shape[1] == 8 else False,
+            'super_res_condition': True if 'external_block.0.0.weight' in model_state_dict else False,
+        }
+
+        if args.ddpm:
+            self.model_params['timestep_respacing'] = 1000
+        if args.ddim:
+            if args.steps:
+                self.model_params['timestep_respacing'] = 'ddim'+str(args.steps)
+            else:
+                self.model_params['timestep_respacing'] = 'ddim50'
+        elif args.steps:
+            self.model_params['timestep_respacing'] = str(args.steps)
+
+        model_config = model_and_diffusion_defaults()
+        model_config.update(self.model_params)
+
+        if args.cpu:
+            model_config['use_fp16'] = False
+
+        # Load models
+        self.model, self.diffusion = create_model_and_diffusion(**model_config)
+        self.model.load_state_dict(model_state_dict, strict=False)
+        self.model.requires_grad_(args.clip_guidance).eval().to(self.device)
+
+        if model_config['use_fp16']:
+            self.model.convert_to_fp16()
+        else:
+            self.model.convert_to_fp32()
+
+        def set_requires_grad(model, value):
+            for param in self.model.parameters():
+                param.requires_grad = value
+
+        # vae
+        self.ldm = torch.load(args.kl_path, map_location="cpu")
+        self.ldm.to(self.device)
+        self.ldm.eval()
+        self.ldm.requires_grad_(args.clip_guidance)
+        set_requires_grad(self.ldm, args.clip_guidance)
+
+        self.bert = BERTEmbedder(1280, 32)
+        sd = torch.load(args.bert_path, map_location="cpu")
+        self.bert.load_state_dict(sd)
+
+        self.bert.to(self.device)
+        self.bert.half().eval()
+        set_requires_grad(self.bert, False)
+
+        # clip
+        self.clip_model, self.clip_preprocess = clip.load('ViT-L/14', device=self.device, jit=False)
+        self.clip_model.eval().requires_grad_(False)
+        self.normalize = transforms.Normalize(mean=[0.48145466, 0.4578275, 0.40821073], std=[0.26862954, 0.26130258, 0.27577711])
+
+    def do_run(args):
+        gc.collect()
+
+        print("DEBUG - Starting do_run")
+        if args.seed >= 0:
+            torch.manual_seed(args.seed)
+
+        # bert context
+        text_emb = self.bert.encode([args.text]*args.batch_size).to(self.device).float()
+        text_blank = self.bert.encode([args.negative]*args.batch_size).to(self.device).float()
+
+        text = clip.tokenize([args.text]*args.batch_size, truncate=True).to(self.device)
+        text_clip_blank = clip.tokenize([args.negative]*args.batch_size, truncate=True).to(self.device)
+
+
+        # clip context
+        text_emb_clip = self.clip_model.encode_text(text)
+        text_emb_clip_blank = self.clip_model.encode_text(text_clip_blank)
+
+        make_cutouts = MakeCutouts(self.clip_model.visual.input_resolution, args.cutn)
+
+        text_emb_norm = text_emb_clip[0] / text_emb_clip[0].norm(dim=-1, keepdim=True)
+
+        image_embed = None
+
+        # image context
+        if args.edit:
+            if args.edit.endswith('.npy'):
+                with open(args.edit, 'rb') as f:
+                    im = np.load(f)
+                    im = torch.from_numpy(im).unsqueeze(0).to(self.device)
+
+                    input_image = torch.zeros(1, 4, args.height//8, args.width//8, device=self.device)
+
+                    y = args.edit_y//8
+                    x = args.edit_x//8
+
+                    ycrop = y + im.shape[2] - input_image.shape[2]
+                    xcrop = x + im.shape[3] - input_image.shape[3]
+
+                    ycrop = ycrop if ycrop > 0 else 0
+                    xcrop = xcrop if xcrop > 0 else 0
+
+                    input_image[0,:,y if y >=0 else 0:y+im.shape[2],x if x >=0 else 0:x+im.shape[3]] = im[:,:,0 if y > 0 else -y:im.shape[2]-ycrop,0 if x > 0 else -x:im.shape[3]-xcrop]
+
+                    input_image_pil = self.ldm.decode(input_image)
+                    input_image_pil = TF.to_pil_image(input_image_pil.squeeze(0).add(1).div(2).clamp(0, 1))
+
+                    input_image *= 0.18215
+            else:
+                w = args.edit_width if args.edit_width else args.width
+                h = args.edit_height if args.edit_height else args.height
+
+                input_image_pil = Image.open(fetch(args.edit)).convert('RGB')
+                input_image_pil = ImageOps.fit(input_image_pil, (w, h))
+
+                input_image = torch.zeros(1, 4, args.height//8, args.width//8, device=self.device)
+
+                im = transforms.ToTensor()(input_image_pil).unsqueeze(0).to(self.device)
+                im = 2*im-1
+                im = self.ldm.encode(im).sample()
+
+                y = args.edit_y//8
+                x = args.edit_x//8
+
+                input_image = torch.zeros(1, 4, args.height//8, args.width//8, device=self.device)
+
+                ycrop = y + im.shape[2] - input_image.shape[2]
+                xcrop = x + im.shape[3] - input_image.shape[3]
+
+                ycrop = ycrop if ycrop > 0 else 0
+                xcrop = xcrop if xcrop > 0 else 0
+
+                input_image[0,:,y if y >=0 else 0:y+im.shape[2],x if x >=0 else 0:x+im.shape[3]] = im[:,:,0 if y > 0 else -y:im.shape[2]-ycrop,0 if x > 0 else -x:im.shape[3]-xcrop]
+
+                input_image_pil = self.ldm.decode(input_image)
+                input_image_pil = TF.to_pil_image(input_image_pil.squeeze(0).add(1).div(2).clamp(0, 1))
+
+                input_image *= 0.18215
+
+            if args.mask:
+                mask_image = Image.open(fetch(args.mask)).convert('L')
+                mask_image = mask_image.resize((args.width//8,args.height//8), Image.ANTIALIAS)
+                mask = transforms.ToTensor()(mask_image).unsqueeze(0).to(self.device)
+            else:
+                print('draw the area for inpainting, then close the window')
+                app = QApplication(sys.argv)
+                d = Draw(args.width, args.height, input_image_pil)
+                app.exec_()
+                mask_image = d.getCanvas().convert('L').point( lambda p: 255 if p < 1 else 0 )
+                mask_image.save('mask.png')
+                mask_image = mask_image.resize((args.width//8,args.height//8), Image.ANTIALIAS)
+                mask = transforms.ToTensor()(mask_image).unsqueeze(0).to(self.device)
+
+            mask1 = (mask > 0.5)
+            mask1 = mask1.float()
+
+            input_image *= mask1
+
+            image_embed = torch.cat(args.batch_size*2*[input_image], dim=0).float()
+        elif self.model_params['image_condition']:
+            # using inpaint model but no image is provided
+            image_embed = torch.zeros(args.batch_size*2, 4, args.height//8, args.width//8, device=self.device)
+
+        kwargs = {
+            "context": torch.cat([text_emb, text_blank], dim=0).float(),
+            "clip_embed": torch.cat([text_emb_clip, text_emb_clip_blank], dim=0).float() if self.model_params['clip_embed_dim'] else None,
+            "image_embed": image_embed
+        }
+
+        # Create a classifier-free guidance sampling function
+        def model_fn(x_t, ts, **kwargs):
+            half = x_t[: len(x_t) // 2]
+            combined = torch.cat([half, half], dim=0)
+            model_out = self.model(combined, ts, **kwargs)
+            eps, rest = model_out[:, :3], model_out[:, 3:]
+            cond_eps, uncond_eps = torch.split(eps, len(eps) // 2, dim=0)
+            half_eps = uncond_eps + args.guidance_scale * (cond_eps - uncond_eps)
+            eps = torch.cat([half_eps, half_eps], dim=0)
+            return torch.cat([eps, rest], dim=1)
+
+        cur_t = None
+
+        def cond_fn(x, t, context=None, clip_embed=None, image_embed=None):
+            with torch.enable_grad():
+                x = x[:args.batch_size].detach().requires_grad_()
+
+                n = x.shape[0]
+
+                my_t = torch.ones([n], device=self.device, dtype=torch.long) * cur_t
+
+                kw = {
+                    'context': context[:args.batch_size],
+                    'clip_embed': clip_embed[:args.batch_size] if self.model_params['clip_embed_dim'] else None,
+                    'image_embed': image_embed[:args.batch_size] if image_embed is not None else None
+                }
+
+                out = self.diffusion.p_mean_variance(self.model, x, my_t, clip_denoised=False, model_kwargs=kw)
+
+                fac = self.diffusion.sqrt_one_minus_alphas_cumprod[cur_t]
+                x_in = out['pred_xstart'] * fac + x * (1 - fac)
+
+                x_in /= 0.18215
+
+                x_img = self.ldm.decode(x_in)
+
+                clip_in = self.normalize(make_cutouts(x_img.add(1).div(2)))
+                clip_embeds = self.clip_model.encode_image(clip_in).float()
+                dists = spherical_dist_loss(clip_embeds.unsqueeze(1), text_emb_clip.unsqueeze(0))
+                dists = dists.view([args.cutn, n, -1])
+
+                losses = dists.sum(2).mean(0)
+
+                loss = losses.sum() * args.clip_guidance_scale
+
+                return -torch.autograd.grad(loss, x)[0]
+    
+        if args.ddpm:
+            sample_fn = self.diffusion.ddpm_sample_loop_progressive
+        elif args.ddim:
+            sample_fn = self.diffusion.ddim_sample_loop_progressive
+        else:
+            sample_fn = self.diffusion.plms_sample_loop_progressive
+
+        def save_sample(i, sample, clip_score=False):
+            for k, image in enumerate(sample['pred_xstart'][:args.batch_size]):
+                image /= 0.18215
+                im = image.unsqueeze(0)
+                out = self.ldm.decode(im)
+
+                npy_filename = f'output_npy/{args.prefix}{i * args.batch_size + k:05}.npy'
+                with open(npy_filename, 'wb') as outfile:
+                    np.save(outfile, image.detach().cpu().numpy())
+
+                out = TF.to_pil_image(out.squeeze(0).add(1).div(2).clamp(0, 1))
+
+                filename = f'output/{args.prefix}{i * args.batch_size + k:05}.png'
+                out.save(filename)
+
+                if clip_score:
+                    image_emb = self.clip_model.encode_image(self.clip_preprocess(out).unsqueeze(0).to(self.device))
+                    image_emb_norm = image_emb / image_emb.norm(dim=-1, keepdim=True)
+
+                    similarity = torch.nn.functional.cosine_similarity(image_emb_norm, text_emb_norm, dim=-1)
+
+                    final_filename = f'output/{args.prefix}_{similarity.item():0.3f}_{i * args.batch_size + k:05}.png'
+                    os.rename(filename, final_filename)
+
+                    npy_final = f'output_npy/{args.prefix}_{similarity.item():0.3f}_{i * args.batch_size + k:05}.npy'
+                    os.rename(npy_filename, npy_final)
+
+        if args.init_image:
+            init = Image.open(args.init_image).convert('RGB')
+            init = init.resize((int(args.width),  int(args.height)), Image.LANCZOS)
+            init = TF.to_tensor(init).to(self.device).unsqueeze(0).clamp(0,1)
+            h = self.ldm.encode(init * 2 - 1).sample() *  0.18215
+            init = torch.cat(args.batch_size*2*[h], dim=0)
+        else:
+            init = None
+
+        for i in range(args.num_batches):
+            cur_t = self.diffusion.num_timesteps - 1
+
+            samples = sample_fn(
+                model_fn,
+                (args.batch_size*2, 4, int(args.height/8), int(args.width/8)),
+                clip_denoised=False,
+                model_kwargs=kwargs,
+                cond_fn=cond_fn if args.clip_guidance else None,
+                device=self.device,
+                progress=True,
+                init_image=init,
+                skip_timesteps=args.skip_timesteps,
+            )
+
+            for j, sample in enumerate(samples):
+                cur_t -= 1
+                if j % 5 == 0 and j != self.diffusion.num_timesteps - 1:
+                    save_sample(i, sample)
+
+            save_sample(i, sample, args.clip_score)
+
