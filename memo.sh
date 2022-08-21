@@ -1,0 +1,1 @@
+sudo iptables -A PREROUTING -t nat -i ens5 -p tcp --dport 80 -j REDIRECT --to-port 5000
