@@ -5,6 +5,7 @@ import ReactDOM from 'react-dom';
 var CANVAS_HEIGHT = 1500;
 var CANVAS_WIDTH  = 1500;
 
+var FULL_CANVAS_LINK = "TODO"
 
 // custom component that will handle loading image from url
 // you may add more logic here to handle "loading" state
@@ -71,7 +72,7 @@ function DraggableRect(props){
     );
 }
 
-function MyCanvas() {
+function MyCanvas(props) {
     
     const inputRef = useRef();
     
@@ -81,6 +82,8 @@ function MyCanvas() {
     const [height, setHeight] = useState(10);
 
     const [isSelectionning, setIsSelectionning] = useState(false);
+
+    const[image_url, setImageUrl] = useState(FULL_CANVAS_LINK);
 
     const handleMouseDown = (e) => {
         var offsets = inputRef.current.content.getBoundingClientRect();
@@ -112,24 +115,27 @@ function MyCanvas() {
     };
   
     return (
-      <Stage
-        ref={inputRef}
-        width={CANVAS_WIDTH} height={CANVAS_HEIGHT} 
-        onMouseDown={handleMouseDown} 
-        onMouseMove = {handleMouseMove}
-        onMouseUp={handleMouseUp}>
-        <Layer 
-         
-        >
-          <URLImage src="https://konvajs.org/assets/yoda.jpg" x={1} />
-            <DraggableRect
-                    x={posX}
-                    y={posY}
-                    width={width}
-                    height={height}
-            />
-        </Layer>
-      </Stage>
+        <div>
+            <button onClick={setImageUrl(FULL_CANVAS_LINK)}>
+                Refresh </button>
+            <Stage
+                ref={inputRef}
+                width={CANVAS_WIDTH} height={CANVAS_HEIGHT} 
+                onMouseDown={handleMouseDown} 
+                onMouseMove = {handleMouseMove}
+                onMouseUp={handleMouseUp}>
+
+                <Layer>
+                <URLImage src={image_url} />
+                    <DraggableRect
+                            x={posX}
+                            y={posY}
+                            width={width}
+                            height={height}
+                    />
+                </Layer>
+        </Stage>
+      </div>
     );
 
 }
