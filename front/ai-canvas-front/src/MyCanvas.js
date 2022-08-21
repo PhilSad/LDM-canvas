@@ -1,11 +1,11 @@
-import React, { Component, useState, useRef } from 'react';
+import React, { Component, useState, useRef, useReducer } from 'react';
 import { Stage, Layer, Image, Rect } from 'react-konva';
 import ReactDOM from 'react-dom';
 
 var CANVAS_HEIGHT = 1500;
 var CANVAS_WIDTH  = 1500;
 
-var FULL_CANVAS_LINK = "TODO"
+var FULL_CANVAS_LINK = "http://35.206.191.68/home/"
 
 // custom component that will handle loading image from url
 // you may add more logic here to handle "loading" state
@@ -85,6 +85,8 @@ function MyCanvas(props) {
 
     const[image_url, setImageUrl] = useState(FULL_CANVAS_LINK);
 
+    const [ignored, forceUpdate] = useReducer(x => x + 1, 0);
+
     const handleMouseDown = (e) => {
         var offsets = inputRef.current.content.getBoundingClientRect();
         setPosX(e.evt.clientX - offsets.x);
@@ -113,11 +115,17 @@ function MyCanvas(props) {
         // call to draw image
 
     };
-  
+    
+    const handleClickRefresh = () => {
+      setImageUrl(image_url + '?');
+    };
+    
+
     return (
         <div>
-            <button onClick={setImageUrl(FULL_CANVAS_LINK)}>
-                Refresh </button>
+            <button onClick={() =>  handleClickRefresh()}>
+                Refresh 
+              </button>
             <Stage
                 ref={inputRef}
                 width={CANVAS_WIDTH} height={CANVAS_HEIGHT} 
