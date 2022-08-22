@@ -40,5 +40,5 @@ def imagine():
 
 
 
-    return Response(base64.b64encode(generated), status=200)
+    return Response(jsonpickle.encode(generated), status=200, mimetype="application/json")
 
