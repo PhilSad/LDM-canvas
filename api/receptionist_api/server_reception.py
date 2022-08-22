@@ -5,6 +5,7 @@ import requests
 import sys
 import os
 import json
+from io import BytesIO
 
 from PIL import Image, ImageDraw
 from flask_cors import CORS
@@ -32,8 +33,8 @@ def imagine():
     url_with_params = f'{URL_IMAGEN_SERVER}?prompt={prompt}&posX={posX}&posY={posY}&width={width}&height={height}' 
     print(url_with_params)
     response = requests.get(url_with_params)
+    generated = Image.open(BytesIO(base64.b64decode(response.text)))
     print(response.text)
-    generated = json.loads(response.text)
 
     canvas = Image.open('./images/full_canvas.png')
     canvas.paste(generated, (posX, posY))

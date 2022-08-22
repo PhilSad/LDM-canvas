@@ -5,6 +5,7 @@ import base64
 import requests
 import sys
 import os
+from io import BytesIO
 
 from PIL import Image, ImageDraw
 sys.path.append('../imagen_api/models_bindings/')
@@ -38,7 +39,9 @@ def imagine():
 
     generated = generated.resize((width, height))
 
+    buffered = BytesIO()
+    generated.save(buffered, format="JPEG")
+    img_str = base64.b64encode(buffered.getvalue())
 
-
-    return Response(base64.b64encode(generated), status=200)
+    return Response(img_str, status=200)
 
