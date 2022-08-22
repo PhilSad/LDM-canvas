@@ -67,33 +67,38 @@ function DraggableRect(props) {
 
   return (
     <Group
-      x={props.x}
-      y={props.y}
-      width={props.width}
-      height={props.height}
-      draggable={true}>
+      x={0}
+      y={0}
+    >
+      <Group
+        x={props.x}
+        y={props.y}
+        draggable={true}
+        fill="green"
+      >
+        <Rect
+          stroke="black"
+          shadowBlur={10}
+          shadowColor="white"
+          width={props.width}
+          height={props.height}
+          opacity={0.5}
+          fill="pink"
+        />
 
-      <Rect
-        stroke="black"
-        shadowBlur={10}
-        shadowColor="white"
-        width={props.width}
-        height={props.height}
-        opacity={0.5}
-        fill="pink"
-      />
+        <Group
+          y={-50}
+          x={props.width-props.width/2-180}
+        >
+          <Html>
+            <input id="prompt_input" placeholder="Input prompt" autofocus />
+            <button onClick={() => props.handleSend()}>
+              Send
+            </button>
+          </Html>
+        </Group>
 
-      <Html
-        divProps={{
-          style: {
-            position: 'absolute',
-            top: -100,
-            left: 10,
-          },
-        }}
->
-        <input placeholder="Input prompt" />
-      </Html>
+      </Group>
     </Group>
   );
 }
@@ -180,6 +185,10 @@ function MyCanvas(props) {
       setHeight(Math.abs(height));
     }
 
+    var input = document.getElementById("prompt_input");
+    input.value='';
+    input.focus();
+
   };
 
   const handleClickRefresh = () => {
@@ -187,7 +196,7 @@ function MyCanvas(props) {
   };
 
   const handleSend = () => {
-    var prompt = document.getElementById('input_prompt').value
+    var prompt = document.getElementById('prompt_input').value
 
     var url_with_params = URL_IMAGINE + '?prompt=' + btoa(prompt) + '&posX=' + Math.floor(posX) + '&posY=' + Math.floor(posY)
       + '&width=' + Math.floor(width) + '&height=' + Math.floor(height);
@@ -195,9 +204,18 @@ function MyCanvas(props) {
     console.log(url_with_params);
 
     fetch(url_with_params).then(() => {
+      console.log('sent!!!');
       handleClickRefresh();
       setHeight(0);
       setWidth(0);
+    });
+
+    
+    var el = document.getElementById("prompt_input");
+    el.addEventListener("keydown", function(event) {
+        if (event.key === "Enter") {
+          handleSend();
+        }
     });
 
   };
@@ -207,25 +225,24 @@ function MyCanvas(props) {
 
       <div class="bar">
 
+        <EditableInput />
 
-      <EditableInput />
+        <button onClick={() => handleClickRefresh()}>
+          Refresh
+        </button>
 
-      <button onClick={() => handleClickRefresh()}>
-        Refresh
-      </button>
+        <button onClick={() => handleSend()}>
+          Send
+        </button>
 
-      <button onClick={() => handleSend()}>
-        Send
-      </button>
+        <button>
+          Save
+        </button>
 
-      <button>
-        Save
-      </button>
-      
         <button class="info">
           ?
         </button>
-      
+
       </div>
 
 
@@ -243,6 +260,7 @@ function MyCanvas(props) {
             y={posY}
             width={width}
             height={height}
+            handleSend={handleSend}
           />
         </Layer>
       </Stage>
