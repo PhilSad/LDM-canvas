@@ -35,7 +35,8 @@ def imagine():
     
 
     prompt = base64.b64decode(b64prompt)
-
+    print(prompt)
+    prompt = prompt.decode("utf-8")
     print(prompt)
     generated = generator.imagine(prompt)
 
