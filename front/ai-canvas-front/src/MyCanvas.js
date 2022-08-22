@@ -98,6 +98,7 @@ function EditableInput(props) {
       value={prompt}
       onChange={(e) => setPrompt(e.target.value)}
       size={50}
+      placeholder="Enter your prompt here"
     />
   );
 }
@@ -193,6 +194,10 @@ function MyCanvas(props) {
 
   return (
     <div>
+
+      <div class="bar">
+
+
       <EditableInput />
 
       <button onClick={() => handleClickRefresh()}>
@@ -202,6 +207,17 @@ function MyCanvas(props) {
       <button onClick={() => handleSend()}>
         Send
       </button>
+
+      <button>
+        Save
+      </button>
+      
+        <button class="info">
+          ?
+        </button>
+      
+      </div>
+
 
       <Stage
         ref={inputRef}
