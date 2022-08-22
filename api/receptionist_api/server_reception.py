@@ -30,8 +30,8 @@ def imagine():
     b64prompt = request.args.get('prompt')
     posX = int(request.args.get('posX'))
     posY = int(request.args.get('posY'))
-    width = int(request.args.get('height'))
-    height = int(request.args.get('width'))
+    width = int(request.args.get('width'))
+    height = int(request.args.get('height'))
     
 
     prompt = base64.b64decode(b64prompt)
