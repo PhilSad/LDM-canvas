@@ -151,10 +151,13 @@ function MyCanvas(props) {
       + '&width='+ Math.floor(width) + '&height=' + Math.floor(height);
       
       console.log(url_with_params);
-      setHeight(0);
-      setwidth(0);
 
-      fetch(url_with_params).then(() => handleClickRefresh());
+
+      fetch(url_with_params).then(() => {
+        handleClickRefresh();
+        setHeight(0);
+        setwidth(0);
+      });
 
     };
 
