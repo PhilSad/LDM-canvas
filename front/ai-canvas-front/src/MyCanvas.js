@@ -1,5 +1,6 @@
 import React, { Component, useState, useRef, useReducer } from 'react';
 import { Stage, Layer, Image, Rect, Group, Text } from 'react-konva';
+import { Html } from 'react-konva-utils';
 import ReactDOM from 'react-dom'
 import { Buffer } from 'buffer';
 
@@ -65,25 +66,34 @@ class URLImage extends React.Component {
 function DraggableRect(props) {
 
   return (
-    <Group>
+    <Group
+      x={props.x}
+      y={props.y}
+      width={props.width}
+      height={props.height}
+      draggable={true}>
+
       <Rect
-        x={props.x}
-        y={props.y}
-        width={props.width}
-        height={props.height}
         stroke="black"
         shadowBlur={10}
         shadowColor="white"
+        width={props.width}
+        height={props.height}
         opacity={0.5}
         fill="pink"
-        draggable={true}
       />
-      <Text
-        text={"text"}
-        fontSize={20}
-        x={props.x + props.width / 2}
-        y={props.y + props.height / 2}
-      />
+
+      <Html
+        divProps={{
+          style: {
+            position: 'absolute',
+            top: -100,
+            left: 10,
+          },
+        }}
+>
+        <input placeholder="Input prompt" />
+      </Html>
     </Group>
   );
 }
@@ -156,7 +166,7 @@ function MyCanvas(props) {
 
   const handleMouseUp = (e) => {
     setIsSelectionning(false);
-    
+
     //set rect new position
 
     if (width < 0) {
