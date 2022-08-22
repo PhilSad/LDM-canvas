@@ -1,13 +1,13 @@
 import React, { Component, useState, useRef, useReducer } from 'react';
-import { Stage, Layer, Image, Rect } from 'react-konva';
+import { Stage, Layer, Image, Rect, Group, Text } from 'react-konva';
 import ReactDOM from 'react-dom'
-import {Buffer} from 'buffer';
+import { Buffer } from 'buffer';
 
 var CANVAS_HEIGHT = 1500;
-var CANVAS_WIDTH  = 1500;
+var CANVAS_WIDTH = 1500;
 
-var FULL_CANVAS_LINK = "http://35.206.191.68/full_canvas/"
-var URL_IMAGINE = 'http://35.206.191.68/imagine/'
+var FULL_CANVAS_LINK = "http://35.210.120.231:5000/full_canvas/"
+var URL_IMAGINE = 'http://35.210.120.231:5000/imagine/'
 // custom component that will handle loading image from url
 // you may add more logic here to handle "loading" state
 // or if loading is failed
@@ -62,135 +62,166 @@ class URLImage extends React.Component {
   }
 }
 
-function DraggableRect(props){
+function DraggableRect(props) {
 
-    return (
-        <Rect
+  return (
+    <Group>
+      <Rect
         x={props.x}
         y={props.y}
         width={props.width}
         height={props.height}
-        fill="red"
+        stroke="black"
         shadowBlur={10}
-    />
-    );
-}
-
-function EditableInput(props){    
-  const [prompt, setPrompt] = useState('');
-  
-  return (
-      <input
-      id="input_prompt"
-          type='text'
-          value= {prompt}
-          onChange={(e) => setPrompt(e.target.value)} 
-          size = {50}
-
+        shadowColor="white"
+        opacity={0.5}
+        fill="pink"
+        draggable={true}
       />
+      <Text
+        text={"text"}
+        fontSize={20}
+        x={props.x + props.width / 2}
+        y={props.y + props.height / 2}
+      />
+    </Group>
   );
-
 }
 
+function EditableInput(props) {
+  const [prompt, setPrompt] = useState('');
+
+  return (
+    <input
+      id="input_prompt"
+      type='text'
+      value={prompt}
+      onChange={(e) => setPrompt(e.target.value)}
+      size={50}
+    />
+  );
+}
 
 function MyCanvas(props) {
+
+  const inputRef = useRef();
+
+  const [posX, setPosX] = useState(0);
+  const [posY, setPosY] = useState(0);
+  const [width, setWidth] = useState(0);
+  const [height, setHeight] = useState(0);
+
+  const [isSelectionning, setIsSelectionning] = useState(false);
+
+  const [image_url, setImageUrl] = useState(FULL_CANVAS_LINK);
+
+  const [ignored, forceUpdate] = useReducer(x => x + 1, 0);
+
+  const handleMouseDown = (e) => {
+    var offsets = inputRef.current.content.getBoundingClientRect();
+    var x = e.evt.clientX - offsets.x;
+    var y = e.evt.clientY - offsets.y;
+
+    //only accept left clicks
+    if (e.evt.which != 1) {
+      return;
+    }
+
+    //if we click on the current rect, we don't want to start a new selection
+    if (x > posX && x < posX + width && y > posY && y < posY + height) {
+      return;
+    }
+
+    if (isSelectionning) {
+      return;
+    }
+
+    setPosX(x);
+    setPosY(y);
+    setWidth(0);
+    setHeight(0);
+    setIsSelectionning(true);
+  };
+
+  const handleMouseMove = (e) => {
+    var offsets = inputRef.current.content.getBoundingClientRect();
+
+    if (isSelectionning) {
+      var w = e.evt.clientX - offsets.x - posX;
+      var h = e.evt.clientY - offsets.y - posY;
+      setWidth(w);
+      setHeight(h);
+    }
+  };
+
+  const handleMouseUp = (e) => {
+    setIsSelectionning(false);
     
-    const inputRef = useRef();
-    
-    const [posX, setPosX] = useState(0);
-    const [posY, setPosY] = useState(0);
-    const [width, setwidth] = useState(0);
-    const [height, setHeight] = useState(0);
+    //set rect new position
 
-    const [isSelectionning, setIsSelectionning] = useState(false);
+    if (width < 0) {
+      setPosX(posX + width);
+      setWidth(Math.abs(width));
+    }
 
-    const[image_url, setImageUrl] = useState(FULL_CANVAS_LINK);
+    if (height < 0) {
+      setPosY(posY + height);
+      setHeight(Math.abs(height));
+    }
 
-    const [ignored, forceUpdate] = useReducer(x => x + 1, 0);
-    
-    
+  };
 
-    
+  const handleClickRefresh = () => {
+    setImageUrl(image_url + '?');
+  };
 
-    const handleMouseDown = (e) => {
-        var offsets = inputRef.current.content.getBoundingClientRect();
-        setPosX(e.evt.clientX - offsets.x);
-        setPosY(e.evt.clientY - offsets.y);
-        setwidth(0);
-        setHeight(0)
-        setIsSelectionning(true);  
-        // console.log(e);      
+  const handleSend = () => {
+    var prompt = document.getElementById('input_prompt').value
 
-    };
+    var url_with_params = URL_IMAGINE + '?prompt=' + btoa(prompt) + '&posX=' + Math.floor(posX) + '&posY=' + Math.floor(posY)
+      + '&width=' + Math.floor(width) + '&height=' + Math.floor(height);
 
-    const handleMouseMove = (e) => {
-        var offsets = inputRef.current.content.getBoundingClientRect();
+    console.log(url_with_params);
 
-        if (isSelectionning){
-            setwidth(e.evt.clientX - offsets.x - posX);
-            setHeight(e.evt.clientY - offsets.y - posY);
-        }
-      };
+    fetch(url_with_params).then(() => {
+      handleClickRefresh();
+      setHeight(0);
+      setWidth(0);
+    });
 
-    const handleMouseUp = (e) => {
-        setIsSelectionning(false);
+  };
 
-        // call to draw image
+  return (
+    <div>
+      <EditableInput />
 
-    };
-    
-    const handleClickRefresh = () => {
-      setImageUrl(image_url + '?');
-    };
+      <button onClick={() => handleClickRefresh()}>
+        Refresh
+      </button>
 
-    const handleSend = () => {
+      <button onClick={() => handleSend()}>
+        Send
+      </button>
 
-      var prompt = document.getElementById('input_prompt').value 
-      const encodedPrompt = Buffer.from(prompt).toString('base64');
-      var url_with_params = URL_IMAGINE+'?prompt=' + btoa(prompt) + '&posX='+Math.floor(posX) + '&posY=' + Math.floor(posY) 
-      + '&width='+ Math.floor(width) + '&height=' + Math.floor(height);
-      
-      console.log(url_with_params);
+      <Stage
+        ref={inputRef}
+        width={CANVAS_WIDTH} height={CANVAS_HEIGHT}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}>
 
-
-      fetch(url_with_params).then(() => {
-        handleClickRefresh();
-        setHeight(0);
-        setwidth(0);
-      });
-
-    };
-
-    return (
-        <div>
-            <EditableInput />
-
-            <button onClick={() =>  handleClickRefresh()}>
-                Refresh 
-              </button>
-
-              <button onClick={() =>  handleSend()}>
-                Send 
-              </button>
-            <Stage
-                ref={inputRef}
-                width={CANVAS_WIDTH} height={CANVAS_HEIGHT} 
-                onMouseDown={handleMouseDown} 
-                onMouseMove = {handleMouseMove}
-                onMouseUp={handleMouseUp}>
-
-                <Layer>
-                <URLImage src={image_url} />
-                    <DraggableRect
-                            x={posX}
-                            y={posY}
-                            width={width}
-                            height={height}
-                    />
-                </Layer>
-        </Stage>
-      </div>
-    );
+        <Layer>
+          <URLImage src={image_url} />
+          <DraggableRect
+            x={posX}
+            y={posY}
+            width={width}
+            height={height}
+          />
+        </Layer>
+      </Stage>
+    </div>
+  );
 
 }
 
