@@ -11,6 +11,7 @@ sys.path.append('../imagen_api/models_bindings/')
 from dalle_mini_mega import DalleGenerator
 from flask_cors import CORS
 
+URL_IMAGEN_SERVER = 'http://35.206.191.68/'
 
 
 app = Flask(__name__)
@@ -33,14 +34,9 @@ def imagine():
     width = int(request.args.get('width'))
     height = int(request.args.get('height'))
     
+    url_with_params = f'{URL_IMAGEN_SERVER}:5000?prompt={prompt}&posX={posX}&posY={posY}&width={width}&height={height}' 
 
-    prompt = base64.b64decode(b64prompt)
-    print(prompt)
-    prompt = prompt.decode("utf-8")
-    print(prompt)
-    generated = generator.imagine(prompt)
-
-    generated = generated.resize((width, height))
+    response = requests.post(url_with_params)
 
     canvas = Image.open('./images/full_canvas.png')
     canvas.paste(generated, (posX, posY))
