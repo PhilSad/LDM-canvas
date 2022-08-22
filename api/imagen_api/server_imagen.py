@@ -8,7 +8,7 @@ import os
 from io import BytesIO
 
 from PIL import Image, ImageDraw
-sys.path.append('../imagen_api/models_bindings/')
+sys.path.append('/home/filou/LDM-canvas/api/imagen_api/models_bindings')
 from dalle_mini_mega import DalleGenerator
 from flask_cors import CORS
 import jsonpickle
@@ -17,9 +17,7 @@ import jsonpickle
 
 app = Flask(__name__)
 CORS(app)
-print('bbbb')
 generator = DalleGenerator()
-print('aaaa')
 
 
 @app.route("/imagine/")

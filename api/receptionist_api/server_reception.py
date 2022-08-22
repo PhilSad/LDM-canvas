@@ -10,8 +10,9 @@ from io import BytesIO
 from PIL import Image, ImageDraw
 from flask_cors import CORS
 
-URL_IMAGEN_SERVER = 'http://35.206.191.68:5000/imagine'
+URL_IMAGEN_SERVER = 'https://gpu.apipipcaisso/'
 
+FULL_CANVAS_PATH = '/home/filou/LDM-canvas/api/receptionist_api/images/full_canvas.png'
 
 app = Flask(__name__)
 CORS(app)
@@ -19,7 +20,7 @@ CORS(app)
 
 @app.route("/full_canvas/")
 def full_canvas():
-    return send_file('./images/full_canvas.png', 'png')
+    return send_file(FULL_CANVAS_PATH, 'png')
 
 
 @app.route("/imagine/")
@@ -36,9 +37,9 @@ def imagine():
     generated = Image.open(BytesIO(base64.b64decode(response.text)))
     print(response.text)
 
-    canvas = Image.open('./images/full_canvas.png')
+    canvas = Image.open(FULL_CANVAS_PATH)
     canvas.paste(generated, (posX, posY))
-    canvas.save('./images/full_canvas.png', quality=100)
+    canvas.save(FULL_CANVAS_PATH, quality=100)
 
     return 'ok'
 
