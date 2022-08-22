@@ -7,7 +7,6 @@ import EditableInput from './EditableInput'
 function App() {
   return (
     <div className="App">
-      <EditableInput />
       <MyCanvas />
     </div>
   );
