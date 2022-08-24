@@ -8,8 +8,7 @@ from io import BytesIO
 import time
 
 from PIL import Image, ImageDraw
-sys.path.append('/home/filou/LDM-canvas/api/imagen_api/models_bindings')
-from dalle_mini_mega import DalleGenerator
+from models_bindings.dalle_mini_mega import DalleGenerator
 from flask_cors import CORS
 import jsonpickle
 
