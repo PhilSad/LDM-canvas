@@ -7,8 +7,8 @@ import { Buffer } from 'buffer';
 var CANVAS_HEIGHT = 1500;
 var CANVAS_WIDTH = 1500;
 
-var FULL_CANVAS_LINK = "http://35.210.120.231:5000/full_canvas/"
-var URL_IMAGINE = 'http://35.210.120.231:5000/imagine/'
+var FULL_CANVAS_LINK = "https://storage.googleapis.com/aicanvas-public-bucket/full_canvas.png"
+var URL_IMAGINE = 'https://function-api-imagen-jujlepts2a-ew.a.run.app/'
 // custom component that will handle loading image from url
 // you may add more logic here to handle "loading" state
 // or if loading is failed
