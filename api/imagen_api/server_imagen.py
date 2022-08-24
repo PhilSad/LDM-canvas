@@ -1,16 +1,12 @@
 from flask import Flask, send_file, Response
 from flask import request
 import base64
-import requests
-import sys
-import os
 from io import BytesIO
 import time
 
 from PIL import Image, ImageDraw
 from models_bindings.dalle_mini_mega import DalleGenerator
 from flask_cors import CORS
-import jsonpickle
 
 
 from google.cloud import storage
@@ -19,7 +15,7 @@ storage_client = storage.Client()
 
 bucket = storage_client.bucket('aicanvas-public-bucket')
 
-CUR_IMAGE_PATH = '/home/filou/LDM-canvas/api/imagen_api/images/cur_image.png'
+CUR_IMAGE_PATH = './images/cur_image.png'
 app = Flask(__name__)
 CORS(app)
 generator = DalleGenerator()
