@@ -10,12 +10,17 @@ from io import BytesIO
 from PIL import Image, ImageDraw
 from flask_cors import CORS
 
-URL_IMAGEN_SERVER = 'https://gpu.apipipcaisso/'
+URL_IMAGEN_SERVER = 'https://gpu.apipicaisso.ml/imagine/'
 
 FULL_CANVAS_PATH = '/home/filou/LDM-canvas/api/receptionist_api/images/full_canvas.png'
 
 app = Flask(__name__)
 CORS(app)
+
+
+@app.route("/")
+def hello():
+    return 'coucou'
 
 
 @app.route("/full_canvas/")
