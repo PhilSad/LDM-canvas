@@ -1,4 +1,3 @@
-from turtle import width
 from flask import Flask, send_file, Response
 from flask import request
 import base64
