@@ -9,6 +9,12 @@ var CANVAS_WIDTH = 1500;
 
 var FULL_CANVAS_LINK = "https://storage.googleapis.com/aicanvas-public-bucket/full_canvas.png"
 var URL_IMAGINE = 'https://function-api-imagen-jujlepts2a-ew.a.run.app/'
+
+var URL_START_VM = "https://function-start-vm-jujlepts2a-ew.a.run.app"
+var URL_STOP_VM = "https://function-stop-jujlepts2a-ew.a.run.app"
+var URL_STATUS_VM = "https://function-get-status-gpu-jujlepts2a-ew.a.run.app"
+
+
 // custom component that will handle loading image from url
 // you may add more logic here to handle "loading" state
 // or if loading is failed
@@ -195,6 +201,24 @@ function MyCanvas(props) {
     setImageUrl(image_url + '?');
   };
 
+  const handleStartVm = () => {
+    fetch(URL_START_VM).then((data) => alert('VM SARTED'));
+  };
+  
+  const handleStopVm = () => {
+    fetch(URL_STOP_VM).then((data) => alert('VM STOPED'));
+  };
+
+  const handleStatusVm = () => {
+    fetch(URL_STATUS_VM).then(data => data.json()).
+                        then((data) => alert(data.message));
+  };
+
+
+  // const handleStatusVm = () => {
+  //   fetch(URL_STATUS_VM).then(alert('VM STOPED'));
+  // };
+
   const handleSend = () => {
     var prompt = document.getElementById('prompt_input').value
 
@@ -235,6 +259,16 @@ function MyCanvas(props) {
           Send
         </button>
 
+        <button onClick={() => handleStartVm()}>
+          start vm
+        </button>
+
+        <button onClick={() => handleStopVm()}>
+          stop vm
+        </button>        
+        <button onClick={() => handleStatusVm()}>
+          status vm
+        </button>       
         <button>
           Save
         </button>
