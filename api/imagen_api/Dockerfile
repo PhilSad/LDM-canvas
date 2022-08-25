@@ -1,14 +1,10 @@
-FROM nvidia/cuda
+FROM python:3.10-slim-buster
 
 WORKDIR /app
 
+RUN pip3 install torch torchvision torchaudio
 COPY requirements.txt requirements.txt
 
-RUN apt update
-RUN apt install python3 python3-venv python3-pip
-RUN python3 -m venv env
-RUN source ./env/bin/activate
-RUN pip3 install -r requirements.txt
 
 COPY . .
 
