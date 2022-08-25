@@ -1,0 +1,9 @@
+Flask
+flask_cors
+jsonpickle
+min_dalle
+Pillow
+protobuf
+requests
+torch
+google-cloud-storage
