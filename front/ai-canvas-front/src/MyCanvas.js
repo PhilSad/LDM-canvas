@@ -9,7 +9,8 @@ const CANVAS_HEIGHT = window.innerHeight;
 const CANVAS_WIDTH = window.innerWidth;
 
 var FULL_CANVAS_LINK = "https://storage.googleapis.com/aicanvas-public-bucket/full_canvas.png"
-var URL_IMAGINE = 'https://function-api-imagen-jujlepts2a-ew.a.run.app/'
+// var URL_IMAGINE = 'https://function-api-imagen-jujlepts2a-ew.a.run.app/'
+var URL_IMAGINE = "https://gpu.apipicaisso.ml/imagine/"
 
 var URL_START_VM = "https://function-start-vm-jujlepts2a-ew.a.run.app"
 var URL_STOP_VM = "https://function-stop-jujlepts2a-ew.a.run.app"
@@ -23,10 +24,10 @@ var URL_STATUS_VM = "https://function-get-status-gpu-jujlepts2a-ew.a.run.app"
 // and then we will set it to native image instance when it is loaded
 
 //states
-const IDLE = 0, SELECTING = 1, MOVING = 2;
+const IDLE = 0, SELECTING = 1, PROMPTING = 2, WAITING = 3, MOVING = 4;
 
 //camera speed
-const CAMERA_SPEED = 0.02;
+const CAMERA_SPEED = 0.1;
 
 class URLImage extends React.Component {
   state = {
@@ -73,63 +74,7 @@ class URLImage extends React.Component {
   }
 }
 
-function DraggableRect(props) {
-
-  return (
-    <Group
-      x={0}
-      y={0}
-    >
-      <Group
-        x={props.x}
-        y={props.y}
-        draggable={true}
-        fill="green"
-      >
-        <Rect
-          stroke="black"
-          shadowBlur={10}
-          shadowColor="white"
-          width={props.width}
-          height={props.height}
-          opacity={0.5}
-          fill="pink"
-        />
-
-        <Group
-          y={-50 + (props.height < 0 ? props.height : 0)}
-          x={props.width - props.width / 2 - 200}
-        >
-          <Html>
-            <input id="prompt_input" placeholder="Input prompt" autoFocus />
-            <button onClick={() => props.handleSend()}>
-              Send
-            </button>
-          </Html>
-        </Group>
-
-      </Group>
-    </Group>
-  );
-}
-
-function EditableInput(props) {
-  const [prompt, setPrompt] = useState('');
-
-  return (
-    <input
-      id="input_prompt"
-      type='text'
-      value={prompt}
-      onChange={(e) => setPrompt(e.target.value)}
-      size={50}
-      placeholder="Enter your prompt here"
-    />
-  );
-}
-
 const MyCanvas = (props) => {
-
   const inputRef = useRef();
 
   const [posX, setPosX] = useState(0);
@@ -139,18 +84,20 @@ const MyCanvas = (props) => {
   const [cursor, setCursor] = useState('default');
 
   //camera
+  const [camInitX, setCamInitX] = useState(0);
+  const [camInitY, setCamInitY] = useState(0);
   const [cameraX, setCameraX] = useState(0);
   const [cameraY, setCameraY] = useState(0);
-  const [scrollInitX, setScrollInitX] = useState(0);
-  const [scrollInitY, setScrollInitY] = useState(0);
+  const [movX, setMovX] = useState(0);
+  const [movY, setMovY] = useState(0);
+  const [imageDivList, setImageDivList] = useState([]);
 
   const [currentState, setCurrentState] = useState(IDLE);
-
   const [image_url, setImageUrl] = useState(FULL_CANVAS_LINK);
 
   const [ignored, forceUpdate] = useReducer(x => x + 1, 0);
 
-  function switchMoveState(e) {
+  function movingCursor(e) {
     switch (currentState) {
       case IDLE:
         setCursor('all-scroll');
@@ -159,10 +106,8 @@ const MyCanvas = (props) => {
         var x = e.evt.clientX;
         var y = e.evt.clientY;
 
-        console.log('init', x, y);
-
-        setScrollInitX(x);
-        setScrollInitY(y);
+        setCamInitX(x);
+        setCamInitY(y);
         break;
 
       case MOVING:
@@ -173,27 +118,81 @@ const MyCanvas = (props) => {
   }
 
   function defineSelection(e) {
-    if(currentState == IDLE) {
+    if (currentState === IDLE) {
       var offsets = inputRef.current.content.getBoundingClientRect();
       var x = e.evt.clientX - offsets.x + cameraX;
       var y = e.evt.clientY - offsets.y + cameraY;
-  
+
       //if we click on the current rect, we don't want to start a new selection
       if (x > posX && x < posX + width && y > posY && y < posY + height) {
         return;
       }
-  
+
       //if we are already making a selection, return
-      if (currentState == SELECTING) {
+      if (currentState === SELECTING) {
         return;
       }
-  
+
       setPosX(x);
       setPosY(y);
       setWidth(0);
       setHeight(0);
       setCurrentState(SELECTING);
     }
+  }
+
+  function DraggableRect(props) {
+
+    return (
+      <Group
+        x={0}
+        y={0}
+      >
+        <Group
+          x={props.x}
+          y={props.y}
+          draggable={true}
+          fill="green"
+        >
+          <Rect
+            stroke="black"
+            shadowBlur={10}
+            shadowColor="white"
+            width={props.width}
+            height={props.height}
+            opacity={0.5}
+            fill="pink"
+          />
+
+          <Group
+            y={-50 + (props.height < 0 ? props.height : 0)}
+            x={props.width - props.width / 2 - 200}
+          >
+            <Html>
+              <div style={{ visibility: currentState === IDLE ? 'visible' : 'hidden' }}>
+                <input id="prompt_input" placeholder="Input prompt" autoFocus />
+                <button onClick={() => props.handleSend()}>
+                  Send
+                </button>
+              </div>
+            </Html>
+          </Group>
+
+        </Group>
+      </Group>
+    );
+  }
+
+  function addNewImage(bytecode, x, y, w, h) {
+    var img = {
+      bytecode: bytecode,
+      x: x,
+      y: y,
+      w: w,
+      h: h
+    };
+
+    setImageDivList([...imageDivList, img])
   }
 
   const handleMouseDown = (e) => {
@@ -203,7 +202,7 @@ const MyCanvas = (props) => {
         break;
 
       case 2:
-        switchMoveState(e);
+        movingCursor(e);
         break;
 
       default:
@@ -213,7 +212,7 @@ const MyCanvas = (props) => {
   const handleMouseMove = (e) => {
     var offsets = inputRef.current.content.getBoundingClientRect();
 
-    switch(currentState){
+    switch (currentState) {
       case SELECTING:
         var w = e.evt.clientX - offsets.x + cameraX - posX;
         var h = e.evt.clientY - offsets.y + cameraY - posY;
@@ -222,19 +221,17 @@ const MyCanvas = (props) => {
         break;
 
       case MOVING:
-        var movX = (e.evt.clientX) - scrollInitX;
-        var movY = (e.evt.clientY) - scrollInitY;
+        setMovX((e.evt.clientX) - camInitX);
+        setMovY((e.evt.clientY) - camInitY);
 
-        console.log(movX, movY);
-
-        setCameraX(cameraX + movX*CAMERA_SPEED);
-        setCameraY(cameraY + movY*CAMERA_SPEED);
+        setCameraX(cameraX + movX * CAMERA_SPEED);
+        setCameraY(cameraY + movY * CAMERA_SPEED);
         break;
     }
   };
 
   const handleMouseUp = (e) => {
-    if (currentState == SELECTING) {
+    if (currentState === SELECTING) {
       setCurrentState(IDLE);
 
       var el = document.getElementById("prompt_input");
@@ -270,14 +267,14 @@ const MyCanvas = (props) => {
   const handleStartVm = () => {
     fetch(URL_START_VM).then((data) => alert('VM SARTED'));
   };
-  
+
   const handleStopVm = () => {
-    fetch(URL_STOP_VM).then((data) => alert('VM STOPED'));
+    fetch(URL_STOP_VM).then((data) => alert('VM STOPPED'));
   };
 
   const handleStatusVm = () => {
     fetch(URL_STATUS_VM).then(data => data.json()).
-                        then((data) => alert(data.message));
+      then((data) => alert(data.message));
   };
 
 
@@ -286,21 +283,28 @@ const MyCanvas = (props) => {
   // };
 
   const handleSend = () => {
+    var x = Math.floor(posX);
+    var y = Math.floor(posY);
+    var w = Math.floor(width);
+    var h = Math.floor(height);
+
     var prompt = document.getElementById('prompt_input').value
     document.getElementById('prompt_input').value = ''
 
-    var url_with_params = URL_IMAGINE + '?prompt=' + btoa(prompt) + '&posX=' + Math.floor(posX) + '&posY=' + Math.floor(posY)
-      + '&width=' + Math.floor(width) + '&height=' + Math.floor(height);
+    var url_with_params = URL_IMAGINE + '?prompt=' + btoa(prompt) + '&posX=' + x + '&posY=' + y + '&width=' + w + '&height=' + h;
 
     console.log(url_with_params);
 
-    console.log('sent!!!');
-    fetch(url_with_params).then(() => {
-      console.log('received!!!');
-      handleClickRefresh();
-      setHeight(0);
-      setWidth(0);
-    });
+    fetch(url_with_params)
+      .then((response) => {
+        return response.text()
+      }).then((data) => {
+        addNewImage(data, x, y, w, h);
+        setHeight(0);
+        setWidth(0);
+        setCurrentState(IDLE);
+      });
+
   };
 
   return (
@@ -345,23 +349,17 @@ const MyCanvas = (props) => {
         <Layer>
           {/* <URLImage src={image_url} /> */}
 
-          <URLImage
-            src={"https://konvajs.org/assets/lion.png"}
-            x={0 - cameraX}
-            y={0 - cameraY}
-          />
-
-          <URLImage
-            src={"https://konvajs.org/assets/yoda.jpg"}
-            x={150 - cameraX}
-            y={300 - cameraY}
-          />
-
-          <URLImage
-            src={"https://konvajs.org/assets/darth-vader.jpg"}
-            x={3000 - cameraX}
-            y={15 - cameraY}
-          />
+          {
+            imageDivList.map((img) => {
+              return (
+                <URLImage
+                  src={"data:image/png;base64," + img.bytecode}
+                  x={img.x - cameraX}
+                  y={img.y - cameraY}
+                />                
+              )
+            })
+          }
 
           <DraggableRect
             x={posX - cameraX}
