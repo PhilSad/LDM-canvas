@@ -16,18 +16,15 @@ var URL_START_VM = "https://function-start-vm-jujlepts2a-ew.a.run.app"
 var URL_STOP_VM = "https://function-stop-jujlepts2a-ew.a.run.app"
 var URL_STATUS_VM = "https://function-get-status-gpu-jujlepts2a-ew.a.run.app"
 
-// custom component that will handle loading image from url
-// you may add more logic here to handle "loading" state
-// or if loading is failed
-// VERY IMPORTANT NOTES:
-// at first we will set image state to null
-// and then we will set it to native image instance when it is loaded
 
-//states
-const IDLE = 0, SELECTING = 1, PROMPTING = 2, WAITING = 3, MOVING = 4;
+//draw states
+const SELECTING = 1, PROMPTING = 2, WAITING = 3;
+
+//camera states
+const MOVING = 4, IDLE = 0;
 
 //camera speed
-const CAMERA_SPEED = 0.1;
+const CAMERA_SPEED = 1;
 
 class URLImage extends React.Component {
   state = {
@@ -77,8 +74,10 @@ class URLImage extends React.Component {
 const MyCanvas = (props) => {
   const inputRef = useRef();
 
+  const [promptInputVisibility, setPromptInputVisibility] = useState(false);
   const [posX, setPosX] = useState(0);
   const [posY, setPosY] = useState(0);
+
   const [width, setWidth] = useState(0);
   const [height, setHeight] = useState(0);
   const [cursor, setCursor] = useState('default');
@@ -88,8 +87,8 @@ const MyCanvas = (props) => {
   const [camInitY, setCamInitY] = useState(0);
   const [cameraX, setCameraX] = useState(0);
   const [cameraY, setCameraY] = useState(0);
-  const [movX, setMovX] = useState(0);
-  const [movY, setMovY] = useState(0);
+  // const [movX, setMovX] = useState(0);
+  // const [movY, setMovY] = useState(0);
   const [imageDivList, setImageDivList] = useState([]);
 
   const [currentState, setCurrentState] = useState(IDLE);
@@ -97,24 +96,54 @@ const MyCanvas = (props) => {
 
   const [ignored, forceUpdate] = useReducer(x => x + 1, 0);
 
-  function movingCursor(e) {
-    switch (currentState) {
+  function switchState(state) {
+    console.log('from ' + currentState + ' to ' + state);
+
+    switch (state) {
       case IDLE:
-        setCursor('all-scroll');
-        setCurrentState(MOVING);
+        setCursor('default');
+        setHeight(0);
+        setWidth(0);
+        break;
 
-        var x = e.evt.clientX;
-        var y = e.evt.clientY;
+      case SELECTING:
+        break;
 
-        setCamInitX(x);
-        setCamInitY(y);
+      case PROMPTING:
+        //add enter key listener
+        var el = document.getElementById("prompt_input");
+        if (el !== null) {
+          el.addEventListener("keydown", function (event) {
+            if (event.key === "Enter") {
+              handleSend();
+            }
+          });
+        }
+
+        //set rect new position
+        if (width < 0) {
+          setPosX(posX + width);
+          setWidth(Math.abs(width));
+        }
+
+        if (height < 0) {
+          setPosY(posY + height);
+          setHeight(Math.abs(height));
+        }
+
+        var input = document.getElementById("prompt_input");
+        input.value = '';
+        input.focus();
+        break;
+
+      case WAITING:
         break;
 
       case MOVING:
-        setCursor('default');
-        setCurrentState(IDLE);
+        setCursor('all-scroll');
         break;
     }
+    setCurrentState(state);
   }
 
   function defineSelection(e) {
@@ -137,7 +166,8 @@ const MyCanvas = (props) => {
       setPosY(y);
       setWidth(0);
       setHeight(0);
-      setCurrentState(SELECTING);
+
+      switchState(SELECTING);
     }
   }
 
@@ -151,7 +181,7 @@ const MyCanvas = (props) => {
         <Group
           x={props.x}
           y={props.y}
-          draggable={true}
+          draggable={false} //TODO change it to true once coord works
           fill="green"
         >
           <Rect
@@ -169,7 +199,7 @@ const MyCanvas = (props) => {
             x={props.width - props.width / 2 - 200}
           >
             <Html>
-              <div style={{ visibility: currentState === IDLE ? 'visible' : 'hidden' }}>
+              <div style={{ visibility: currentState === PROMPTING ? 'visible' : 'hidden' }}>
                 <input id="prompt_input" placeholder="Input prompt" autoFocus />
                 <button onClick={() => props.handleSend()}>
                   Send
@@ -202,7 +232,9 @@ const MyCanvas = (props) => {
         break;
 
       case 2:
-        movingCursor(e);
+        setCamInitX(e.evt.clientX);
+        setCamInitY(e.evt.clientY);
+        switchState(MOVING);
         break;
 
       default:
@@ -221,42 +253,31 @@ const MyCanvas = (props) => {
         break;
 
       case MOVING:
-        setMovX((e.evt.clientX) - camInitX);
-        setMovY((e.evt.clientY) - camInitY);
+        var movX = (e.evt.clientX) - camInitX;
+        var movY = (e.evt.clientY) - camInitY;
 
-        setCameraX(cameraX + movX * CAMERA_SPEED);
-        setCameraY(cameraY + movY * CAMERA_SPEED);
+        setCamInitX(e.evt.clientX);
+        setCamInitY(e.evt.clientY);
+
+        setCameraX(cameraX - movX * CAMERA_SPEED);
+        setCameraY(cameraY - movY * CAMERA_SPEED);
         break;
     }
   };
 
   const handleMouseUp = (e) => {
-    if (currentState === SELECTING) {
-      setCurrentState(IDLE);
+    switch (e.evt.which) {
+      case 1:
+        if (currentState === SELECTING) {
+          switchState(PROMPTING);
+        }
+        break;
 
-      var el = document.getElementById("prompt_input");
-      if (el !== null) {
-        el.addEventListener("keydown", function (event) {
-          if (event.key === "Enter") {
-            handleSend();
-          }
-        });
-      }
+      case 2:
+        switchState(IDLE);
+        break;
 
-      //set rect new position
-      if (width < 0) {
-        setPosX(posX + width);
-        setWidth(Math.abs(width));
-      }
-
-      if (height < 0) {
-        setPosY(posY + height);
-        setHeight(Math.abs(height));
-      }
-
-      var input = document.getElementById("prompt_input");
-      input.value = '';
-      input.focus();
+      default:
     }
   };
 
@@ -300,9 +321,7 @@ const MyCanvas = (props) => {
         return response.text()
       }).then((data) => {
         addNewImage(data, x, y, w, h);
-        setHeight(0);
-        setWidth(0);
-        setCurrentState(IDLE);
+        switchState(IDLE);
       });
 
   };
@@ -356,7 +375,7 @@ const MyCanvas = (props) => {
                   src={"data:image/png;base64," + img.bytecode}
                   x={img.x - cameraX}
                   y={img.y - cameraY}
-                />                
+                />
               )
             })
           }
