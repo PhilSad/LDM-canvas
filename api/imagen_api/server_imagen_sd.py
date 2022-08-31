@@ -1,11 +1,10 @@
+from models_bindings.stable_diffusion import StableDiffusionGenerator
 from flask import Flask, send_file, Response
 from flask import request
 import base64
 from io import BytesIO
 import time
-
 from PIL import Image, ImageDraw
-from models_bindings.dalle_mini_mega import DalleGenerator
 from flask_cors import CORS
 
 
@@ -20,7 +19,7 @@ app = Flask(__name__)
 CORS(app)
 
 
-generator = DalleGenerator()
+generator = StableDiffusionGenerator()
 
 
 @app.route("/imagine/")
@@ -37,7 +36,7 @@ def imagine():
     print(prompt)
     prompt = prompt.decode("utf-8")
     print(prompt)
-    generated = generator.imagine(prompt)
+    generated = generator.imagine(prompt, 512, 512)
 
     generated = generated.resize((width, height))
 
