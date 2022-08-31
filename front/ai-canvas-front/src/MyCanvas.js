@@ -8,14 +8,15 @@ import { Buffer } from 'buffer';
 const CANVAS_HEIGHT = window.innerHeight;
 const CANVAS_WIDTH = window.innerWidth;
 
-var FULL_CANVAS_LINK = "https://storage.googleapis.com/aicanvas-public-bucket/full_canvas.png"
-// var URL_IMAGINE = 'https://function-api-imagen-jujlepts2a-ew.a.run.app/'
-var URL_IMAGINE = "https://gpu.apipicaisso.ml/imagine/"
+var URL_BUCKET = "https://storage.googleapis.com/aicanvas-public-bucket/"
+var URL_IMAGINE = 'https://europe-west1-ai-canvas.cloudfunctions.net/function-imagen-1stgen'
+// var URL_IMAGINE = "https://gpu.apipicaisso.ml/imagine/"
 
 var URL_START_VM = "https://function-start-vm-jujlepts2a-ew.a.run.app"
 var URL_STOP_VM = "https://function-stop-jujlepts2a-ew.a.run.app"
 var URL_STATUS_VM = "https://function-get-status-gpu-jujlepts2a-ew.a.run.app"
 
+var URL_GET_IMAGES = 'https://europe-west1-ai-canvas.cloudfunctions.net/function-get_images_for_pos'
 
 //draw states
 const SELECTING = 1, PROMPTING = 2, WAITING = 3;
@@ -89,12 +90,12 @@ const MyCanvas = (props) => {
   const [cameraY, setCameraY] = useState(0);
   // const [movX, setMovX] = useState(0);
   // const [movY, setMovY] = useState(0);
-  const [imageDivList, setImageDivList] = useState([]);
 
   const [currentState, setCurrentState] = useState(IDLE);
-  const [image_url, setImageUrl] = useState(FULL_CANVAS_LINK);
 
-  const [ignored, forceUpdate] = useReducer(x => x + 1, 0);
+
+  const [imageDivList, setImageDivList] = useState([]);
+                                  //images.message.foreach((image) => console.log(image.path)));
 
   function switchState(state) {
     console.log('from ' + currentState + ' to ' + state);
@@ -213,16 +214,18 @@ const MyCanvas = (props) => {
     );
   }
 
-  function addNewImage(bytecode, x, y, w, h) {
+  function addNewImage(src, x, y, w, h) {
+    console.log('image added');
+    console.log(src);
     var img = {
-      bytecode: bytecode,
+      src: URL_BUCKET + src,
       x: x,
       y: y,
       w: w,
       h: h
     };
 
-    setImageDivList([...imageDivList, img])
+    setImageDivList([...imageDivList, img]);
   }
 
   const handleMouseDown = (e) => {
@@ -282,7 +285,18 @@ const MyCanvas = (props) => {
   };
 
   const handleClickRefresh = () => {
-    setImageUrl(image_url + '?');
+    
+    var url_get_image_with_params = URL_GET_IMAGES+'?posX=0&posY=10&width=100&height=100';
+    console.log(url_get_image_with_params);
+    fetch(url_get_image_with_params).then((data) => data.json())
+                                    .then((json) => json.message)
+                                    .then((images) => Array.from(images).forEach((image) => {
+                                      console.log(image);
+                                      console.log(image.path);
+                                      addNewImage(image.path, image.posX, image.posY, image.width, image.height);
+                                    }));
+       
+
   };
 
   const handleStartVm = () => {
@@ -320,6 +334,7 @@ const MyCanvas = (props) => {
       .then((response) => {
         return response.text()
       }).then((data) => {
+        console.log(data);
         addNewImage(data, x, y, w, h);
         switchState(IDLE);
       });
@@ -369,10 +384,11 @@ const MyCanvas = (props) => {
           {/* <URLImage src={image_url} /> */}
 
           {
-            imageDivList.map((img) => {
+            imageDivList.map((img, i) => {
               return (
                 <URLImage
-                  src={"data:image/png;base64," + img.bytecode}
+                  key={i}
+                  src={img.src}
                   x={img.x - cameraX}
                   y={img.y - cameraY}
                 />
