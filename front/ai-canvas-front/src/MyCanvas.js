@@ -94,8 +94,7 @@ const MyCanvas = (props) => {
   const [currentState, setCurrentState] = useState(IDLE);
 
 
-  const [imageDivList, setImageDivList] = useState([]);
-                                  //images.message.foreach((image) => console.log(image.path)));
+  var [imageDivList, setImageDivList] = useState([]);
 
   function switchState(state) {
     console.log('from ' + currentState + ' to ' + state);
@@ -215,8 +214,8 @@ const MyCanvas = (props) => {
   }
 
   function addNewImage(src, x, y, w, h) {
-    console.log('image added');
-    console.log(src);
+    // console.log('image added');
+    // console.log(src);
     var img = {
       src: URL_BUCKET + src,
       x: x,
@@ -225,7 +224,8 @@ const MyCanvas = (props) => {
       h: h
     };
 
-    setImageDivList([...imageDivList, img]);
+    setImageDivList(prevState => [...prevState, img]);
+    console.log(imageDivList);
   }
 
   const handleMouseDown = (e) => {
@@ -308,8 +308,9 @@ const MyCanvas = (props) => {
   };
 
   const handleStatusVm = () => {
-    fetch(URL_STATUS_VM).then(data => data.json()).
-      then((data) => alert(data.message));
+    // fetch(URL_STATUS_VM).then(data => data.json()).
+    //   then((data) => alert(data.message));
+    console.log(imageDivList);
   };
 
 
