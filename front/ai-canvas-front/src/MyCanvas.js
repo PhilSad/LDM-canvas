@@ -18,10 +18,7 @@ var URL_STATUS_VM = "https://function-get-status-gpu-jujlepts2a-ew.a.run.app"
 
 
 //draw states
-const SELECTING = 1, PROMPTING = 2, WAITING = 3;
-
-//camera states
-const MOVING = 4, IDLE = 0;
+const IDLE = 0, SELECTING = 1, PROMPTING = 2, WAITING = 3, MOVING = 4;
 
 //camera speed
 const CAMERA_SPEED = 1;
@@ -74,7 +71,6 @@ class URLImage extends React.Component {
 const MyCanvas = (props) => {
   const inputRef = useRef();
 
-  const [promptInputVisibility, setPromptInputVisibility] = useState(false);
   const [posX, setPosX] = useState(0);
   const [posY, setPosY] = useState(0);
 
@@ -87,14 +83,11 @@ const MyCanvas = (props) => {
   const [camInitY, setCamInitY] = useState(0);
   const [cameraX, setCameraX] = useState(0);
   const [cameraY, setCameraY] = useState(0);
-  // const [movX, setMovX] = useState(0);
-  // const [movY, setMovY] = useState(0);
+
   const [imageDivList, setImageDivList] = useState([]);
 
   const [currentState, setCurrentState] = useState(IDLE);
   const [image_url, setImageUrl] = useState(FULL_CANVAS_LINK);
-
-  const [ignored, forceUpdate] = useReducer(x => x + 1, 0);
 
   function switchState(state) {
     console.log('from ' + currentState + ' to ' + state);
@@ -191,7 +184,7 @@ const MyCanvas = (props) => {
             width={props.width}
             height={props.height}
             opacity={0.5}
-            fill="pink"
+            fill={currentState === WAITING ? "green" : "pink"}
           />
 
           <Group
@@ -316,6 +309,8 @@ const MyCanvas = (props) => {
 
     console.log(url_with_params);
 
+    switchState(WAITING);
+
     fetch(url_with_params)
       .then((response) => {
         return response.text()
@@ -354,6 +349,10 @@ const MyCanvas = (props) => {
         <button className="info">
           ?
         </button>
+
+        <p>
+          {cameraX}, {cameraY}
+        </p>
       </div>
 
 
