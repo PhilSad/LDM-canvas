@@ -1,11 +1,10 @@
+from models_bindings.stable_diffusion import StableDiffusionGenerator
 from flask import Flask, send_file, Response
 from flask import request
 import base64
 from io import BytesIO
 import time
-
 from PIL import Image, ImageDraw
-from models_bindings.dalle_mini_mega import DalleGenerator
 from flask_cors import CORS
 
 
@@ -15,11 +14,12 @@ storage_client = storage.Client()
 
 bucket = storage_client.bucket('aicanvas-public-bucket')
 
+CUR_IMAGE_PATH = './images/cur_image.png'
 app = Flask(__name__)
 CORS(app)
 
 
-generator = DalleGenerator()
+generator = StableDiffusionGenerator()
 
 
 @app.route("/imagine/")
@@ -36,9 +36,21 @@ def imagine():
     print(prompt)
     prompt = prompt.decode("utf-8")
     print(prompt)
-    generated = generator.imagine(prompt)
+    generated = generator.imagine(prompt, 512, 512)
 
     generated = generated.resize((width, height))
+
+    generated.save(CUR_IMAGE_PATH)
+
+    # save to cloud
+    storage_client = storage.Client()
+    bucket = storage_client.bucket('aicanvas-public-bucket')
+    blob_generated = bucket.blob('cur_generated.png')
+    blob_history = bucket.blob(f'history/{str(time.time())}-{prompt}.png')
+
+    blob_generated.upload_from_filename(CUR_IMAGE_PATH)
+    blob_history.upload_from_filename(CUR_IMAGE_PATH)
+    
 
     # todo save image
 
