@@ -23,6 +23,8 @@ const IDLE = 0, SELECTING = 1, PROMPTING = 2, WAITING = 3, MOVING = 4;
 
 //camera speed
 const CAMERA_SPEED = 1;
+const CAMERA_ZOOM_SPEED = 0.1;
+const MIN_ZOOM = 0.1;
 
 class URLImage extends React.Component {
   state = {
@@ -60,6 +62,8 @@ class URLImage extends React.Component {
       <Image
         x={this.props.x}
         y={this.props.y}
+        width={this.props.width}
+        height={this.props.height}
         image={this.state.image}
         ref={(node) => {
           this.imageNode = node;
@@ -86,14 +90,15 @@ const MyCanvas = (props) => {
   const [camInitY, setCamInitY] = useState(0);
   const [cameraX, setCameraX] = useState(0);
   const [cameraY, setCameraY] = useState(0);
+  const [cameraZoom, setCameraZoom] = useState(1);
+
   const [imageDivList, setImageDivList] = useState([]);
   // const [movX, setMovX] = useState(0);
   // const [movY, setMovY] = useState(0);
 
 
   function switchState(state) {
-    console.log('from ' + currentState + ' to ' + state);
-
+    
     switch (state) {
       case IDLE:
         setCursor('default');
@@ -141,19 +146,28 @@ const MyCanvas = (props) => {
     setCurrentState(state);
   }
 
+  function toAbsoluteSpace(x, y) {
+    x = cameraX + x / cameraZoom;
+    y = cameraY + y / cameraZoom;
+    return [x,y]
+  }
+
+  function toRelativeSpace(x, y) {
+    x = (x-cameraX) * cameraZoom;
+    y = (y-cameraY) * cameraZoom;
+    return [x,y]
+  }
+
   function defineSelection(e) {
     if (currentState === IDLE) {
       var offsets = inputRef.current.content.getBoundingClientRect();
-      var x = e.evt.clientX - offsets.x + cameraX;
-      var y = e.evt.clientY - offsets.y + cameraY;
+
+      var x = (e.evt.clientX - offsets.x);
+      var y = (e.evt.clientY - offsets.y);
+      [x,y] = toAbsoluteSpace(x, y);
 
       //if we click on the current rect, we don't want to start a new selection
       if (x > posX && x < posX + width && y > posY && y < posY + height) {
-        return;
-      }
-
-      //if we are already making a selection, return
-      if (currentState === SELECTING) {
         return;
       }
 
@@ -220,7 +234,6 @@ const MyCanvas = (props) => {
     };
 
     setImageDivList(prevState => [...prevState, img]);
-    console.log(imageDivList);
   }
 
   const handleMouseDown = (e) => {
@@ -244,24 +257,42 @@ const MyCanvas = (props) => {
 
     switch (currentState) {
       case SELECTING:
-        var w = e.evt.clientX - offsets.x + cameraX - posX;
-        var h = e.evt.clientY - offsets.y + cameraY - posY;
+        var w = ((e.evt.clientX - offsets.x) / cameraZoom + cameraX - posX);
+        var h = ((e.evt.clientY - offsets.y) / cameraZoom + cameraY - posY);
         setWidth(w);
         setHeight(h);
         break;
 
       case MOVING:
-        var movX = (e.evt.clientX) - camInitX;
+        var movX = (e.evt.clientX)  - camInitX;
         var movY = (e.evt.clientY) - camInitY;
 
         setCamInitX(e.evt.clientX);
         setCamInitY(e.evt.clientY);
 
-        setCameraX(cameraX - movX * CAMERA_SPEED);
-        setCameraY(cameraY - movY * CAMERA_SPEED);
+        setCameraX((cameraX - movX / cameraZoom));
+        setCameraY((cameraY - movY / cameraZoom));
         break;
     }
   };
+
+  const handleMouseScroll = (e) => {
+    if(e.evt.wheelDelta === 0)
+      return;
+      
+    var newZoom = cameraZoom + CAMERA_ZOOM_SPEED * (e.evt.wheelDelta > 0 ? 1 : -1)
+    newZoom = Math.max(newZoom, 0.1);
+    
+    var offsets = inputRef.current.content.getBoundingClientRect();
+    var x = (e.evt.clientX - offsets.x);
+    var y = (e.evt.clientY - offsets.y);
+    var [ax,ay] = toAbsoluteSpace(x,y);
+
+    setCameraX(ax - x/newZoom);
+    setCameraY(ay - y/newZoom);
+
+    setCameraZoom(newZoom);
+  }
 
   const handleMouseUp = (e) => {
     switch (e.evt.which) {
@@ -281,7 +312,7 @@ const MyCanvas = (props) => {
 
   const handleClickRefresh = () => {
     
-    var url_get_image_with_params = URL_GET_IMAGES+'?posX=0&posY=10&width=100&height=100';
+    var url_get_image_with_params = URL_GET_IMAGES+'?posX=0&posY=0&width=100&height=100';
     console.log(url_get_image_with_params);
     fetch(url_get_image_with_params).then((data) => data.json())
                                     .then((json) => json.message)
@@ -308,16 +339,11 @@ const MyCanvas = (props) => {
     console.log(imageDivList);
   };
 
-
-  // const handleStatusVm = () => {
-  //   fetch(URL_STATUS_VM).then(alert('VM STOPED'));
-  // };
-
   const handleSend = () => {
-    var x = Math.floor(posX);
-    var y = Math.floor(posY);
-    var w = Math.floor(width);
-    var h = Math.floor(height);
+    var x = Math.floor(posX)
+    var y = Math.floor(posY)
+    var w = Math.floor(width)
+    var h = Math.floor(height)
 
     var prompt = document.getElementById('prompt_input').value
     document.getElementById('prompt_input').value = ''
@@ -369,7 +395,7 @@ const MyCanvas = (props) => {
         </button>
 
         <p>
-          {cameraX}, {cameraY}
+          {Math.floor(cameraX)}, {Math.floor(cameraY)}, {Math.floor(cameraZoom*100)/100}
         </p>
       </div>
 
@@ -380,29 +406,32 @@ const MyCanvas = (props) => {
         height={CANVAS_HEIGHT}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}>
+        onMouseUp={handleMouseUp}
+        onWheel={handleMouseScroll}>
 
         <Layer>
-          {/* <URLImage src={image_url} /> */}
-
           {
             imageDivList.map((img, i) => {
+              var [x,y] = toRelativeSpace(img.x, img.y);
+
               return (
                 <URLImage
                   key={i}
                   src={img.src}
-                  x={img.x - cameraX}
-                  y={img.y - cameraY}
+                  x={x}
+                  y={y}
+                  width={img.w * cameraZoom}
+                  height={img.h * cameraZoom}
                 />
               )
             })
           }
 
           <DraggableRect
-            x={posX - cameraX}
-            y={posY - cameraY}
-            width={width}
-            height={height}
+            x={(posX - cameraX)*cameraZoom}
+            y={(posY - cameraY)*cameraZoom}
+            width={width*cameraZoom}
+            height={height*cameraZoom}
             handleSend={handleSend}
           />
         </Layer>
