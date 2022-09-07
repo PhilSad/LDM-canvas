@@ -4,6 +4,7 @@ import { Html } from 'react-konva-utils';
 import useImage from 'use-image';
 import ReactDOM from 'react-dom'
 import { Buffer } from 'buffer';
+import { GoogleLogin } from '@react-oauth/google';
 
 const CANVAS_HEIGHT = window.innerHeight;
 const CANVAS_WIDTH = window.innerWidth;
@@ -474,6 +475,14 @@ const MyCanvas = (props) => {
     <div style={{ cursor: cursor }}>
 
       <div className="bar">
+      {/* <GoogleLogin
+        onSuccess={credentialResponse => {
+          console.log(credentialResponse);
+        }}
+        onError={() => {
+          console.log('Login Failed');
+        }}
+      /> */}
         {isMobile ? (
           <div>
             <button onClick={() => handleClickRefresh()}>

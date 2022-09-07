@@ -1,2 +1,5 @@
 api/imagen_api/models_bindings/models/*
 api/imagen_api/models_bindings/__pycache__/*
+/cloud/env
+/venv
+/front/ai-canvas-front/node_modules
