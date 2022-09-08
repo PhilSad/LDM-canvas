@@ -4,7 +4,7 @@ import { Html } from 'react-konva-utils';
 import useImage from 'use-image';
 import ReactDOM from 'react-dom'
 import { Buffer } from 'buffer';
-import { GoogleLogin } from '@react-oauth/google';
+import { GoogleLogin, useGoogleLogin  } from '@react-oauth/google';
 
 const CANVAS_HEIGHT = window.innerHeight;
 const CANVAS_WIDTH = window.innerWidth;
@@ -104,6 +104,8 @@ const MyCanvas = (props) => {
   const [placeHolderList, setPlaceHolderList] = useState({})
 
   const [isMobile, setIsMobile] = React.useState(false);
+  const [isLogged, setIsLogged] = useState(false);
+
 
 
   useEffect(() => {
@@ -185,6 +187,11 @@ const MyCanvas = (props) => {
   }
 
   function defineSelection(e) {
+
+    if(isLogged === false){
+      return
+    }
+
     var offsets = inputRef.current.content.getBoundingClientRect();
 
     var x = (e.evt.clientX - offsets.x);
@@ -471,18 +478,17 @@ const MyCanvas = (props) => {
     return true;
   }
 
+  const login = useGoogleLogin({
+    onSuccess: resp => setIsLogged(true),
+    flow: 'auth-code',
+  });
+
   return (
     <div style={{ cursor: cursor }}>
 
       <div className="bar">
-      {/* <GoogleLogin
-        onSuccess={credentialResponse => {
-          console.log(credentialResponse);
-        }}
-        onError={() => {
-          console.log('Login Failed');
-        }}
-      /> */}
+      <button onClick={() => login()}>Login</button>
+
         {isMobile ? (
           <div>
             <button onClick={() => handleClickRefresh()}>
