@@ -3,6 +3,7 @@ import { Stage, Layer, Image, Rect, Group, Text } from 'react-konva';
 import { Router, Routes, Route, createSearchParams, useSearchParams } from "react-router-dom";
 import URLImage from './URLImage';
 import PromptRect from './promptRect';
+import { GoogleLogin, useGoogleLogin  } from '@react-oauth/google';
 
 import * as env from './env.js';
 
@@ -55,6 +56,8 @@ const MyCanvas = (props) => {
   const [imageDivList, setImageDivList] = useState([]);
 
   const [isMobile, setIsMobile] = React.useState(false);
+  const [isLogged, setIsLogged] = useState(false);
+
 
   //on page load
   useEffect(() => {
@@ -167,6 +170,10 @@ const MyCanvas = (props) => {
 
   // define a new selection
   function defineSelection(x, y) {
+    if(isLogged === false){
+      return
+    }
+
     [x, y] = toGlobalSpace(x, y);
 
     //if we click on the current rect, we don't want to start a new selection
@@ -419,10 +426,17 @@ const MyCanvas = (props) => {
     return true;
   }
 
+  const login = useGoogleLogin({
+    onSuccess: resp => setIsLogged(true),
+    flow: 'auth-code',
+  });
+
   return (
     <div style={{ cursor: cursor }}>
 
       <div className="bar">
+      <button onClick={() => login()}>Login</button>
+
         {isMobile ? (
           <div>
             <button onClick={() => handleClickRefresh()}>
