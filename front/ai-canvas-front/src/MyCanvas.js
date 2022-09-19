@@ -1,12 +1,10 @@
-import React, { Component, useState, useEffect, useRef, useReducer } from 'react';
+import React, { Component, useState, useEffect, useRef, useReducer, TouchEvent } from 'react';
 import { Stage, Layer, Image, Rect, Group, Text } from 'react-konva';
-import { Html } from 'react-konva-utils';
-import useImage from 'use-image';
-import ReactDOM from 'react-dom'
-import { Buffer } from 'buffer';
+import { Router, Routes, Route, createSearchParams, useSearchParams } from "react-router-dom";
+import URLImage from './URLImage';
+import PromptRect from './promptRect';
 
-const CANVAS_HEIGHT = window.innerHeight;
-const CANVAS_WIDTH = window.innerWidth;
+import * as env from './env.js';
 
 var URL_BUCKET = "https://storage.googleapis.com/aicanvas-public-bucket/"
 var URL_IMAGINE = 'https://europe-west1-ai-canvas.cloudfunctions.net/function-imagen-1stgen'
@@ -24,60 +22,10 @@ const SELECTING = 1, PROMPTING = 2;
 //move state
 const IDLE = 0, MOVING = 4, READY = 3;
 
-
 //camera speed
 const CAMERA_SPEED = 1;
 const CAMERA_ZOOM_SPEED = 1.1;
 const MIN_ZOOM = 0.01;
-
-var nb_drawn = 0;
-
-class URLImage extends React.Component {
-  state = {
-    image: null,
-  };
-  componentDidMount() {
-    this.loadImage();
-  }
-  componentDidUpdate(oldProps) {
-    if (oldProps.src !== this.props.src) {
-      this.loadImage();
-    }
-  }
-  componentWillUnmount() {
-    this.image.removeEventListener('load', this.handleLoad);
-  }
-  loadImage() {
-    // save to "this" to remove "load" handler on unmount
-    this.image = new window.Image();
-    this.image.src = this.props.src;
-    this.image.addEventListener('load', this.handleLoad);
-  }
-  handleLoad = () => {
-    // after setState react-konva will update canvas and redraw the layer
-    // because "image" property is changed
-    this.setState({
-      image: this.image,
-    });
-    // if you keep same image object during source updates
-    // you will have to update layer manually:
-    // this.imageNode.getLayer().batchDraw();
-  };
-  render() {
-    return (
-      <Image
-        x={this.props.x}
-        y={this.props.y}
-        width={this.props.width}
-        height={this.props.height}
-        image={this.state.image}
-        ref={(node) => {
-          this.imageNode = node;
-        }}
-      />
-    );
-  }
-}
 
 const MyCanvas = (props) => {
   const inputRef = useRef();
@@ -92,6 +40,9 @@ const MyCanvas = (props) => {
   const [height, setHeight] = useState(0);
   const [cursor, setCursor] = useState('default');
 
+  const [canvasW, setCanvasW] = useState(window.innerWidth);
+  const [canvasH, setCanvasH] = useState(window.innerHeight);
+
   //camera
   const [camInitX, setCamInitX] = useState(0);
   const [camInitY, setCamInitY] = useState(0);
@@ -99,26 +50,32 @@ const MyCanvas = (props) => {
   const [cameraY, setCameraY] = useState(0);
   const [cameraZoom, setCameraZoom] = useState(1);
 
+  const [searchParams, setSearchParams] = useSearchParams();
+
   const [imageDivList, setImageDivList] = useState([]);
-  const [placeHolderList, setPlaceHolderList] = useState({})
 
   const [isMobile, setIsMobile] = React.useState(false);
 
-
+  //on page load
   useEffect(() => {
     const onPageLoad = () => {
-      var el = document.getElementById("prompt_input");
-      if (el !== null) {
-        el.addEventListener("keydown", function (event) {
-          if (event.key === "Enter") {
-            handleSend();
-          }
-        });
-      }
-      
       setIsMobile(window.innerWidth <= 768);
+
       handleClickRefresh();
+
+      var x = searchParams.get("x") !== null ? searchParams.get("x") : 0;
+      var y = searchParams.get("y") !== null ? searchParams.get("y") : 0;
+      var zoom = searchParams.get("zoom") !== null ? searchParams.get("zoom") : 1;
+
+      moveCamera(x,y,zoom);
     };
+
+    const onPageResize = () => {
+      setCanvasW(window.innerWidth);
+      setCanvasH(window.innerHeight);
+    }
+
+    window.addEventListener("resize", onPageResize);
 
     // Check if the page has already loaded
     if (document.readyState === "complete") {
@@ -126,7 +83,9 @@ const MyCanvas = (props) => {
     } else {
       window.addEventListener("load", onPageLoad);
       // Remove the event listener when component unmounts
-      return () => window.removeEventListener("load", onPageLoad);
+      return () => {
+        window.removeEventListener("load", onPageLoad);
+      }
     }
   }, []);
 
@@ -153,6 +112,15 @@ const MyCanvas = (props) => {
         var input = document.getElementById("prompt_input");
         input.value = '';
         input.focus();
+
+        var el = document.getElementById("prompt_input");
+        if (el !== null) {
+          el.addEventListener("keydown", function (event) {
+            if (event.key === "Enter") {
+              handleSend();
+            }
+          });
+        }
         break;
     }
     setCurrentState(state);
@@ -171,7 +139,21 @@ const MyCanvas = (props) => {
     setMoveState(state);
   }
 
-  function toAbsoluteSpace(x, y) {
+  //smove camera and set zoom
+  function moveCamera(x,y,zoom) {
+    setCameraX(x);
+    setCameraY(y);
+    setCameraZoom(zoom);
+  }
+
+  function setSearchParam() {
+    setSearchParams(
+      createSearchParams({ x: Math.round(cameraX), y: Math.round(cameraY), zoom: Math.round(cameraZoom*100)/100 })
+    );
+  }
+
+  // convert coordinates system
+  function toGlobalSpace(x, y) {
     x = cameraX + x / cameraZoom;
     y = cameraY + y / cameraZoom;
     return [x, y]
@@ -183,12 +165,9 @@ const MyCanvas = (props) => {
     return [x, y]
   }
 
-  function defineSelection(e) {
-    var offsets = inputRef.current.content.getBoundingClientRect();
-
-    var x = (e.evt.clientX - offsets.x);
-    var y = (e.evt.clientY - offsets.y);
-    [x, y] = toAbsoluteSpace(x, y);
+  // define a new selection
+  function defineSelection(x, y) {
+    [x, y] = toGlobalSpace(x, y);
 
     //if we click on the current rect, we don't want to start a new selection
     if (x > posX && x < posX + width && y > posY && y < posY + height) {
@@ -208,48 +187,6 @@ const MyCanvas = (props) => {
     setPosY(Number.MAX_SAFE_INTEGER);
     setWidth(0);
     setHeight(0);
-  }
-
-  function DraggableRect(props) {
-
-    return (
-      <Group
-        x={0}
-        y={0}
-      >
-        <Group
-          x={props.x}
-          y={props.y}
-          draggable={false} //TODO change it to true once coord works
-          fill="green"
-        >
-          <Rect
-            stroke="black"
-            shadowBlur={10}
-            shadowColor="white"
-            width={props.width}
-            height={props.height}
-            opacity={0.5}
-            fill={"pink"}
-          />
-
-          <Group
-            y={-50 + (props.height < 0 ? props.height : 0)}
-            x={props.width - props.width / 2 - 200}
-          >
-            <Html>
-              <div style={{ visibility: currentState === PROMPTING ? 'visible' : 'hidden' }}>
-                <input id="prompt_input" placeholder="Input prompt" autoFocus />
-                <button onClick={() => props.handleSend()}>
-                  Send
-                </button>
-              </div>
-            </Html>
-          </Group>
-
-        </Group>
-      </Group>
-    );
   }
 
   function addNewPlaceholder(x, y, w, h) {
@@ -281,76 +218,88 @@ const MyCanvas = (props) => {
     setImageDivList(prevState => [...prevState, img]);
   }
 
+  // movement handlers
+  const handleTouchDown = (e) => {
+    var touchposx = e.currentTarget.pointerPos.x;
+    var touchposy = e.currentTarget.pointerPos.y;
+
+    if (currentState === IDLE && moveState === READY) {
+      setCamInitX(touchposx);
+      setCamInitY(touchposy);
+      switchMoveState(MOVING)
+    } else if (currentState === IDLE && moveState === IDLE) {
+      var offsets = inputRef.current.content.getBoundingClientRect();
+      var x = (touchposx - offsets.x);
+      var y = (touchposy - offsets.y);
+      defineSelection(x, y);
+    }
+  }
+
   const handleMouseDown = (e) => {
-    console.log(isMobile);
-    if (!isMobile) {
-      switch (e.evt.which) {
-        case 1:
-          defineSelection(e);
-          break;
+    switch (e.evt.which) {
+      case 1:
+        var offsets = inputRef.current.content.getBoundingClientRect();
+        var x = (e.evt.clientX - offsets.x);
+        var y = (e.evt.clientY - offsets.y);
+        defineSelection(x, y);
+        break;
 
-        case 2:
-          setCamInitX(e.evt.clientX);
-          setCamInitY(e.evt.clientY);
-          switchMoveState(MOVING);
-          break;
-
-        default:
-      }
-    } else {
-      if (currentState === IDLE && moveState === READY) {
+      case 2:
         setCamInitX(e.evt.clientX);
         setCamInitY(e.evt.clientY);
-        switchMoveState(MOVING)
-      } else if (currentState === IDLE && moveState === IDLE) {
-        defineSelection(e);
-      }
+        switchMoveState(MOVING);
+        break;
+
+      default:
     }
   };
+
+  const handleTouchMove = (e) => {
+    var offsets = inputRef.current.content.getBoundingClientRect();
+
+    var touchposx = e.currentTarget.pointerPos.x;
+    var touchposy = e.currentTarget.pointerPos.y;
+
+    if (currentState === SELECTING && moveState === IDLE) {
+
+      var w = ((touchposx - offsets.x) / cameraZoom + cameraX - posX);
+      var h = ((touchposy - offsets.y) / cameraZoom + cameraY - posY);
+      setWidth(w);
+      setHeight(h);
+    } else if (currentState === IDLE && moveState === MOVING) {
+      var movX = (touchposx) - camInitX;
+      var movY = (touchposy) - camInitY;
+
+      setCamInitX(touchposx);
+      setCamInitY(touchposy);
+
+      moveCamera((cameraX - movX / cameraZoom),(cameraY - movY / cameraZoom), cameraZoom);
+    }
+  }
 
   const handleMouseMove = (e) => {
     var offsets = inputRef.current.content.getBoundingClientRect();
 
-    if (!isMobile) {
-      switch (currentState) {
-        case SELECTING:
-          var w = ((e.evt.clientX - offsets.x) / cameraZoom + cameraX - posX);
-          var h = ((e.evt.clientY - offsets.y) / cameraZoom + cameraY - posY);
-          setWidth(w);
-          setHeight(h);
-          break;
-      }
-
-      switch (moveState) {
-        case MOVING:
-          var movX = (e.evt.clientX) - camInitX;
-          var movY = (e.evt.clientY) - camInitY;
-
-          setCamInitX(e.evt.clientX);
-          setCamInitY(e.evt.clientY);
-
-          setCameraX((cameraX - movX / cameraZoom));
-          setCameraY((cameraY - movY / cameraZoom));
-          break;
-      }
-    } else {
-      if (currentState === SELECTING && moveState === IDLE) {
-        w = ((e.evt.clientX - offsets.x) / cameraZoom + cameraX - posX);
-        h = ((e.evt.clientY - offsets.y) / cameraZoom + cameraY - posY);
+    switch (currentState) {
+      case SELECTING:
+        var w = ((e.evt.clientX - offsets.x) / cameraZoom + cameraX - posX);
+        var h = ((e.evt.clientY - offsets.y) / cameraZoom + cameraY - posY);
         setWidth(w);
         setHeight(h);
-      } else if (currentState === IDLE && moveState === MOVING) {
-        movX = (e.evt.clientX) - camInitX;
-        movY = (e.evt.clientY) - camInitY;
+        break;
+    }
+
+    switch (moveState) {
+      case MOVING:
+        var movX = (e.evt.clientX) - camInitX;
+        var movY = (e.evt.clientY) - camInitY;
 
         setCamInitX(e.evt.clientX);
         setCamInitY(e.evt.clientY);
 
-        setCameraX((cameraX - movX / cameraZoom));
-        setCameraY((cameraY - movY / cameraZoom));
-      }
+        moveCamera((cameraX - movX / cameraZoom),(cameraY - movY / cameraZoom), cameraZoom);
+        break;
     }
-
   };
 
   const handleMouseScroll = (e) => {
@@ -369,27 +318,26 @@ const MyCanvas = (props) => {
     var offsets = inputRef.current.content.getBoundingClientRect();
     var x = (e.evt.clientX - offsets.x);
     var y = (e.evt.clientY - offsets.y);
-    var [ax, ay] = toAbsoluteSpace(x, y);
+    var [ax, ay] = toGlobalSpace(x, y);
 
-    setCameraX(ax - x / newZoom);
-    setCameraY(ay - y / newZoom);
+    moveCamera((ax - x / newZoom),(ay - y / newZoom), newZoom);
+  }
 
-    setCameraZoom(newZoom);
+  const handleTouchUp = (e) => {
+    if (currentState === IDLE && moveState === MOVING) {
+      switchMoveState(READY);
+    } else if (currentState === SELECTING && moveState === IDLE) {
+      switchState(PROMPTING);
+    }
+
+    setSearchParam();
   }
 
   const handleMouseUp = (e) => {
     switch (e.evt.which) {
       case 1:
-        if (!isMobile) {
-          if (currentState === SELECTING) {
-            switchState(PROMPTING);
-          }
-        } else {
-          if (currentState === IDLE && moveState === MOVING) {
-            switchMoveState(READY);
-          } else if (currentState === SELECTING && moveState === IDLE) {
-            switchState(PROMPTING);
-          }
+        if (currentState === SELECTING) {
+          switchState(PROMPTING);
         }
         break;
 
@@ -399,6 +347,8 @@ const MyCanvas = (props) => {
 
       default:
     }
+
+    setSearchParam();
   };
 
   const handleClickRefresh = () => {
@@ -407,8 +357,8 @@ const MyCanvas = (props) => {
     fetch(url_get_image_with_params).then((data) => data.json())
       .then((json) => json.message)
       .then((images) => Array.from(images).forEach((image) => {
-        console.log(image);
-        console.log(image.path);
+        // console.log(image);
+        // console.log(image.path);
         addNewImage(URL_BUCKET + image.path, image.posX, image.posY, image.width, image.height);
       }));
   };
@@ -443,8 +393,6 @@ const MyCanvas = (props) => {
     var w = Math.floor(width)
     var h = Math.floor(height)
 
-    //var [w,h] = toRelativeSpace(width,height).map((v) => {return Math.floor(v)})
-
     var prompt = document.getElementById('prompt_input').value
     document.getElementById('prompt_input').value = ''
 
@@ -464,7 +412,8 @@ const MyCanvas = (props) => {
 
   };
 
-  function overlaps(a, b) {
+  // true if rectangle a and b overlap
+  function overlap(a, b) {
     if (a.x >= b.x + b.w || b.x >= a.x + a.w) return false;
     if (a.y >= b.y + b.h || b.y >= a.y + a.h) return false;
     return true;
@@ -501,38 +450,46 @@ const MyCanvas = (props) => {
             </button>
           </div>
         ) : (
-          <button onClick={() => { setIsMobile(!isMobile) }}>
-            Mobile controls
+          <button onClick={() => handleClickRefresh()}>
+            Refresh
           </button>
+          // <button onClick={() => { setIsMobile(!isMobile) }}>
+          //   Mobile controls
+          // </button>
         )}
 
-        <p>
+        <p className="coords">
           {Math.floor(cameraX)}, {Math.floor(cameraY)}, {Math.floor(cameraZoom * 100) / 100}
         </p>
 
       </div>
 
-
       <Stage
         ref={inputRef}
-        width={CANVAS_WIDTH}
-        height={CANVAS_HEIGHT}
+        width={canvasW}
+        height={canvasH}
+
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
-        onWheel={handleMouseScroll}>
+        onWheel={handleMouseScroll}
+
+        onTouchStart={handleTouchDown}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchUp}
+      >
 
         <Layer>
           {
             imageDivList.map((img, i) => {
               var cameraBox = {
-                x : cameraX,
-                y : cameraY,
-                w : window.innerWidth / cameraZoom,
-                h : window.innerHeight / cameraZoom
+                x: cameraX - (window.innerWidth / cameraZoom) * 0.125,
+                y: cameraY - (window.innerHeight / cameraZoom) * 0.125,
+                w: (window.innerWidth / cameraZoom) * 1.25,
+                h: (window.innerHeight / cameraZoom) * 1.25
               }
               if (
-                overlaps(cameraBox, img)
+                overlap(cameraBox, img)
               ) {
                 var [x, y] = toRelativeSpace(img.x, img.y);
 
@@ -566,15 +523,17 @@ const MyCanvas = (props) => {
             })
           }
 
-          <DraggableRect
+          <PromptRect
             x={(posX - cameraX) * cameraZoom}
             y={(posY - cameraY) * cameraZoom}
             width={width * cameraZoom}
             height={height * cameraZoom}
             handleSend={handleSend}
+            visible={currentState === PROMPTING}
           />
         </Layer>
       </Stage>
+
     </div>
   );
 
