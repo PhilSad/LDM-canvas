@@ -1,9 +1,10 @@
 import React from 'react';
-import { Image } from 'react-konva';
+import { Image, Group, Rect } from 'react-konva';
 
 class URLImage extends React.Component {
     state = {
         image: null,
+        infoVisible: false
     };
     componentDidMount() {
         this.loadImage();
@@ -32,18 +33,45 @@ class URLImage extends React.Component {
         // you will have to update layer manually:
         // this.imageNode.getLayer().batchDraw();
     };
+    handleEnter = () => {
+        this.setState({
+            infoVisible: true,
+        });
+    }
+    handleLeave = () => {
+        this.setState({
+            infoVisible: false,
+        });
+    }
+    handleClick = () => {
+        alert(this.props.src);
+    }
     render() {
         return (
-            <Image
+            <Group
                 x={this.props.x}
                 y={this.props.y}
-                width={this.props.width}
-                height={this.props.height}
-                image={this.state.image}
-                ref={(node) => {
-                    this.imageNode = node;
-                }}
-            />
+                onMouseEnter={this.handleEnter}
+                onMouseLeave={this.handleLeave}
+            >
+                <Image
+                    width={this.props.width}
+                    height={this.props.height}
+                    image={this.state.image}
+                    ref={(node) => {
+                        this.imageNode = node;
+                    }}
+                    stroke="red"
+                    strokeWidth={this.state.infoVisible ? 0 : 0}
+                />
+                <Rect
+                    width={this.props.width*0.1}
+                    height={this.props.width*0.1}
+                    onClick={this.handleClick}
+                    fill="red"
+                    opacity={this.state.infoVisible ? 0.8 : 0}
+                />
+            </Group>
         );
     }
 }

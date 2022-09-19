@@ -210,7 +210,7 @@ const MyCanvas = (props) => {
     setImageDivList(prevState => [...prevState, img]);
   }
 
-  function addNewImage(src, x, y, w, h) {
+  function addNewImage(src, x, y, w, h, prompt) {
     // console.log('image added');
     // console.log(src);
     var img = {
@@ -219,7 +219,8 @@ const MyCanvas = (props) => {
       x: x,
       y: y,
       w: w,
-      h: h
+      h: h,
+      prompt: prompt
     };
 
     setImageDivList(prevState => [...prevState, img]);
@@ -364,9 +365,9 @@ const MyCanvas = (props) => {
     fetch(url_get_image_with_params).then((data) => data.json())
       .then((json) => json.message)
       .then((images) => Array.from(images).forEach((image) => {
-        // console.log(image);
+        console.log(image);
         // console.log(image.path);
-        addNewImage(URL_BUCKET + image.path, image.posX, image.posY, image.width, image.height);
+        addNewImage(URL_BUCKET + image.path, image.posX, image.posY, image.width, image.height, image.prompt);
       }));
   };
 
@@ -516,6 +517,7 @@ const MyCanvas = (props) => {
                       y={y}
                       width={img.w * cameraZoom}
                       height={img.h * cameraZoom}
+                      prompt={img.prompt}
                     />)
                 } else if (img.type === 'placeholder') {
                   return (
