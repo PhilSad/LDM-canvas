@@ -35,7 +35,7 @@ class URLImage extends React.Component {
     };
     handleEnter = () => {
         this.setState({
-            infoVisible: true,
+            infoVisible: false,
         });
     }
     handleLeave = () => {
@@ -64,13 +64,15 @@ class URLImage extends React.Component {
                     stroke="red"
                     strokeWidth={this.state.infoVisible ? 0 : 0}
                 />
-                <Rect
-                    width={this.props.width*0.1}
-                    height={this.props.width*0.1}
-                    onClick={this.handleClick}
-                    fill="red"
-                    opacity={this.state.infoVisible ? 0.8 : 0}
-                />
+                {this.state.infoVisible &&
+
+                    <Rect
+                        width={this.props.width * 0.1}
+                        height={this.props.width * 0.1}
+                        onClick={this.handleClick}
+                        fill="red"
+                    />
+                }
             </Group>
         );
     }
