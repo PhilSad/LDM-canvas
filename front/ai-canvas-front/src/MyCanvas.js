@@ -3,7 +3,7 @@ import { Stage, Layer, Image, Rect, Group, Text } from 'react-konva';
 import { Router, Routes, Route, createSearchParams, useSearchParams } from "react-router-dom";
 import URLImage from './URLImage';
 import PromptRect from './promptRect';
-import { GoogleLogin, useGoogleLogin  } from '@react-oauth/google';
+import { GoogleLogin, useGoogleLogin, googleLogout  } from '@react-oauth/google';
 
 import * as env from './env.js';
 
@@ -365,7 +365,7 @@ const MyCanvas = (props) => {
     fetch(url_get_image_with_params).then((data) => data.json())
       .then((json) => json.message)
       .then((images) => Array.from(images).forEach((image) => {
-        console.log(image);
+        // console.log(image);
         // console.log(image.path);
         addNewImage(URL_BUCKET + image.path, image.posX, image.posY, image.width, image.height, image.prompt);
       }));
@@ -431,12 +431,33 @@ const MyCanvas = (props) => {
     onSuccess: resp => setIsLogged(true),
     flow: 'auth-code',
   });
-
+  console.log("is logged : " + isLogged)
   return (
     <div style={{ cursor: cursor }}>
 
       <div className="bar">
-      <button onClick={() => login()}>Login</button>
+
+        { isLogged === false ? (      
+              <GoogleLogin
+                  onSuccess={credentialResponse => {
+                    console.log(credentialResponse);
+                    setIsLogged(true)
+                  }}
+                  onError={() => {
+                    console.log('Login Failed');
+                  }}
+                  useOneTap/>
+                  ): (
+
+                <button onClick={() =>{
+                  googleLogout();
+                  setIsLogged(false) ;
+                  console.log(isLogged);
+                  // todo add logout=1 dans l'url et enlever le automatic login s'il est present
+                }}> Logout </button>
+
+
+              )}
 
         {isMobile ? (
           <div>
@@ -465,12 +486,14 @@ const MyCanvas = (props) => {
             </button>
           </div>
         ) : (
+          <div>
           <button onClick={() => handleClickRefresh()}>
             Refresh
           </button>
-          // <button onClick={() => { setIsMobile(!isMobile) }}>
-          //   Mobile controls
-          // </button>
+           <button onClick={() => { setIsMobile(!isMobile) }}>
+             Mobile controls
+           </button>
+          </div>
         )}
 
         <p className="coords">
