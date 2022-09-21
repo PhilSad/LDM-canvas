@@ -450,8 +450,7 @@ const MyCanvas = (props) => {
                   />
                   ) : (
 
-          />
-        ) : (
+          
 
           <button onClick={() => {
             googleLogout();
