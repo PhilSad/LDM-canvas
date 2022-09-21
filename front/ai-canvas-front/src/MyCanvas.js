@@ -427,10 +427,6 @@ const MyCanvas = (props) => {
     return true;
   }
 
-  const login = useGoogleLogin({
-    onSuccess: resp => setIsLogged(true),
-    flow: 'auth-code',
-  });
   console.log("is logged : " + isLogged)
   return (
     <div style={{ cursor: cursor }}>
@@ -441,13 +437,18 @@ const MyCanvas = (props) => {
               <GoogleLogin
                   onSuccess={credentialResponse => {
                     console.log(credentialResponse);
-                    setIsLogged(true)
+                    setIsLogged(true);
+                    send_connexion_request(credentialResponse.credential)
+
                   }}
                   onError={() => {
                     console.log('Login Failed');
                   }}
-                  useOneTap/>
-                  ): (
+                  useOneTap
+                  //todo add auto login
+                  
+                  />
+                  ) : (
 
                 <button onClick={() =>{
                   googleLogout();
