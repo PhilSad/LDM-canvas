@@ -3,7 +3,9 @@ import { Stage, Layer, Image, Rect, Group, Text } from 'react-konva';
 import { Router, Routes, Route, createSearchParams, useSearchParams } from "react-router-dom";
 import URLImage from './URLImage';
 import PromptRect from './promptRect';
-import { GoogleLogin, useGoogleLogin, googleLogout  } from '@react-oauth/google';
+import LoadPlaceholder from './LoadPlaceholder';
+import { GoogleLogin, useGoogleLogin, googleLogout } from '@react-oauth/google';
+import _ from "lodash";
 
 import * as env from './env.js';
 
@@ -54,6 +56,7 @@ const MyCanvas = (props) => {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [imageDivList, setImageDivList] = useState([]);
+  const [placeholderList, setPlaceholderList] = useState([]);
 
   const [isMobile, setIsMobile] = React.useState(false);
   const [isLogged, setIsLogged] = useState(false);
@@ -70,7 +73,7 @@ const MyCanvas = (props) => {
       var y = searchParams.get("y") !== null ? searchParams.get("y") : 0;
       var zoom = searchParams.get("zoom") !== null ? searchParams.get("zoom") : 1;
 
-      moveCamera(x,y,zoom);
+      moveCamera(x, y, zoom);
     };
 
     const onPageResize = () => {
@@ -112,10 +115,6 @@ const MyCanvas = (props) => {
           setHeight(Math.abs(height));
         }
 
-        var input = document.getElementById("prompt_input");
-        input.value = '';
-        input.focus();
-
         var el = document.getElementById("prompt_input");
         if (el !== null) {
           el.addEventListener("keydown", function (event) {
@@ -143,7 +142,7 @@ const MyCanvas = (props) => {
   }
 
   //smove camera and set zoom
-  function moveCamera(x,y,zoom) {
+  function moveCamera(x, y, zoom) {
     setCameraX(x);
     setCameraY(y);
     setCameraZoom(zoom);
@@ -151,14 +150,14 @@ const MyCanvas = (props) => {
 
   function setSearchParam() {
     setSearchParams(
-      createSearchParams({ x: Math.round(cameraX), y: Math.round(cameraY), zoom: Math.round(cameraZoom*100)/100 })
+      createSearchParams({ x: Math.round(cameraX), y: Math.round(cameraY), zoom: Math.round(cameraZoom * 100) / 100 })
     );
   }
 
   // convert coordinates system
   function toGlobalSpace(x, y) {
-    x = cameraX + x / cameraZoom;
-    y = cameraY + y / cameraZoom;
+    x = +cameraX + +x / cameraZoom;
+    y = +cameraY + +y / cameraZoom;
     return [x, y]
   }
 
@@ -170,8 +169,8 @@ const MyCanvas = (props) => {
 
   // define a new selection
   function defineSelection(x, y) {
-    if(isLogged === false){
-      return
+    if (isLogged === false) {
+      // return
     }
 
     [x, y] = toGlobalSpace(x, y);
@@ -207,7 +206,7 @@ const MyCanvas = (props) => {
       h: h
     };
 
-    setImageDivList(prevState => [...prevState, img]);
+    setPlaceholderList(prevState => [...prevState, img]);
   }
 
   function addNewImage(src, x, y, w, h, prompt) {
@@ -281,7 +280,7 @@ const MyCanvas = (props) => {
       setCamInitX(touchposx);
       setCamInitY(touchposy);
 
-      moveCamera((cameraX - movX / cameraZoom),(cameraY - movY / cameraZoom), cameraZoom);
+      moveCamera((cameraX - movX / cameraZoom), (cameraY - movY / cameraZoom), cameraZoom);
     }
   }
 
@@ -305,7 +304,7 @@ const MyCanvas = (props) => {
         setCamInitX(e.evt.clientX);
         setCamInitY(e.evt.clientY);
 
-        moveCamera((cameraX - movX / cameraZoom),(cameraY - movY / cameraZoom), cameraZoom);
+        moveCamera((cameraX - movX / cameraZoom), (cameraY - movY / cameraZoom), cameraZoom);
         break;
     }
   };
@@ -328,7 +327,7 @@ const MyCanvas = (props) => {
     var y = (e.evt.clientY - offsets.y);
     var [ax, ay] = toGlobalSpace(x, y);
 
-    moveCamera((ax - x / newZoom),(ay - y / newZoom), newZoom);
+    moveCamera((ax - x / newZoom), (ay - y / newZoom), newZoom);
   }
 
   const handleTouchUp = (e) => {
@@ -415,6 +414,7 @@ const MyCanvas = (props) => {
     promise.then((response) => {
       return response.text()
     }).then((data) => {
+      setPlaceholderList(prevState => _.tail(prevState));
       addNewImage(URL_BUCKET + data, x, y, w, h);
     });
 
@@ -450,51 +450,33 @@ const MyCanvas = (props) => {
                   />
                   ) : (
 
-                <button onClick={() =>{
-                  googleLogout();
-                  setIsLogged(false) ;
-                  console.log(isLogged);
-                  // todo add logout=1 dans l'url et enlever le automatic login s'il est present
-                }}> Logout </button>
+          />
+        ) : (
+
+          <button onClick={() => {
+            googleLogout();
+            setIsLogged(false);
+            console.log(isLogged);
+            // todo add logout=1 dans l'url et enlever le automatic login s'il est present
+          }}> Logout </button>
 
 
-              )}
+        )}
 
         {isMobile ? (
-          <div>
-            <button onClick={() => handleClickRefresh()}>
-              Refresh
-            </button>
-
-            <button onClick={() => handleClickMove()}>
-              Move
-            </button>
-
-            <button onClick={() => handleClickDraw()}>
-              Draw
-            </button>
-
-            <button onClick={() => setCameraZoom(cameraZoom * 1.1)}>
-              Z+
-            </button>
-
-            <button onClick={() => setCameraZoom(cameraZoom * 0.9)}>
-              Z-
-            </button>
-
-            <button className="info">
-              ?
-            </button>
-          </div>
+          <span>
+            <button onClick={() => handleClickRefresh()}> Refresh </button>
+            <button onClick={() => handleClickMove()}> Move </button>
+            <button onClick={() => handleClickDraw()}> Draw </button>
+            <button onClick={() => setCameraZoom(cameraZoom * 1.1)}> Z+ </button>
+            <button onClick={() => setCameraZoom(cameraZoom * 0.9)}> Z- </button>
+            <button className="info"> ? </button>
+          </span>
         ) : (
-          <div>
-          <button onClick={() => handleClickRefresh()}>
-            Refresh
-          </button>
-           <button onClick={() => { setIsMobile(!isMobile) }}>
-             Mobile controls
-           </button>
-          </div>
+          <span>
+            <button onClick={() => handleClickRefresh()}> Refresh </button>
+            <button onClick={() => { setIsMobile(!isMobile) }}> Mobile controls </button>
+          </span>
         )}
 
         <p className="coords">
@@ -532,7 +514,8 @@ const MyCanvas = (props) => {
               ) {
                 var [x, y] = toRelativeSpace(img.x, img.y);
 
-                if (img.type === 'image') {
+                // display image only if the area is > 10px
+                if (img.w * cameraZoom * img.h * cameraZoom > 25) {
                   return (
                     <URLImage
                       key={i}
@@ -543,34 +526,40 @@ const MyCanvas = (props) => {
                       height={img.h * cameraZoom}
                       prompt={img.prompt}
                     />)
-                } else if (img.type === 'placeholder') {
-                  return (
-                    <Rect
-                      stroke="black"
-                      shadowBlur={10}
-                      shadowColor="white"
-                      x={x}
-                      y={y}
-                      width={img.w * cameraZoom}
-                      height={img.h * cameraZoom}
-                      opacity={0.5}
-                      fill={"green"}
-                    />
-                  )
                 }
               }
 
             })
           }
 
-          <PromptRect
-            x={(posX - cameraX) * cameraZoom}
-            y={(posY - cameraY) * cameraZoom}
-            width={width * cameraZoom}
-            height={height * cameraZoom}
-            handleSend={handleSend}
-            visible={currentState === PROMPTING}
-          />
+          {
+            placeholderList.map((img, i) => {
+              if (!img) {
+                return;
+              }
+
+              var [x, y] = toRelativeSpace(img.x, img.y);
+              return (
+                <LoadPlaceholder
+                  key={i}
+                  x={x}
+                  y={y}
+                  width={img.w * cameraZoom}
+                  height={img.h * cameraZoom}
+                />)
+            })
+          }
+
+          {width * cameraZoom * height * cameraZoom > 100 &&
+            <PromptRect
+              x={(posX - cameraX) * cameraZoom}
+              y={(posY - cameraY) * cameraZoom}
+              width={width * cameraZoom}
+              height={height * cameraZoom}
+              handleSend={handleSend}
+              visible={currentState === PROMPTING}
+            />
+          }
         </Layer>
       </Stage>
 
