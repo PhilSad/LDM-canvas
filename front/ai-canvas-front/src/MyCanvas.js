@@ -6,8 +6,12 @@ import PromptRect from './promptRect';
 import LoadPlaceholder from './LoadPlaceholder';
 import { GoogleLogin, useGoogleLogin, googleLogout } from '@react-oauth/google';
 import _ from "lodash";
-
+import io from 'socket.io-client';
 import * as env from './env.js';
+
+import * as request from './requests'
+
+const socket = io("http://127.0.0.1:5000")
 
 var URL_BUCKET = "https://storage.googleapis.com/aicanvas-public-bucket/"
 var URL_IMAGINE = 'https://europe-west1-ai-canvas.cloudfunctions.net/function-imagen-1stgen'
@@ -60,6 +64,23 @@ const MyCanvas = (props) => {
 
   const [isMobile, setIsMobile] = React.useState(false);
   const [isLogged, setIsLogged] = useState(false);
+
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      console.log('This will run every second!');
+    }, 1000);
+
+
+    
+    socket.on('new_image', (path) => {
+      console.log('New Image ! ' + path);
+    });
+
+
+
+    return () => clearInterval(interval);
+  }, []);
 
 
   //on page load
@@ -438,7 +459,7 @@ const MyCanvas = (props) => {
                   onSuccess={credentialResponse => {
                     console.log(credentialResponse);
                     setIsLogged(true);
-                    send_connexion_request(credentialResponse.credential)
+                    // request.send_connexion_request(credentialResponse.credential)
 
                   }}
                   onError={() => {
