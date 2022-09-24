@@ -35,7 +35,7 @@ const CAMERA_ZOOM_SPEED = 1.1;
 const MIN_ZOOM = 0.01;
 
 const MyCanvas = (props) => {
-  const inputRef = useRef();
+  const stageRef = useRef();
 
   const [currentState, setCurrentState] = useState(IDLE);
   const [moveState, setMoveState] = useState(IDLE);
@@ -72,7 +72,7 @@ const MyCanvas = (props) => {
     }, 1000);
 
 
-    
+
     socket.on('new_image', (path) => {
       console.log('New Image ! ' + path);
     });
@@ -103,6 +103,8 @@ const MyCanvas = (props) => {
     }
 
     window.addEventListener("resize", onPageResize);
+
+    window.addEventListener('contextmenu', event => event.preventDefault());
 
     // Check if the page has already loaded
     if (document.readyState === "complete") {
@@ -256,7 +258,7 @@ const MyCanvas = (props) => {
       setCamInitY(touchposy);
       switchMoveState(MOVING)
     } else if (currentState === IDLE && moveState === IDLE) {
-      var offsets = inputRef.current.content.getBoundingClientRect();
+      var offsets = stageRef.current.content.getBoundingClientRect();
       var x = (touchposx - offsets.x);
       var y = (touchposy - offsets.y);
       defineSelection(x, y);
@@ -266,7 +268,7 @@ const MyCanvas = (props) => {
   const handleMouseDown = (e) => {
     switch (e.evt.which) {
       case 1:
-        var offsets = inputRef.current.content.getBoundingClientRect();
+        var offsets = stageRef.current.content.getBoundingClientRect();
         var x = (e.evt.clientX - offsets.x);
         var y = (e.evt.clientY - offsets.y);
         defineSelection(x, y);
@@ -278,12 +280,18 @@ const MyCanvas = (props) => {
         switchMoveState(MOVING);
         break;
 
+      case 3:
+        setCamInitX(e.evt.clientX);
+        setCamInitY(e.evt.clientY);
+        switchMoveState(MOVING);
+        break;
+
       default:
     }
   };
 
   const handleTouchMove = (e) => {
-    var offsets = inputRef.current.content.getBoundingClientRect();
+    var offsets = stageRef.current.content.getBoundingClientRect();
 
     var touchposx = e.currentTarget.pointerPos.x;
     var touchposy = e.currentTarget.pointerPos.y;
@@ -306,7 +314,7 @@ const MyCanvas = (props) => {
   }
 
   const handleMouseMove = (e) => {
-    var offsets = inputRef.current.content.getBoundingClientRect();
+    var offsets = stageRef.current.content.getBoundingClientRect();
 
     switch (currentState) {
       case SELECTING:
@@ -343,7 +351,7 @@ const MyCanvas = (props) => {
 
     newZoom = Math.max(newZoom, MIN_ZOOM);
 
-    var offsets = inputRef.current.content.getBoundingClientRect();
+    var offsets = stageRef.current.content.getBoundingClientRect();
     var x = (e.evt.clientX - offsets.x);
     var y = (e.evt.clientY - offsets.y);
     var [ax, ay] = toGlobalSpace(x, y);
@@ -373,11 +381,24 @@ const MyCanvas = (props) => {
         switchMoveState(IDLE);
         break;
 
+      case 3:
+        switchMoveState(IDLE);
+        break;
+
       default:
     }
 
     setSearchParam();
   };
+
+  const handleSaveImage = () => {
+    var pixelRatio = 1; //TODO complicated math to know the ratio
+    //TODO error if all selection is not in frame
+    //TODO crop image
+    //https://www.delftstack.com/howto/javascript/javascript-crop-image/
+    const uri = stageRef.current.toDataURL({pixelRatio: pixelRatio});
+    console.log(uri);
+  }
 
   const handleClickRefresh = () => {
     var url_get_image_with_params = URL_GET_IMAGES + '?posX=0&posY=0&width=100&height=100';
@@ -454,24 +475,24 @@ const MyCanvas = (props) => {
 
       <div className="bar">
 
-        { isLogged === false ? (      
-              <GoogleLogin
-                  onSuccess={credentialResponse => {
-                    console.log(credentialResponse);
-                    setIsLogged(true);
-                    // request.send_connexion_request(credentialResponse.credential)
+        {isLogged === false ? (
+          <GoogleLogin
+            onSuccess={credentialResponse => {
+              console.log(credentialResponse);
+              setIsLogged(true);
+              // request.send_connexion_request(credentialResponse.credential)
 
-                  }}
-                  onError={() => {
-                    console.log('Login Failed');
-                  }}
-                  useOneTap
-                  //todo add auto login
-                  
-                  />
-                  ) : (
+            }}
+            onError={() => {
+              console.log('Login Failed');
+            }}
+            useOneTap
+          //todo add auto login
 
-          
+          />
+        ) : (
+
+
 
           <button onClick={() => {
             googleLogout();
@@ -496,6 +517,7 @@ const MyCanvas = (props) => {
           <span>
             <button onClick={() => handleClickRefresh()}> Refresh </button>
             <button onClick={() => { setIsMobile(!isMobile) }}> Mobile controls </button>
+            <button onClick={() => handleSaveImage()}> Save Image </button>
           </span>
         )}
 
@@ -506,7 +528,7 @@ const MyCanvas = (props) => {
       </div>
 
       <Stage
-        ref={inputRef}
+        ref={stageRef}
         width={canvasW}
         height={canvasH}
 
