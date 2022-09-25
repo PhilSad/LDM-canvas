@@ -3,6 +3,7 @@ import { Stage, Layer, Image, Rect, Group, Text } from 'react-konva';
 import { Router, Routes, Route, createSearchParams, useSearchParams } from "react-router-dom";
 import URLImage from './URLImage';
 import PromptRect from './promptRect';
+// import ImageSaver from './ImageSaver';
 import LoadPlaceholder from './LoadPlaceholder';
 import { GoogleLogin, useGoogleLogin, googleLogout } from '@react-oauth/google';
 import _ from "lodash";
@@ -35,7 +36,16 @@ const CAMERA_ZOOM_SPEED = 1.1;
 const MIN_ZOOM = 0.01;
 
 const MyCanvas = (props) => {
-  const stageRef = useRef();
+  const stageRef = useRef(null);
+  const layerRef = useRef(null);
+
+  const [imageSave, setImageSave] = useState({
+    x: 0,
+    y: 0,
+    w: 512,
+    h: 512,
+    image: new window.Image()
+  });
 
   const [currentState, setCurrentState] = useState(IDLE);
   const [moveState, setMoveState] = useState(IDLE);
@@ -68,7 +78,7 @@ const MyCanvas = (props) => {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      console.log('This will run every second!');
+      // console.log('This will run every second!');
     }, 1000);
 
 
@@ -392,12 +402,31 @@ const MyCanvas = (props) => {
   };
 
   const handleSaveImage = () => {
-    var pixelRatio = 1; //TODO complicated math to know the ratio
+
     //TODO error if all selection is not in frame
     //TODO crop image
     //https://www.delftstack.com/howto/javascript/javascript-crop-image/
-    const uri = stageRef.current.toDataURL({pixelRatio: pixelRatio});
-    console.log(uri);
+
+    var pixelRatio = 1; //TODO complicated math to know the ratio
+
+    let image = new window.Image();
+    image.src = stageRef.current.toDataURL();
+
+    console.log(stageRef.current.toDataURL());
+
+    //TODO complicated math to know the actual dimension
+
+    var [x, y] = toRelativeSpace(posX, posY);
+
+    let imageSaveInfo = {
+      x: 0,
+      y: 0,
+      w: 512,
+      h: 512,
+      image: image
+    }
+
+    setImageSave(imageSaveInfo);
   }
 
   const handleClickRefresh = () => {
@@ -469,7 +498,6 @@ const MyCanvas = (props) => {
     return true;
   }
 
-  console.log("is logged : " + isLogged)
   return (
     <div style={{ cursor: cursor }}>
 
@@ -529,6 +557,7 @@ const MyCanvas = (props) => {
 
       <Stage
         ref={stageRef}
+
         width={canvasW}
         height={canvasH}
 
@@ -542,7 +571,7 @@ const MyCanvas = (props) => {
         onTouchEnd={handleTouchUp}
       >
 
-        <Layer>
+        <Layer ref={layerRef}>
           {
             imageDivList.map((img, i) => {
               var cameraBox = {
@@ -603,6 +632,20 @@ const MyCanvas = (props) => {
             />
           }
         </Layer>
+
+        <Layer>
+          <Image
+            x={imageSave.x}
+            y={imageSave.y}
+            width={imageSave.w}
+            height={imageSave.h}
+            image={imageSave.image}
+            stroke="red"
+            strokeWidth={5}
+          />
+           
+        </Layer>
+
       </Stage>
 
     </div>

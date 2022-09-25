@@ -21,6 +21,7 @@ class URLImage extends React.Component {
         // save to "this" to remove "load" handler on unmount
         this.image = new window.Image();
         this.image.src = this.props.src;
+        // this.image.crossOrigin = 'Anonymous';
         this.image.addEventListener('load', this.handleLoad);
     }
     handleLoad = () => {
@@ -62,7 +63,7 @@ class URLImage extends React.Component {
                         this.imageNode = node;
                     }}
                     stroke="red"
-                    strokeWidth={this.state.infoVisible ? 0 : 0}
+                    strokeWidth={this.state.infoVisible ? 1 : 0}
                 />
                 {this.state.infoVisible &&
 
