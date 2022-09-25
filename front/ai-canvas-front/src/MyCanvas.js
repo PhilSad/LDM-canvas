@@ -8,6 +8,8 @@ import { GoogleLogin, useGoogleLogin, googleLogout } from '@react-oauth/google';
 import _ from "lodash";
 import io from 'socket.io-client';
 import * as env from './env.js';
+import Amplify from '@aws-amplify/core'
+import * as gen from './generated'
 
 import * as request from './requests'
 
@@ -33,6 +35,10 @@ const IDLE = 0, MOVING = 4, READY = 3;
 const CAMERA_SPEED = 1;
 const CAMERA_ZOOM_SPEED = 1.1;
 const MIN_ZOOM = 0.01;
+
+
+
+
 
 const MyCanvas = (props) => {
   const stageRef = useRef();
@@ -65,22 +71,19 @@ const MyCanvas = (props) => {
   const [isMobile, setIsMobile] = React.useState(false);
   const [isLogged, setIsLogged] = useState(false);
 
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      console.log('This will run every second!');
-    }, 1000);
+  const [room, setRoom] = useState('default');
 
 
-
-    socket.on('new_image', (path) => {
-      console.log('New Image ! ' + path);
-    });
-
+  function handle_receive_from_socket(data){
+    addNewImage(data.src, data.x, data.y, data.width, data.height, data.prompt)
+  }
 
 
-    return () => clearInterval(interval);
-  }, []);
+    useEffect(() => {
+      //Subscribe via WebSockets
+      const subscription = gen.subscribe(room, ({ data }) => handle_receive_from_socket(data))
+      return () => subscription.unsubscribe()
+  }, [room])
 
 
   //on page load
