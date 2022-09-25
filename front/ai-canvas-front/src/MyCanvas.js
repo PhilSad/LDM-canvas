@@ -7,13 +7,10 @@ import PromptRect from './promptRect';
 import LoadPlaceholder from './LoadPlaceholder';
 import { GoogleLogin, useGoogleLogin, googleLogout } from '@react-oauth/google';
 import _ from "lodash";
-import io from 'socket.io-client';
 import ImageSaverLayer from './imageSaveLayer';
 import * as env from './env.js';
 
 import * as request from './requests'
-
-const socket = io("http://127.0.0.1:5000")
 
 var URL_BUCKET = "https://storage.googleapis.com/aicanvas-public-bucket/"
 var URL_IMAGINE = 'https://europe-west1-ai-canvas.cloudfunctions.net/function-imagen-1stgen'
@@ -76,14 +73,6 @@ const MyCanvas = (props) => {
     const interval = setInterval(() => {
       // console.log('This will run every second!');
     }, 1000);
-
-
-
-    socket.on('new_image', (path) => {
-      console.log('New Image ! ' + path);
-    });
-
-
 
     return () => clearInterval(interval);
   }, []);
