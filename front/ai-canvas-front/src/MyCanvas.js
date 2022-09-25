@@ -8,6 +8,7 @@ import LoadPlaceholder from './LoadPlaceholder';
 import { GoogleLogin, useGoogleLogin, googleLogout } from '@react-oauth/google';
 import _ from "lodash";
 import io from 'socket.io-client';
+import ImageSaverLayer from './imageSaveLayer';
 import * as env from './env.js';
 
 import * as request from './requests'
@@ -37,15 +38,10 @@ const MIN_ZOOM = 0.01;
 
 const MyCanvas = (props) => {
   const stageRef = useRef(null);
-  const layerRef = useRef(null);
+  const imageLayerRef = useRef(null);
+  const imageSaveRef = useRef(null);
 
-  const [imageSave, setImageSave] = useState({
-    x: 0,
-    y: 0,
-    w: 512,
-    h: 512,
-    image: new window.Image()
-  });
+  const [imageSave, setImageSave] = useState(null);
 
   const [currentState, setCurrentState] = useState(IDLE);
   const [moveState, setMoveState] = useState(IDLE);
@@ -137,6 +133,9 @@ const MyCanvas = (props) => {
         break;
 
       case PROMPTING:
+        //prepare save image in case of inpainting
+        cropImageToSelection();
+
         //set rect new position
         if (width < 0) {
           setPosX(posX + width);
@@ -401,28 +400,23 @@ const MyCanvas = (props) => {
     setSearchParam();
   };
 
-  const handleSaveImage = () => {
-
-    //TODO error if all selection is not in frame
-    //TODO crop image
-    //https://www.delftstack.com/howto/javascript/javascript-crop-image/
-
-    var pixelRatio = 1; //TODO complicated math to know the ratio
-
+  const cropImageToSelection = () => {
     let image = new window.Image();
-    image.src = stageRef.current.toDataURL();
-
-    console.log(stageRef.current.toDataURL());
-
-    //TODO complicated math to know the actual dimension
-
+    
+    
     var [x, y] = toRelativeSpace(posX, posY);
+    var [w, h] = [width * cameraZoom, height * cameraZoom];
+    
+    // the biggest side must be 512px
+    var pixelRatio = 512/Math.max(w,h);
+
+    image.src = imageLayerRef.current.toDataURL({pixelRatio: pixelRatio});
 
     let imageSaveInfo = {
-      x: 0,
-      y: 0,
-      w: 512,
-      h: 512,
+      x: x * pixelRatio,
+      y: y * pixelRatio,
+      w: w * pixelRatio,
+      h: h * pixelRatio,
       image: image
     }
 
@@ -545,7 +539,7 @@ const MyCanvas = (props) => {
           <span>
             <button onClick={() => handleClickRefresh()}> Refresh </button>
             <button onClick={() => { setIsMobile(!isMobile) }}> Mobile controls </button>
-            <button onClick={() => handleSaveImage()}> Save Image </button>
+            <button onClick={() => { imageSaveRef.current.download() }}> Save Image </button>
           </span>
         )}
 
@@ -571,7 +565,7 @@ const MyCanvas = (props) => {
         onTouchEnd={handleTouchUp}
       >
 
-        <Layer ref={layerRef}>
+        <Layer ref={imageLayerRef}>
           {
             imageDivList.map((img, i) => {
               var cameraBox = {
@@ -602,7 +596,9 @@ const MyCanvas = (props) => {
 
             })
           }
+        </Layer>
 
+        <Layer>
           {
             placeholderList.map((img, i) => {
               if (!img) {
@@ -633,20 +629,15 @@ const MyCanvas = (props) => {
           }
         </Layer>
 
-        <Layer>
-          <Image
-            x={imageSave.x}
-            y={imageSave.y}
-            width={imageSave.w}
-            height={imageSave.h}
-            image={imageSave.image}
-            stroke="red"
-            strokeWidth={5}
-          />
-           
-        </Layer>
-
       </Stage>
+
+      {
+        imageSave !== null &&
+        <ImageSaverLayer
+          ref = {imageSaveRef}
+          imageSave={imageSave}
+        />
+      }
 
     </div>
   );

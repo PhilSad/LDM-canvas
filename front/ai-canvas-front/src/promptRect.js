@@ -7,7 +7,7 @@ function PromptRect(props) {
 
     const style = {
         borderColor: "rgba(215, 215, 215, 1)",
-        borderWidth: minSize*0.0025+"em",
+        borderWidth: minSize * 0.0025 + "em",
         borderStyle: "solid",
         boxSizing: "border-box",
         backgroundColor: "white",
@@ -41,7 +41,7 @@ function PromptRect(props) {
 
                 {props.visible &&
                     <Group
-                        y={-50}
+                        y={-50 + (props.height < 0 ? props.height : 0)}
                         x={props.width - props.width / 2 - 150}
                     >
                         <Html>
