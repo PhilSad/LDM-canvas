@@ -3,21 +3,10 @@ import { Rect, Group } from 'react-konva';
 import { Html } from 'react-konva-utils';
 
 function PromptRect(props) {
-    var minSize = Math.min(props.width, props.height)
-
-    const style = {
-        borderColor: "rgba(215, 215, 215, 1)",
-        borderWidth: minSize * 0.0025 + "em",
-        borderStyle: "solid",
-        boxSizing: "border-box",
-        backgroundColor: "white",
-        display: "block",
-        marginLeft: "auto",
-        marginRight: "auto",
-        width: props.width,
-        height: props.height,
-        position: "relative"
-    }
+    var width = props.width;
+    var height = props.height;
+    var x = props.x;
+    var y = props.y;
 
     return (
         <Group
@@ -25,8 +14,8 @@ function PromptRect(props) {
             y={0}
         >
             <Group
-                x={props.x}
-                y={props.y}
+                x={x}
+                y={y}
                 fill="green"
             >
                 <Rect
@@ -34,15 +23,15 @@ function PromptRect(props) {
                     dash={[10, 10]}
                     shadowBlur={10}
                     shadowColor="white"
-                    width={props.width}
-                    height={props.height}
+                    width={width}
+                    height={height}
                     fill={"rgba(240,240,240,0.5)"}
                 />
 
                 {props.visible &&
                     <Group
-                        y={-50 + (props.height < 0 ? props.height : 0)}
-                        x={props.width - props.width / 2 - 150}
+                        y={-50 + (height < 0 ? height : 0)}
+                        x={width - width / 2 - 150}
                     >
                         <Html>
                             <div>

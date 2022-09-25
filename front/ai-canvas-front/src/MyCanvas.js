@@ -133,9 +133,6 @@ const MyCanvas = (props) => {
         break;
 
       case PROMPTING:
-        //prepare save image in case of inpainting
-        cropImageToSelection();
-
         //set rect new position
         if (width < 0) {
           setPosX(posX + width);
@@ -329,6 +326,7 @@ const MyCanvas = (props) => {
       case SELECTING:
         var w = ((e.evt.clientX - offsets.x) / cameraZoom + cameraX - posX);
         var h = ((e.evt.clientY - offsets.y) / cameraZoom + cameraY - posY);
+
         setWidth(w);
         setHeight(h);
         break;
@@ -539,6 +537,7 @@ const MyCanvas = (props) => {
           <span>
             <button onClick={() => handleClickRefresh()}> Refresh </button>
             <button onClick={() => { setIsMobile(!isMobile) }}> Mobile controls </button>
+            <button onClick={() => { cropImageToSelection() }}> Pre-save </button>
             <button onClick={() => { imageSaveRef.current.download() }}> Save Image </button>
           </span>
         )}
@@ -617,7 +616,7 @@ const MyCanvas = (props) => {
             })
           }
 
-          {width * cameraZoom * height * cameraZoom > 100 &&
+          {Math.abs(width * cameraZoom * height * cameraZoom) > 100 &&
             <PromptRect
               x={(posX - cameraX) * cameraZoom}
               y={(posY - cameraY) * cameraZoom}
