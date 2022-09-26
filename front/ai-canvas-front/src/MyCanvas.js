@@ -74,6 +74,15 @@ const MyCanvas = (props) => {
   const [room, setRoom] = useState('default');
 
 
+
+      //Publish data to subscribed clients
+    async function handleSubmit(evt) {
+        evt.preventDefault()
+        evt.stopPropagation()
+        let send_data = '{"from":"client"}'
+        await gen.publish(room, JSON.stringify(JSON.parse(send_data), null, 2))
+    }
+
   function handle_receive_from_socket(data){
     console.log(data);
     // addNewImage(data.src, data.x, data.y, data.width, data.height, data.prompt)
@@ -507,6 +516,8 @@ const MyCanvas = (props) => {
 
 
         )}
+
+          <button onClick={handleSubmit}> send socket </button>
 
         {isMobile ? (
           <span>
