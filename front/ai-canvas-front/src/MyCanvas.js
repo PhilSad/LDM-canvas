@@ -13,7 +13,7 @@ import * as gen from './generated'
 
 import * as request from './requests'
 
-const socket = io("http://127.0.0.1:5000")
+Amplify.configure(gen.config)
 
 var URL_BUCKET = "https://storage.googleapis.com/aicanvas-public-bucket/"
 var URL_IMAGINE = 'https://europe-west1-ai-canvas.cloudfunctions.net/function-imagen-1stgen'
@@ -75,11 +75,12 @@ const MyCanvas = (props) => {
 
 
   function handle_receive_from_socket(data){
-    addNewImage(data.src, data.x, data.y, data.width, data.height, data.prompt)
+    console.log(data);
+    // addNewImage(data.src, data.x, data.y, data.width, data.height, data.prompt)
   }
 
-
-    useEffect(() => {
+  //socket
+  useEffect(() => {
       //Subscribe via WebSockets
       const subscription = gen.subscribe(room, ({ data }) => handle_receive_from_socket(data))
       return () => subscription.unsubscribe()
