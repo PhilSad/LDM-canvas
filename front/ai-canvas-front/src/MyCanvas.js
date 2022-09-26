@@ -84,8 +84,11 @@ const MyCanvas = (props) => {
     }
 
   function handle_receive_from_socket(data){
-    console.log(data);
-    // addNewImage(data.src, data.x, data.y, data.width, data.height, data.prompt)
+    data = JSON.parse(data)
+    console.log(data)
+    setPlaceholderList(prevState => _.tail(prevState));
+    addNewImage(URL_BUCKET + data.path, data.posX, data.posY, data.width, data.height, data.prompt)
+    console.log('added image from ' + URL_BUCKET + data.path)
   }
 
   //socket
@@ -462,16 +465,17 @@ const MyCanvas = (props) => {
 
     hideSelectionRect();
 
-    const promise = fetch(url_with_params);
+    fetch(url_with_params);
 
     addNewPlaceholder(x, y, w, h);
 
-    promise.then((response) => {
-      return response.text()
-    }).then((data) => {
-      setPlaceholderList(prevState => _.tail(prevState));
-      addNewImage(URL_BUCKET + data, x, y, w, h);
-    });
+    // promise.then((response) => {
+    //   return response.text()
+    // })
+    // .then((data) => {
+    //   setPlaceholderList(prevState => _.tail(prevState));
+    //   addNewImage(URL_BUCKET + data, x, y, w, h);
+    // });
 
   };
 
@@ -482,7 +486,7 @@ const MyCanvas = (props) => {
     return true;
   }
 
-  console.log("is logged : " + isLogged)
+  // console.log("is logged : " + isLogged)
   return (
     <div style={{ cursor: cursor }}>
 
