@@ -84,15 +84,15 @@ const MyCanvas = (props) => {
 
 
 
-      //Publish data to subscribed clients
-    async function handleSubmit(evt) {
-        evt.preventDefault()
-        evt.stopPropagation()
-        let send_data = '{"from":"client"}'
-        await gen.publish(room, JSON.stringify(JSON.parse(send_data), null, 2))
-    }
+  //Publish data to subscribed clients
+  async function handleSubmit(evt) {
+    evt.preventDefault()
+    evt.stopPropagation()
+    let send_data = '{"from":"client"}'
+    await gen.publish(room, JSON.stringify(JSON.parse(send_data), null, 2))
+  }
 
-  function handle_receive_from_socket(data){
+  function handle_receive_from_socket(data) {
     data = JSON.parse(data)
     console.log(data)
     setPlaceholderList(prevState => _.tail(prevState));
@@ -102,9 +102,9 @@ const MyCanvas = (props) => {
 
   //socket
   useEffect(() => {
-      //Subscribe via WebSockets
-      const subscription = gen.subscribe(room, ({ data }) => handle_receive_from_socket(data))
-      return () => subscription.unsubscribe()
+    //Subscribe via WebSockets
+    const subscription = gen.subscribe(room, ({ data }) => handle_receive_from_socket(data))
+    return () => subscription.unsubscribe()
   }, [room])
 
 
@@ -162,7 +162,7 @@ const MyCanvas = (props) => {
           setPosY(posY + height);
           setHeight(Math.abs(height));
         }
-        
+
         break;
     }
     setCurrentState(state);
@@ -411,15 +411,15 @@ const MyCanvas = (props) => {
 
   const cropImageToSelection = () => {
     let image = new window.Image();
-    
-    
+
+
     var [x, y] = toRelativeSpace(posX, posY);
     var [w, h] = [width * cameraZoom, height * cameraZoom];
-    
-    // the biggest side must be 512px
-    var pixelRatio = 512/Math.max(w,h);
 
-    image.src = imageLayerRef.current.toDataURL({pixelRatio: pixelRatio});
+    // the biggest side must be 512px
+    var pixelRatio = 512 / Math.max(w, h);
+
+    image.src = imageLayerRef.current.toDataURL({ pixelRatio: pixelRatio });
 
     let imageSaveInfo = {
       x: x * pixelRatio,
@@ -477,14 +477,14 @@ const MyCanvas = (props) => {
     var prompt = document.getElementById('prompt_input').value
     document.getElementById('prompt_input').value = ''
 
-    var url_with_params = URL_IP_ALPHA + 
-    '?prompt=' + btoa(prompt) +
-    '&room=' + room +
-    '&posX=' + x +
-    '&posY=' + y +
-    '&width=' + w +
-    '&height=' + h +
-    '&init_image=' + imageSaveRef.current.uri();
+    var url_with_params = URL_IP_ALPHA +
+      '?prompt=' + btoa(prompt) +
+      '&room=' + room +
+      '&posX=' + x +
+      '&posY=' + y +
+      '&width=' + w +
+      '&height=' + h +
+      '&init_image=' + imageSaveRef.current.uri();
 
     hideSelectionRect();
 
@@ -494,7 +494,7 @@ const MyCanvas = (props) => {
   }
 
   const handleImg2Img = () => {
-    
+
   }
 
   const handleSave = () => {
@@ -512,24 +512,35 @@ const MyCanvas = (props) => {
     var y = Math.floor(posY)
     var w = Math.floor(width)
     var h = Math.floor(height)
-
     var prompt = document.getElementById('prompt_input').value
+
     document.getElementById('prompt_input').value = ''
-
-    var url_with_params = URL_IP_ALPHA + 
-    '?prompt=' + btoa(prompt) +
-    '&room=' + room +
-    '&posX=' + x +
-    '&posY=' + y +
-    '&width=' + w +
-    '&height=' + h +
-    '&init_image=' + imageSaveRef.current.uri();
-
-    console.log(url_with_params);
 
     hideSelectionRect();
 
-    fetch(url_with_params);
+    var imageParamsDict = {
+      'prompt': btoa(prompt),
+      'room': room,
+      'posX': x,
+      'posY': y,
+      'width': w,
+      'height': h,
+      'init_image': imageSaveRef.current.uri()
+    }
+
+    let xhr = new XMLHttpRequest();
+    xhr.open("POST", URL_IP_ALPHA);
+    xhr.setRequestHeader("Accept", "application/json");
+    xhr.setRequestHeader("Content-Type", "application/json");
+    xhr.send(imageParamsDict);
+
+    // fetch(URL_IP_ALPHA, {
+    //   method: 'POST',
+    //   headers: {
+    //     'Content-Type': 'application/json',
+    //   },
+    //   body: JSON.stringify(imageParamsDict),
+    // })
 
     addNewPlaceholder(x, y, w, h);
   };
@@ -575,7 +586,7 @@ const MyCanvas = (props) => {
 
         )}
 
-          <button onClick={handleSubmit}> send socket </button>
+        <button onClick={handleSubmit}> send socket </button>
 
         {isMobile ? (
           <span>
@@ -689,7 +700,7 @@ const MyCanvas = (props) => {
       {
         imageSave !== null &&
         <ImageSaverLayer
-          ref = {imageSaveRef}
+          ref={imageSaveRef}
           imageSave={imageSave}
         />
       }
