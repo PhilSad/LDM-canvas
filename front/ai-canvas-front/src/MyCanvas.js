@@ -9,12 +9,17 @@ import { GoogleLogin, useGoogleLogin, googleLogout } from '@react-oauth/google';
 import _ from "lodash";
 import ImageSaverLayer from './imageSaveLayer';
 import * as env from './env.js';
+import Amplify from '@aws-amplify/core'
+import * as gen from './generated'
 
 import * as request from './requests'
 
+Amplify.configure(gen.config)
+
 var URL_BUCKET = "https://storage.googleapis.com/aicanvas-public-bucket/"
-var URL_IMAGINE = 'https://europe-west1-ai-canvas.cloudfunctions.net/function-imagen-1stgen'
-// var URL_IMAGINE = "https://gpu.apipicaisso.ml/imagine/"
+var URL_NEW_IMAGE = 'https://europe-west1-ai-canvas.cloudfunctions.net/new_image'
+var URL_IP_MASK = 'https://europe-west1-ai-canvas.cloudfunctions.net/inpaint_mask'
+var URL_IP_ALPHA = 'https://europe-west1-ai-canvas.cloudfunctions.net/inpaint_alpha'
 
 var URL_START_VM = "https://function-start-vm-jujlepts2a-ew.a.run.app"
 var URL_STOP_VM = "https://function-stop-jujlepts2a-ew.a.run.app"
@@ -23,15 +28,23 @@ var URL_STATUS_VM = "https://function-get-status-gpu-jujlepts2a-ew.a.run.app"
 var URL_GET_IMAGES = 'https://europe-west1-ai-canvas.cloudfunctions.net/function-get_images_for_pos'
 
 //draw states
-const SELECTING = 1, PROMPTING = 2;
+const SELECTING = "SELECTING";
+const PROMPTING = "PROMPTING";
+const INPUT_TYPE = "INPUT_TYPE";
 
 //move state
-const IDLE = 0, MOVING = 4, READY = 3;
+const IDLE = "IDLE";
+const MOVING = "MOVING";
+const READY = "READY";
 
 //camera speed
 const CAMERA_SPEED = 1;
 const CAMERA_ZOOM_SPEED = 1.1;
 const MIN_ZOOM = 0.01;
+
+
+
+
 
 const MyCanvas = (props) => {
   const stageRef = useRef(null);
@@ -68,14 +81,32 @@ const MyCanvas = (props) => {
   const [isMobile, setIsMobile] = React.useState(false);
   const [isLogged, setIsLogged] = useState(false);
 
+  const [room, setRoom] = useState('default');
 
+
+
+      //Publish data to subscribed clients
+    async function handleSubmit(evt) {
+        evt.preventDefault()
+        evt.stopPropagation()
+        let send_data = '{"from":"client"}'
+        await gen.publish(room, JSON.stringify(JSON.parse(send_data), null, 2))
+    }
+
+  function handle_receive_from_socket(data){
+    data = JSON.parse(data)
+    console.log(data)
+    setPlaceholderList(prevState => _.tail(prevState));
+    addNewImage(URL_BUCKET + data.path, data.posX, data.posY, data.width, data.height, data.prompt)
+    console.log('added image from ' + URL_BUCKET + data.path)
+  }
+
+  //socket
   useEffect(() => {
-    const interval = setInterval(() => {
-      // console.log('This will run every second!');
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, []);
+      //Subscribe via WebSockets
+      const subscription = gen.subscribe(room, ({ data }) => handle_receive_from_socket(data))
+      return () => subscription.unsubscribe()
+  }, [room])
 
 
   //on page load
@@ -121,7 +152,7 @@ const MyCanvas = (props) => {
       case SELECTING:
         break;
 
-      case PROMPTING:
+      case INPUT_TYPE:
         //set rect new position
         if (width < 0) {
           setPosX(posX + width);
@@ -132,15 +163,7 @@ const MyCanvas = (props) => {
           setPosY(posY + height);
           setHeight(Math.abs(height));
         }
-
-        var el = document.getElementById("prompt_input");
-        if (el !== null) {
-          el.addEventListener("keydown", function (event) {
-            if (event.key === "Enter") {
-              handleSend();
-            }
-          });
-        }
+        
         break;
     }
     setCurrentState(state);
@@ -359,7 +382,7 @@ const MyCanvas = (props) => {
     if (currentState === IDLE && moveState === MOVING) {
       switchMoveState(READY);
     } else if (currentState === SELECTING && moveState === IDLE) {
-      switchState(PROMPTING);
+      switchState(INPUT_TYPE);
     }
 
     setSearchParam();
@@ -369,7 +392,7 @@ const MyCanvas = (props) => {
     switch (e.evt.which) {
       case 1:
         if (currentState === SELECTING) {
-          switchState(PROMPTING);
+          switchState(INPUT_TYPE);
         }
         break;
 
@@ -446,6 +469,23 @@ const MyCanvas = (props) => {
     console.log(imageDivList);
   };
 
+  const handleInpaint = () => {
+
+  }
+
+  const handleImg2Img = () => {
+    
+  }
+
+  const handleSave = () => {
+    cropImageToSelection();
+    imageSaveRef.current.download();
+  }
+
+  const handleNewImage = () => {
+    switchState(PROMPTING);
+  }
+
   const handleSend = () => {
     var x = Math.floor(posX)
     var y = Math.floor(posY)
@@ -455,21 +495,21 @@ const MyCanvas = (props) => {
     var prompt = document.getElementById('prompt_input').value
     document.getElementById('prompt_input').value = ''
 
-    var url_with_params = URL_IMAGINE + '?prompt=' + btoa(prompt) + '&posX=' + x + '&posY=' + y + '&width=' + w + '&height=' + h;
+    var url_with_params = URL_NEW_IMAGE + 
+    '?prompt=' + btoa(prompt) +
+    '&room=' + 'tmp' +
+    '&posX=' + x +
+    '&posY=' + y +
+    '&width=' + w +
+    '&height=' + h;
+
+    console.log(url_with_params)
 
     hideSelectionRect();
 
-    const promise = fetch(url_with_params);
+    fetch(url_with_params);
 
     addNewPlaceholder(x, y, w, h);
-
-    promise.then((response) => {
-      return response.text()
-    }).then((data) => {
-      setPlaceholderList(prevState => _.tail(prevState));
-      addNewImage(URL_BUCKET + data, x, y, w, h);
-    });
-
   };
 
   // true if rectangle a and b overlap
@@ -513,6 +553,8 @@ const MyCanvas = (props) => {
 
         )}
 
+          <button onClick={handleSubmit}> send socket </button>
+
         {isMobile ? (
           <span>
             <button onClick={() => handleClickRefresh()}> Refresh </button>
@@ -527,7 +569,6 @@ const MyCanvas = (props) => {
             <button onClick={() => handleClickRefresh()}> Refresh </button>
             <button onClick={() => { setIsMobile(!isMobile) }}> Mobile controls </button>
             <button onClick={() => { cropImageToSelection() }}> Pre-save </button>
-            <button onClick={() => { imageSaveRef.current.download() }}> Save Image </button>
           </span>
         )}
 
@@ -612,7 +653,11 @@ const MyCanvas = (props) => {
               width={width * cameraZoom}
               height={height * cameraZoom}
               handleSend={handleSend}
-              visible={currentState === PROMPTING}
+              handleNewImage={handleNewImage}
+              handleInpaint={handleInpaint}
+              handleImg2Img={handleImg2Img}
+              handleSave={handleSave}
+              currentState={currentState}
             />
           }
         </Layer>
