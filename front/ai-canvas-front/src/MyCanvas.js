@@ -3,15 +3,14 @@ import { Stage, Layer, Image, Rect, Group, Text } from 'react-konva';
 import { Router, Routes, Route, createSearchParams, useSearchParams } from "react-router-dom";
 import URLImage from './URLImage';
 import PromptRect from './promptRect';
+// import ImageSaver from './ImageSaver';
 import LoadPlaceholder from './LoadPlaceholder';
 import { GoogleLogin, useGoogleLogin, googleLogout } from '@react-oauth/google';
 import _ from "lodash";
-import io from 'socket.io-client';
+import ImageSaverLayer from './imageSaveLayer';
 import * as env from './env.js';
 
 import * as request from './requests'
-
-const socket = io("http://127.0.0.1:5000")
 
 var URL_BUCKET = "https://storage.googleapis.com/aicanvas-public-bucket/"
 var URL_IMAGINE = 'https://europe-west1-ai-canvas.cloudfunctions.net/function-imagen-1stgen'
@@ -35,7 +34,11 @@ const CAMERA_ZOOM_SPEED = 1.1;
 const MIN_ZOOM = 0.01;
 
 const MyCanvas = (props) => {
-  const stageRef = useRef();
+  const stageRef = useRef(null);
+  const imageLayerRef = useRef(null);
+  const imageSaveRef = useRef(null);
+
+  const [imageSave, setImageSave] = useState(null);
 
   const [currentState, setCurrentState] = useState(IDLE);
   const [moveState, setMoveState] = useState(IDLE);
@@ -68,16 +71,8 @@ const MyCanvas = (props) => {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      console.log('This will run every second!');
+      // console.log('This will run every second!');
     }, 1000);
-
-
-
-    socket.on('new_image', (path) => {
-      console.log('New Image ! ' + path);
-    });
-
-
 
     return () => clearInterval(interval);
   }, []);
@@ -320,6 +315,7 @@ const MyCanvas = (props) => {
       case SELECTING:
         var w = ((e.evt.clientX - offsets.x) / cameraZoom + cameraX - posX);
         var h = ((e.evt.clientY - offsets.y) / cameraZoom + cameraY - posY);
+
         setWidth(w);
         setHeight(h);
         break;
@@ -391,13 +387,27 @@ const MyCanvas = (props) => {
     setSearchParam();
   };
 
-  const handleSaveImage = () => {
-    var pixelRatio = 1; //TODO complicated math to know the ratio
-    //TODO error if all selection is not in frame
-    //TODO crop image
-    //https://www.delftstack.com/howto/javascript/javascript-crop-image/
-    const uri = stageRef.current.toDataURL({pixelRatio: pixelRatio});
-    console.log(uri);
+  const cropImageToSelection = () => {
+    let image = new window.Image();
+    
+    
+    var [x, y] = toRelativeSpace(posX, posY);
+    var [w, h] = [width * cameraZoom, height * cameraZoom];
+    
+    // the biggest side must be 512px
+    var pixelRatio = 512/Math.max(w,h);
+
+    image.src = imageLayerRef.current.toDataURL({pixelRatio: pixelRatio});
+
+    let imageSaveInfo = {
+      x: x * pixelRatio,
+      y: y * pixelRatio,
+      w: w * pixelRatio,
+      h: h * pixelRatio,
+      image: image
+    }
+
+    setImageSave(imageSaveInfo);
   }
 
   const handleClickRefresh = () => {
@@ -469,7 +479,6 @@ const MyCanvas = (props) => {
     return true;
   }
 
-  console.log("is logged : " + isLogged)
   return (
     <div style={{ cursor: cursor }}>
 
@@ -517,7 +526,8 @@ const MyCanvas = (props) => {
           <span>
             <button onClick={() => handleClickRefresh()}> Refresh </button>
             <button onClick={() => { setIsMobile(!isMobile) }}> Mobile controls </button>
-            <button onClick={() => handleSaveImage()}> Save Image </button>
+            <button onClick={() => { cropImageToSelection() }}> Pre-save </button>
+            <button onClick={() => { imageSaveRef.current.download() }}> Save Image </button>
           </span>
         )}
 
@@ -529,6 +539,7 @@ const MyCanvas = (props) => {
 
       <Stage
         ref={stageRef}
+
         width={canvasW}
         height={canvasH}
 
@@ -542,7 +553,7 @@ const MyCanvas = (props) => {
         onTouchEnd={handleTouchUp}
       >
 
-        <Layer>
+        <Layer ref={imageLayerRef}>
           {
             imageDivList.map((img, i) => {
               var cameraBox = {
@@ -573,7 +584,9 @@ const MyCanvas = (props) => {
 
             })
           }
+        </Layer>
 
+        <Layer>
           {
             placeholderList.map((img, i) => {
               if (!img) {
@@ -592,7 +605,7 @@ const MyCanvas = (props) => {
             })
           }
 
-          {width * cameraZoom * height * cameraZoom > 100 &&
+          {Math.abs(width * cameraZoom * height * cameraZoom) > 100 &&
             <PromptRect
               x={(posX - cameraX) * cameraZoom}
               y={(posY - cameraY) * cameraZoom}
@@ -603,7 +616,16 @@ const MyCanvas = (props) => {
             />
           }
         </Layer>
+
       </Stage>
+
+      {
+        imageSave !== null &&
+        <ImageSaverLayer
+          ref = {imageSaveRef}
+          imageSave={imageSave}
+        />
+      }
 
     </div>
   );
