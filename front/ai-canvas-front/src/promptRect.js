@@ -8,6 +8,15 @@ function PromptRect(props) {
     var x = props.x;
     var y = props.y;
 
+    var el = document.getElementById("prompt_input");
+    if (el !== null) {
+        el.addEventListener("keydown", function (event) {
+            if (event.key === "Enter") {
+                props.handleSend();
+            }
+        });
+    }
+
     return (
         <Group
             x={0}
@@ -28,21 +37,34 @@ function PromptRect(props) {
                     fill={"rgba(240,240,240,0.5)"}
                 />
 
-                {props.visible &&
-                    <Group
-                        y={-50 + (height < 0 ? height : 0)}
-                        x={width - width / 2 - 150}
-                    >
-                        <Html>
-                            <div>
-                                <input id="prompt_input" placeholder="Image prompt" autoFocus />
-                                <button onClick={() => props.handleSend()}>
-                                    Send
-                                </button>
-                            </div>
-                        </Html>
-                    </Group>
-                }
+                <Group
+                    y={-50 + (height < 0 ? height : 0)}
+                    x={width - width / 2 - 200}
+                >
+                    <Html>
+                        <div className='choiceButtonCont'>
+
+                            {props.currentState == "INPUT_TYPE" &&
+                                <div>
+                                    <button className='choiceButton' onClick={() => props.handleNewImage()}>Ni</button>
+                                    <button className='choiceButton' onClick={() => props.handleInpaint()}>Ip</button>
+                                    <button className='choiceButton' onClick={() => props.handleImg2Img()}>i2i</button>
+                                    <button className='choiceButton green' onClick={() => props.handleSave()}>Sv</button>
+                                </div>
+                            }
+
+                            {props.currentState == "PROMPTING" &&
+                                <div>
+                                    <input id="prompt_input" placeholder="Image prompt" autoFocus />
+                                    <button onClick={() => props.handleSend()} >
+                                        Send
+                                    </button>
+                                </div>
+                            }
+
+                        </div>
+                    </Html>
+                </Group>
 
             </Group>
         </Group>

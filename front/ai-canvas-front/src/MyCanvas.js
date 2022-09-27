@@ -13,8 +13,9 @@ import * as env from './env.js';
 import * as request from './requests'
 
 var URL_BUCKET = "https://storage.googleapis.com/aicanvas-public-bucket/"
-var URL_IMAGINE = 'https://europe-west1-ai-canvas.cloudfunctions.net/function-imagen-1stgen'
-// var URL_IMAGINE = "https://gpu.apipicaisso.ml/imagine/"
+var URL_NEW_IMAGE = 'https://europe-west1-ai-canvas.cloudfunctions.net/new_image'
+var URL_IP_MASK = 'https://europe-west1-ai-canvas.cloudfunctions.net/inpaint_mask'
+var URL_IP_ALPHA = 'https://europe-west1-ai-canvas.cloudfunctions.net/inpaint_alpha'
 
 var URL_START_VM = "https://function-start-vm-jujlepts2a-ew.a.run.app"
 var URL_STOP_VM = "https://function-stop-jujlepts2a-ew.a.run.app"
@@ -23,10 +24,14 @@ var URL_STATUS_VM = "https://function-get-status-gpu-jujlepts2a-ew.a.run.app"
 var URL_GET_IMAGES = 'https://europe-west1-ai-canvas.cloudfunctions.net/function-get_images_for_pos'
 
 //draw states
-const SELECTING = 1, PROMPTING = 2;
+const SELECTING = "SELECTING";
+const PROMPTING = "PROMPTING";
+const INPUT_TYPE = "INPUT_TYPE";
 
 //move state
-const IDLE = 0, MOVING = 4, READY = 3;
+const IDLE = "IDLE";
+const MOVING = "MOVING";
+const READY = "READY";
 
 //camera speed
 const CAMERA_SPEED = 1;
@@ -121,7 +126,7 @@ const MyCanvas = (props) => {
       case SELECTING:
         break;
 
-      case PROMPTING:
+      case INPUT_TYPE:
         //set rect new position
         if (width < 0) {
           setPosX(posX + width);
@@ -132,15 +137,7 @@ const MyCanvas = (props) => {
           setPosY(posY + height);
           setHeight(Math.abs(height));
         }
-
-        var el = document.getElementById("prompt_input");
-        if (el !== null) {
-          el.addEventListener("keydown", function (event) {
-            if (event.key === "Enter") {
-              handleSend();
-            }
-          });
-        }
+        
         break;
     }
     setCurrentState(state);
@@ -359,7 +356,7 @@ const MyCanvas = (props) => {
     if (currentState === IDLE && moveState === MOVING) {
       switchMoveState(READY);
     } else if (currentState === SELECTING && moveState === IDLE) {
-      switchState(PROMPTING);
+      switchState(INPUT_TYPE);
     }
 
     setSearchParam();
@@ -369,7 +366,7 @@ const MyCanvas = (props) => {
     switch (e.evt.which) {
       case 1:
         if (currentState === SELECTING) {
-          switchState(PROMPTING);
+          switchState(INPUT_TYPE);
         }
         break;
 
@@ -446,6 +443,23 @@ const MyCanvas = (props) => {
     console.log(imageDivList);
   };
 
+  const handleInpaint = () => {
+
+  }
+
+  const handleImg2Img = () => {
+    
+  }
+
+  const handleSave = () => {
+    cropImageToSelection();
+    imageSaveRef.current.download();
+  }
+
+  const handleNewImage = () => {
+    switchState(PROMPTING);
+  }
+
   const handleSend = () => {
     var x = Math.floor(posX)
     var y = Math.floor(posY)
@@ -455,7 +469,15 @@ const MyCanvas = (props) => {
     var prompt = document.getElementById('prompt_input').value
     document.getElementById('prompt_input').value = ''
 
-    var url_with_params = URL_IMAGINE + '?prompt=' + btoa(prompt) + '&posX=' + x + '&posY=' + y + '&width=' + w + '&height=' + h;
+    var url_with_params = URL_NEW_IMAGE + 
+    '?prompt=' + btoa(prompt) +
+    '&room=' + 'tmp' +
+    '&posX=' + x +
+    '&posY=' + y +
+    '&width=' + w +
+    '&height=' + h;
+
+    console.log(url_with_params)
 
     hideSelectionRect();
 
@@ -527,7 +549,6 @@ const MyCanvas = (props) => {
             <button onClick={() => handleClickRefresh()}> Refresh </button>
             <button onClick={() => { setIsMobile(!isMobile) }}> Mobile controls </button>
             <button onClick={() => { cropImageToSelection() }}> Pre-save </button>
-            <button onClick={() => { imageSaveRef.current.download() }}> Save Image </button>
           </span>
         )}
 
@@ -612,7 +633,11 @@ const MyCanvas = (props) => {
               width={width * cameraZoom}
               height={height * cameraZoom}
               handleSend={handleSend}
-              visible={currentState === PROMPTING}
+              handleNewImage={handleNewImage}
+              handleInpaint={handleInpaint}
+              handleImg2Img={handleImg2Img}
+              handleSave={handleSave}
+              currentState={currentState}
             />
           }
         </Layer>
