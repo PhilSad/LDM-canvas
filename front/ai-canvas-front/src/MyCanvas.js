@@ -14,6 +14,8 @@ import * as gen from './generated'
 
 import * as request from './requests'
 
+Amplify.configure(gen.config)
+
 var URL_BUCKET = "https://storage.googleapis.com/aicanvas-public-bucket/"
 var URL_NEW_IMAGE = 'https://europe-west1-ai-canvas.cloudfunctions.net/new_image'
 var URL_IP_MASK = 'https://europe-west1-ai-canvas.cloudfunctions.net/inpaint_mask'
@@ -82,12 +84,25 @@ const MyCanvas = (props) => {
   const [room, setRoom] = useState('default');
 
 
+
+      //Publish data to subscribed clients
+    async function handleSubmit(evt) {
+        evt.preventDefault()
+        evt.stopPropagation()
+        let send_data = '{"from":"client"}'
+        await gen.publish(room, JSON.stringify(JSON.parse(send_data), null, 2))
+    }
+
   function handle_receive_from_socket(data){
-    addNewImage(data.src, data.x, data.y, data.width, data.height, data.prompt)
+    data = JSON.parse(data)
+    console.log(data)
+    setPlaceholderList(prevState => _.tail(prevState));
+    addNewImage(URL_BUCKET + data.path, data.posX, data.posY, data.width, data.height, data.prompt)
+    console.log('added image from ' + URL_BUCKET + data.path)
   }
 
-
-    useEffect(() => {
+  //socket
+  useEffect(() => {
       //Subscribe via WebSockets
       const subscription = gen.subscribe(room, ({ data }) => handle_receive_from_socket(data))
       return () => subscription.unsubscribe()
@@ -492,17 +507,9 @@ const MyCanvas = (props) => {
 
     hideSelectionRect();
 
-    const promise = fetch(url_with_params);
+    fetch(url_with_params);
 
     addNewPlaceholder(x, y, w, h);
-
-    promise.then((response) => {
-      return response.text()
-    }).then((data) => {
-      setPlaceholderList(prevState => _.tail(prevState));
-      addNewImage(URL_BUCKET + data, x, y, w, h);
-    });
-
   };
 
   // true if rectangle a and b overlap
@@ -545,6 +552,8 @@ const MyCanvas = (props) => {
 
 
         )}
+
+          <button onClick={handleSubmit}> send socket </button>
 
         {isMobile ? (
           <span>
