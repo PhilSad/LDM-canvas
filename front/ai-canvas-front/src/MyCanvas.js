@@ -9,6 +9,8 @@ import { GoogleLogin, useGoogleLogin, googleLogout } from '@react-oauth/google';
 import _ from "lodash";
 import ImageSaverLayer from './imageSaveLayer';
 import * as env from './env.js';
+import Amplify from '@aws-amplify/core'
+import * as gen from './generated'
 
 import * as request from './requests'
 
@@ -37,6 +39,10 @@ const READY = "READY";
 const CAMERA_SPEED = 1;
 const CAMERA_ZOOM_SPEED = 1.1;
 const MIN_ZOOM = 0.01;
+
+
+
+
 
 const MyCanvas = (props) => {
   const stageRef = useRef(null);
@@ -73,14 +79,19 @@ const MyCanvas = (props) => {
   const [isMobile, setIsMobile] = React.useState(false);
   const [isLogged, setIsLogged] = useState(false);
 
+  const [room, setRoom] = useState('default');
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      // console.log('This will run every second!');
-    }, 1000);
 
-    return () => clearInterval(interval);
-  }, []);
+  function handle_receive_from_socket(data){
+    addNewImage(data.src, data.x, data.y, data.width, data.height, data.prompt)
+  }
+
+
+    useEffect(() => {
+      //Subscribe via WebSockets
+      const subscription = gen.subscribe(room, ({ data }) => handle_receive_from_socket(data))
+      return () => subscription.unsubscribe()
+  }, [room])
 
 
   //on page load
