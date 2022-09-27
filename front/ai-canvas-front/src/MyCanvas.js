@@ -43,10 +43,9 @@ const CAMERA_ZOOM_SPEED = 1.1;
 const MIN_ZOOM = 0.01;
 
 
-
-
-
 const MyCanvas = (props) => {
+  let init_image;
+
   const stageRef = useRef(null);
   const imageLayerRef = useRef(null);
   const imageSaveRef = useRef(null);
@@ -469,8 +468,29 @@ const MyCanvas = (props) => {
     console.log(imageDivList);
   };
 
-  const handleInpaint = () => {
+  const handleInpaintAlpha = () => {
+    var x = Math.floor(posX)
+    var y = Math.floor(posY)
+    var w = Math.floor(width)
+    var h = Math.floor(height)
 
+    var prompt = document.getElementById('prompt_input').value
+    document.getElementById('prompt_input').value = ''
+
+    var url_with_params = URL_IP_ALPHA + 
+    '?prompt=' + btoa(prompt) +
+    '&room=' + room +
+    '&posX=' + x +
+    '&posY=' + y +
+    '&width=' + w +
+    '&height=' + h +
+    '&init_image=' + imageSaveRef.current.uri();
+
+    hideSelectionRect();
+
+    fetch(url_with_params);
+
+    addNewPlaceholder(x, y, w, h);
   }
 
   const handleImg2Img = () => {
@@ -483,6 +503,7 @@ const MyCanvas = (props) => {
   }
 
   const handleNewImage = () => {
+    cropImageToSelection();
     switchState(PROMPTING);
   }
 
@@ -495,15 +516,16 @@ const MyCanvas = (props) => {
     var prompt = document.getElementById('prompt_input').value
     document.getElementById('prompt_input').value = ''
 
-    var url_with_params = URL_NEW_IMAGE + 
+    var url_with_params = URL_IP_ALPHA + 
     '?prompt=' + btoa(prompt) +
-    '&room=' + 'tmp' +
+    '&room=' + room +
     '&posX=' + x +
     '&posY=' + y +
     '&width=' + w +
-    '&height=' + h;
+    '&height=' + h +
+    '&init_image=' + imageSaveRef.current.uri();
 
-    console.log(url_with_params)
+    console.log(url_with_params);
 
     hideSelectionRect();
 
@@ -654,7 +676,7 @@ const MyCanvas = (props) => {
               height={height * cameraZoom}
               handleSend={handleSend}
               handleNewImage={handleNewImage}
-              handleInpaint={handleInpaint}
+              handleInpaintAlpha={handleInpaintAlpha}
               handleImg2Img={handleImg2Img}
               handleSave={handleSave}
               currentState={currentState}
