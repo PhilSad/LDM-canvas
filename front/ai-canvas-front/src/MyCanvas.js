@@ -3,15 +3,23 @@ import { Stage, Layer, Image, Rect, Group, Text } from 'react-konva';
 import { Router, Routes, Route, createSearchParams, useSearchParams } from "react-router-dom";
 import URLImage from './URLImage';
 import PromptRect from './promptRect';
+// import ImageSaver from './ImageSaver';
 import LoadPlaceholder from './LoadPlaceholder';
 import { GoogleLogin, useGoogleLogin, googleLogout } from '@react-oauth/google';
 import _ from "lodash";
-
+import ImageSaverLayer from './imageSaveLayer';
 import * as env from './env.js';
+import Amplify from '@aws-amplify/core'
+import * as gen from './generated'
+
+import * as request from './requests'
+
+Amplify.configure(gen.config)
 
 var URL_BUCKET = "https://storage.googleapis.com/aicanvas-public-bucket/"
-var URL_IMAGINE = 'https://europe-west1-ai-canvas.cloudfunctions.net/function-imagen-1stgen'
-// var URL_IMAGINE = "https://gpu.apipicaisso.ml/imagine/"
+var URL_NEW_IMAGE = 'https://europe-west1-ai-canvas.cloudfunctions.net/new_image'
+var URL_IP_MASK = 'https://europe-west1-ai-canvas.cloudfunctions.net/inpaint_mask'
+var URL_IP_ALPHA = 'https://europe-west1-ai-canvas.cloudfunctions.net/inpaint_alpha'
 
 var URL_START_VM = "https://function-start-vm-jujlepts2a-ew.a.run.app"
 var URL_STOP_VM = "https://function-stop-jujlepts2a-ew.a.run.app"
@@ -20,18 +28,29 @@ var URL_STATUS_VM = "https://function-get-status-gpu-jujlepts2a-ew.a.run.app"
 var URL_GET_IMAGES = 'https://europe-west1-ai-canvas.cloudfunctions.net/function-get_images_for_pos'
 
 //draw states
-const SELECTING = 1, PROMPTING = 2;
+const SELECTING = "SELECTING";
+const PROMPTING = "PROMPTING";
+const INPUT_TYPE = "INPUT_TYPE";
 
 //move state
-const IDLE = 0, MOVING = 4, READY = 3;
+const IDLE = "IDLE";
+const MOVING = "MOVING";
+const READY = "READY";
 
 //camera speed
 const CAMERA_SPEED = 1;
 const CAMERA_ZOOM_SPEED = 1.1;
 const MIN_ZOOM = 0.01;
 
+
 const MyCanvas = (props) => {
-  const inputRef = useRef();
+  let init_image;
+
+  const stageRef = useRef(null);
+  const imageLayerRef = useRef(null);
+  const imageSaveRef = useRef(null);
+
+  const [imageSave, setImageSave] = useState(null);
 
   const [currentState, setCurrentState] = useState(IDLE);
   const [moveState, setMoveState] = useState(IDLE);
@@ -61,6 +80,33 @@ const MyCanvas = (props) => {
   const [isMobile, setIsMobile] = React.useState(false);
   const [isLogged, setIsLogged] = useState(false);
 
+  const [room, setRoom] = useState('default');
+
+
+
+  //Publish data to subscribed clients
+  async function handleSubmit(evt) {
+    evt.preventDefault()
+    evt.stopPropagation()
+    let send_data = '{"from":"client"}'
+    await gen.publish(room, JSON.stringify(JSON.parse(send_data), null, 2))
+  }
+
+  function handle_receive_from_socket(data) {
+    data = JSON.parse(data)
+    console.log(data)
+    setPlaceholderList(prevState => _.tail(prevState));
+    addNewImage(URL_BUCKET + data.path, data.posX, data.posY, data.width, data.height, data.prompt)
+    console.log('added image from ' + URL_BUCKET + data.path)
+  }
+
+  //socket
+  useEffect(() => {
+    //Subscribe via WebSockets
+    const subscription = gen.subscribe(room, ({ data }) => handle_receive_from_socket(data))
+    return () => subscription.unsubscribe()
+  }, [room])
+
 
   //on page load
   useEffect(() => {
@@ -83,6 +129,8 @@ const MyCanvas = (props) => {
 
     window.addEventListener("resize", onPageResize);
 
+    window.addEventListener('contextmenu', event => event.preventDefault());
+
     // Check if the page has already loaded
     if (document.readyState === "complete") {
       onPageLoad();
@@ -103,7 +151,7 @@ const MyCanvas = (props) => {
       case SELECTING:
         break;
 
-      case PROMPTING:
+      case INPUT_TYPE:
         //set rect new position
         if (width < 0) {
           setPosX(posX + width);
@@ -115,14 +163,6 @@ const MyCanvas = (props) => {
           setHeight(Math.abs(height));
         }
 
-        var el = document.getElementById("prompt_input");
-        if (el !== null) {
-          el.addEventListener("keydown", function (event) {
-            if (event.key === "Enter") {
-              handleSend();
-            }
-          });
-        }
         break;
     }
     setCurrentState(state);
@@ -235,7 +275,7 @@ const MyCanvas = (props) => {
       setCamInitY(touchposy);
       switchMoveState(MOVING)
     } else if (currentState === IDLE && moveState === IDLE) {
-      var offsets = inputRef.current.content.getBoundingClientRect();
+      var offsets = stageRef.current.content.getBoundingClientRect();
       var x = (touchposx - offsets.x);
       var y = (touchposy - offsets.y);
       defineSelection(x, y);
@@ -245,7 +285,7 @@ const MyCanvas = (props) => {
   const handleMouseDown = (e) => {
     switch (e.evt.which) {
       case 1:
-        var offsets = inputRef.current.content.getBoundingClientRect();
+        var offsets = stageRef.current.content.getBoundingClientRect();
         var x = (e.evt.clientX - offsets.x);
         var y = (e.evt.clientY - offsets.y);
         defineSelection(x, y);
@@ -257,12 +297,18 @@ const MyCanvas = (props) => {
         switchMoveState(MOVING);
         break;
 
+      case 3:
+        setCamInitX(e.evt.clientX);
+        setCamInitY(e.evt.clientY);
+        switchMoveState(MOVING);
+        break;
+
       default:
     }
   };
 
   const handleTouchMove = (e) => {
-    var offsets = inputRef.current.content.getBoundingClientRect();
+    var offsets = stageRef.current.content.getBoundingClientRect();
 
     var touchposx = e.currentTarget.pointerPos.x;
     var touchposy = e.currentTarget.pointerPos.y;
@@ -285,12 +331,13 @@ const MyCanvas = (props) => {
   }
 
   const handleMouseMove = (e) => {
-    var offsets = inputRef.current.content.getBoundingClientRect();
+    var offsets = stageRef.current.content.getBoundingClientRect();
 
     switch (currentState) {
       case SELECTING:
         var w = ((e.evt.clientX - offsets.x) / cameraZoom + cameraX - posX);
         var h = ((e.evt.clientY - offsets.y) / cameraZoom + cameraY - posY);
+
         setWidth(w);
         setHeight(h);
         break;
@@ -322,7 +369,7 @@ const MyCanvas = (props) => {
 
     newZoom = Math.max(newZoom, MIN_ZOOM);
 
-    var offsets = inputRef.current.content.getBoundingClientRect();
+    var offsets = stageRef.current.content.getBoundingClientRect();
     var x = (e.evt.clientX - offsets.x);
     var y = (e.evt.clientY - offsets.y);
     var [ax, ay] = toGlobalSpace(x, y);
@@ -334,7 +381,7 @@ const MyCanvas = (props) => {
     if (currentState === IDLE && moveState === MOVING) {
       switchMoveState(READY);
     } else if (currentState === SELECTING && moveState === IDLE) {
-      switchState(PROMPTING);
+      switchState(INPUT_TYPE);
     }
 
     setSearchParam();
@@ -344,11 +391,15 @@ const MyCanvas = (props) => {
     switch (e.evt.which) {
       case 1:
         if (currentState === SELECTING) {
-          switchState(PROMPTING);
+          switchState(INPUT_TYPE);
         }
         break;
 
       case 2:
+        switchMoveState(IDLE);
+        break;
+
+      case 3:
         switchMoveState(IDLE);
         break;
 
@@ -357,6 +408,29 @@ const MyCanvas = (props) => {
 
     setSearchParam();
   };
+
+  const cropImageToSelection = () => {
+    let image = new window.Image();
+
+
+    var [x, y] = toRelativeSpace(posX, posY);
+    var [w, h] = [width * cameraZoom, height * cameraZoom];
+
+    // the biggest side must be 512px
+    var pixelRatio = 512 / Math.max(w, h);
+
+    image.src = imageLayerRef.current.toDataURL({ pixelRatio: pixelRatio });
+
+    let imageSaveInfo = {
+      x: x * pixelRatio,
+      y: y * pixelRatio,
+      w: w * pixelRatio,
+      h: h * pixelRatio,
+      image: image
+    }
+
+    setImageSave(imageSaveInfo);
+  }
 
   const handleClickRefresh = () => {
     var url_get_image_with_params = URL_GET_IMAGES + '?posX=0&posY=0&width=100&height=100';
@@ -394,7 +468,7 @@ const MyCanvas = (props) => {
     console.log(imageDivList);
   };
 
-  const handleSend = () => {
+  const handleInpaintAlpha = () => {
     var x = Math.floor(posX)
     var y = Math.floor(posY)
     var w = Math.floor(width)
@@ -403,21 +477,72 @@ const MyCanvas = (props) => {
     var prompt = document.getElementById('prompt_input').value
     document.getElementById('prompt_input').value = ''
 
-    var url_with_params = URL_IMAGINE + '?prompt=' + btoa(prompt) + '&posX=' + x + '&posY=' + y + '&width=' + w + '&height=' + h;
+    var url_with_params = URL_IP_ALPHA +
+      '?prompt=' + btoa(prompt) +
+      '&room=' + room +
+      '&posX=' + x +
+      '&posY=' + y +
+      '&width=' + w +
+      '&height=' + h +
+      '&init_image=' + imageSaveRef.current.uri();
 
     hideSelectionRect();
 
-    const promise = fetch(url_with_params);
+    fetch(url_with_params);
 
     addNewPlaceholder(x, y, w, h);
+  }
 
-    promise.then((response) => {
-      return response.text()
-    }).then((data) => {
-      setPlaceholderList(prevState => _.tail(prevState));
-      addNewImage(URL_BUCKET + data, x, y, w, h);
-    });
+  const handleImg2Img = () => {
 
+  }
+
+  const handleSave = () => {
+    cropImageToSelection();
+    imageSaveRef.current.download();
+  }
+
+  const handleNewImage = () => {
+    cropImageToSelection();
+    switchState(PROMPTING);
+  }
+
+  const handleSend = () => {
+    var x = Math.floor(posX)
+    var y = Math.floor(posY)
+    var w = Math.floor(width)
+    var h = Math.floor(height)
+    var prompt = document.getElementById('prompt_input').value
+
+    document.getElementById('prompt_input').value = ''
+
+    hideSelectionRect();
+
+    var imageParamsDict = {
+      'prompt': btoa(prompt),
+      'room': room,
+      'posX': x,
+      'posY': y,
+      'width': w,
+      'height': h,
+      'init_image': imageSaveRef.current.uri()
+    }
+
+    let xhr = new XMLHttpRequest();
+    xhr.open("POST", URL_IP_ALPHA);
+    xhr.setRequestHeader("Accept", "application/json");
+    xhr.setRequestHeader("Content-Type", "application/json");
+    xhr.send(imageParamsDict);
+
+    // fetch(URL_IP_ALPHA, {
+    //   method: 'POST',
+    //   headers: {
+    //     'Content-Type': 'application/json',
+    //   },
+    //   body: JSON.stringify(imageParamsDict),
+    // })
+
+    addNewPlaceholder(x, y, w, h);
   };
 
   // true if rectangle a and b overlap
@@ -427,30 +552,29 @@ const MyCanvas = (props) => {
     return true;
   }
 
-  console.log("is logged : " + isLogged)
   return (
     <div style={{ cursor: cursor }}>
 
       <div className="bar">
 
-        { isLogged === false ? (      
-              <GoogleLogin
-                  onSuccess={credentialResponse => {
-                    console.log(credentialResponse);
-                    setIsLogged(true);
-                    send_connexion_request(credentialResponse.credential)
+        {isLogged === false ? (
+          <GoogleLogin
+            onSuccess={credentialResponse => {
+              console.log(credentialResponse);
+              setIsLogged(true);
+              // request.send_connexion_request(credentialResponse.credential)
 
-                  }}
-                  onError={() => {
-                    console.log('Login Failed');
-                  }}
-                  useOneTap
-                  //todo add auto login
-                  
-                  />
-                  ) : (
+            }}
+            onError={() => {
+              console.log('Login Failed');
+            }}
+            useOneTap
+          //todo add auto login
 
-          
+          />
+        ) : (
+
+
 
           <button onClick={() => {
             googleLogout();
@@ -461,6 +585,8 @@ const MyCanvas = (props) => {
 
 
         )}
+
+        <button onClick={handleSubmit}> send socket </button>
 
         {isMobile ? (
           <span>
@@ -475,6 +601,7 @@ const MyCanvas = (props) => {
           <span>
             <button onClick={() => handleClickRefresh()}> Refresh </button>
             <button onClick={() => { setIsMobile(!isMobile) }}> Mobile controls </button>
+            <button onClick={() => { cropImageToSelection() }}> Pre-save </button>
           </span>
         )}
 
@@ -485,7 +612,8 @@ const MyCanvas = (props) => {
       </div>
 
       <Stage
-        ref={inputRef}
+        ref={stageRef}
+
         width={canvasW}
         height={canvasH}
 
@@ -499,7 +627,7 @@ const MyCanvas = (props) => {
         onTouchEnd={handleTouchUp}
       >
 
-        <Layer>
+        <Layer ref={imageLayerRef}>
           {
             imageDivList.map((img, i) => {
               var cameraBox = {
@@ -530,7 +658,9 @@ const MyCanvas = (props) => {
 
             })
           }
+        </Layer>
 
+        <Layer>
           {
             placeholderList.map((img, i) => {
               if (!img) {
@@ -549,18 +679,31 @@ const MyCanvas = (props) => {
             })
           }
 
-          {width * cameraZoom * height * cameraZoom > 100 &&
+          {Math.abs(width * cameraZoom * height * cameraZoom) > 100 &&
             <PromptRect
               x={(posX - cameraX) * cameraZoom}
               y={(posY - cameraY) * cameraZoom}
               width={width * cameraZoom}
               height={height * cameraZoom}
               handleSend={handleSend}
-              visible={currentState === PROMPTING}
+              handleNewImage={handleNewImage}
+              handleInpaintAlpha={handleInpaintAlpha}
+              handleImg2Img={handleImg2Img}
+              handleSave={handleSave}
+              currentState={currentState}
             />
           }
         </Layer>
+
       </Stage>
+
+      {
+        imageSave !== null &&
+        <ImageSaverLayer
+          ref={imageSaveRef}
+          imageSave={imageSave}
+        />
+      }
 
     </div>
   );

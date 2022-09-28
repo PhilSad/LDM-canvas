@@ -25,6 +25,9 @@ input{
 button{
   background-color: black;
   color: beige;
+  border: solid;
+  border-width: 2px;
+  border-color: white;
   cursor: pointer;
 }
 
@@ -46,4 +49,26 @@ button{
 
 .coords {
   background-color: white;
+}
+
+.choiceButton {
+  height: 30px;
+  width: 30px;
+  margin: 0;
+  padding: 0;
+}
+
+.choiceButtonCont {
+  width: 400px;
+}
+
+.choiceButtonCont div {
+  display: flex;
+  justify-content: space-around;
+  margin: auto;
+  width: 150px;
+}
+
+.green {
+  background-color: green;
 }
