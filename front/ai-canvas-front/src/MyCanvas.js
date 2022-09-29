@@ -19,7 +19,7 @@ Amplify.configure(gen.config)
 var URL_BUCKET = "https://storage.googleapis.com/aicanvas-public-bucket/"
 var URL_NEW_IMAGE = 'https://europe-west1-ai-canvas.cloudfunctions.net/new_image'
 var URL_IP_MASK = 'https://europe-west1-ai-canvas.cloudfunctions.net/inpaint_mask'
-var URL_IP_ALPHA = 'https://europe-west1-ai-canvas.cloudfunctions.net/inpaint_alpha'
+var URL_IP_ALPHA = 'https://europe-west1-ai-canvas.cloudfunctions.net/inpaint_alpha/'
 
 var URL_START_VM = "https://function-start-vm-jujlepts2a-ew.a.run.app"
 var URL_STOP_VM = "https://function-stop-jujlepts2a-ew.a.run.app"
@@ -477,6 +477,8 @@ const MyCanvas = (props) => {
     var prompt = document.getElementById('prompt_input').value
     document.getElementById('prompt_input').value = ''
 
+    //TODO UPDATE HEREq
+
     var url_with_params = URL_IP_ALPHA +
       '?prompt=' + btoa(prompt) +
       '&room=' + room +
@@ -518,6 +520,11 @@ const MyCanvas = (props) => {
 
     hideSelectionRect();
 
+    var uri = imageSaveRef.current.uri()
+
+    // remove "data:image/png;base64,"
+    uri = uri.substring(22)
+
     var imageParamsDict = {
       'prompt': btoa(prompt),
       'room': room,
@@ -525,25 +532,36 @@ const MyCanvas = (props) => {
       'posY': y,
       'width': w,
       'height': h,
-      'init_image': imageSaveRef.current.uri()
+      'init_image': uri
     }
 
-    let xhr = new XMLHttpRequest();
-    xhr.open("POST", URL_IP_ALPHA);
-    xhr.setRequestHeader("Accept", "application/json");
-    xhr.setRequestHeader("Content-Type", "application/json");
-    xhr.send(imageParamsDict);
+    // let xhr = new XMLHttpRequest();
+    // xhr.open("POST", URL_IP_ALPHA);
+    // xhr.setRequestHeader("Accept", "application/json");
+    // xhr.setRequestHeader("Content-Type", "application/json");
+    // xhr.send(imageParamsDict);
 
-    // fetch(URL_IP_ALPHA, {
-    //   method: 'POST',
-    //   headers: {
-    //     'Content-Type': 'application/json',
-    //   },
-    //   body: JSON.stringify(imageParamsDict),
-    // })
+    fetch(URL_IP_ALPHA, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(imageParamsDict),
+    })
 
     addNewPlaceholder(x, y, w, h);
   };
+
+  const handleTestPost = () => {
+    fetch('https://us-central1-ai-canvas.cloudfunctions.net/function-test-post', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({'my' : 'data'}),
+    })
+
+  }
 
   // true if rectangle a and b overlap
   function overlap(a, b) {
@@ -587,7 +605,8 @@ const MyCanvas = (props) => {
         )}
 
         <button onClick={handleSubmit}> send socket </button>
-
+        <button onClick={handleTestPost}> test post </button>
+        
         {isMobile ? (
           <span>
             <button onClick={() => handleClickRefresh()}> Refresh </button>
