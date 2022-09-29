@@ -1,9 +1,8 @@
-import logo from './logo.svg';
 import './App.css';
 import './MyCanvas'
 import MyCanvas from './MyCanvas';
-import React, { Component } from 'react';
-import { BrowserRouter, Routes, Route, createSearchParams, useSearchParams } from "react-router-dom";
+import React from 'react';
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { GoogleOAuthProvider } from '@react-oauth/google';
 
 function App() {

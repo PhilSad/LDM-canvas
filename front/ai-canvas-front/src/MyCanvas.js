@@ -1,31 +1,31 @@
-import React, { Component, useState, useEffect, useRef, useReducer, TouchEvent } from 'react';
-import { Stage, Layer, Image, Rect, Group, Text } from 'react-konva';
-import { Router, Routes, Route, createSearchParams, useSearchParams } from "react-router-dom";
+import React, { useState, useEffect, useRef } from 'react';
+import { Stage, Layer } from 'react-konva';
+import { createSearchParams, useSearchParams } from "react-router-dom";
 import URLImage from './URLImage';
 import PromptRect from './promptRect';
-// import ImageSaver from './ImageSaver';
 import LoadPlaceholder from './LoadPlaceholder';
-import { GoogleLogin, useGoogleLogin, googleLogout } from '@react-oauth/google';
+import { GoogleLogin, googleLogout } from '@react-oauth/google';
 import _ from "lodash";
 import ImageSaverLayer from './imageSaveLayer';
-import * as env from './env.js';
 import Amplify from '@aws-amplify/core'
 import * as gen from './generated'
 
-import * as request from './requests'
+// import ImageSaver from './ImageSaver';
+// import * as env from './env.js';
+// import * as request from './requests'
 
 Amplify.configure(gen.config)
 
-var URL_BUCKET = "https://storage.googleapis.com/aicanvas-public-bucket/"
-var URL_NEW_IMAGE = 'https://europe-west1-ai-canvas.cloudfunctions.net/new_image'
-var URL_IP_MASK = 'https://europe-west1-ai-canvas.cloudfunctions.net/inpaint_mask'
-var URL_IP_ALPHA = 'https://europe-west1-ai-canvas.cloudfunctions.net/inpaint_alpha/'
+const URL_BUCKET = "https://storage.googleapis.com/aicanvas-public-bucket/"
+const URL_NEW_IMAGE = 'https://europe-west1-ai-canvas.cloudfunctions.net/new_image'
+const URL_IP_MASK = 'https://europe-west1-ai-canvas.cloudfunctions.net/inpaint_mask'
+const URL_IP_ALPHA = 'https://europe-west1-ai-canvas.cloudfunctions.net/inpaint_alpha/'
 
-var URL_START_VM = "https://function-start-vm-jujlepts2a-ew.a.run.app"
-var URL_STOP_VM = "https://function-stop-jujlepts2a-ew.a.run.app"
-var URL_STATUS_VM = "https://function-get-status-gpu-jujlepts2a-ew.a.run.app"
+const URL_START_VM = "https://function-start-vm-jujlepts2a-ew.a.run.app"
+const URL_STOP_VM = "https://function-stop-jujlepts2a-ew.a.run.app"
+const URL_STATUS_VM = "https://function-get-status-gpu-jujlepts2a-ew.a.run.app"
 
-var URL_GET_IMAGES = 'https://europe-west1-ai-canvas.cloudfunctions.net/function-get_images_for_pos'
+const URL_GET_IMAGES = 'https://europe-west1-ai-canvas.cloudfunctions.net/function-get_images_for_pos'
 
 //draw states
 const SELECTING = "SELECTING";
@@ -42,10 +42,9 @@ const CAMERA_SPEED = 1;
 const CAMERA_ZOOM_SPEED = 1.1;
 const MIN_ZOOM = 0.01;
 
+let generation_type;
 
 const MyCanvas = (props) => {
-  let init_image;
-
   const stageRef = useRef(null);
   const imageLayerRef = useRef(null);
   const imageSaveRef = useRef(null);
@@ -82,31 +81,17 @@ const MyCanvas = (props) => {
 
   const [room, setRoom] = useState('default');
 
-
-
-  //Publish data to subscribed clients
-  async function handleSubmit(evt) {
-    evt.preventDefault()
-    evt.stopPropagation()
-    let send_data = '{"from":"client"}'
-    await gen.publish(room, JSON.stringify(JSON.parse(send_data), null, 2))
-  }
-
   function handle_receive_from_socket(data) {
     data = JSON.parse(data)
-    console.log(data)
     setPlaceholderList(prevState => _.tail(prevState));
     addNewImage(URL_BUCKET + data.path, data.posX, data.posY, data.width, data.height, data.prompt)
-    console.log('added image from ' + URL_BUCKET + data.path)
   }
 
   //socket
   useEffect(() => {
-    //Subscribe via WebSockets
     const subscription = gen.subscribe(room, ({ data }) => handle_receive_from_socket(data))
     return () => subscription.unsubscribe()
   }, [room])
-
 
   //on page load
   useEffect(() => {
@@ -250,8 +235,6 @@ const MyCanvas = (props) => {
   }
 
   function addNewImage(src, x, y, w, h, prompt) {
-    // console.log('image added');
-    // console.log(src);
     var img = {
       type: 'image',
       src: src,
@@ -465,34 +448,12 @@ const MyCanvas = (props) => {
   const handleStatusVm = () => {
     // fetch(URL_STATUS_VM).then(data => data.json()).
     //   then((data) => alert(data.message));
-    console.log(imageDivList);
   };
 
   const handleInpaintAlpha = () => {
-    var x = Math.floor(posX)
-    var y = Math.floor(posY)
-    var w = Math.floor(width)
-    var h = Math.floor(height)
-
-    var prompt = document.getElementById('prompt_input').value
-    document.getElementById('prompt_input').value = ''
-
-    //TODO UPDATE HEREq
-
-    var url_with_params = URL_IP_ALPHA +
-      '?prompt=' + btoa(prompt) +
-      '&room=' + room +
-      '&posX=' + x +
-      '&posY=' + y +
-      '&width=' + w +
-      '&height=' + h +
-      '&init_image=' + imageSaveRef.current.uri();
-
-    hideSelectionRect();
-
-    fetch(url_with_params);
-
-    addNewPlaceholder(x, y, w, h);
+    generation_type = "inpaint_alpha";
+    cropImageToSelection();
+    switchState(PROMPTING);
   }
 
   const handleImg2Img = () => {
@@ -501,11 +462,12 @@ const MyCanvas = (props) => {
 
   const handleSave = () => {
     cropImageToSelection();
-    imageSaveRef.current.download();
+
+    setTimeout(function () { imageSaveRef.current.download(); }, 100);
   }
 
   const handleNewImage = () => {
-    cropImageToSelection();
+    generation_type = "new_image";
     switchState(PROMPTING);
   }
 
@@ -520,48 +482,47 @@ const MyCanvas = (props) => {
 
     hideSelectionRect();
 
-    var uri = imageSaveRef.current.uri()
-
-    // remove "data:image/png;base64,"
-    uri = uri.substring(22)
-
     var imageParamsDict = {
       'prompt': btoa(prompt),
       'room': room,
       'posX': x,
       'posY': y,
       'width': w,
-      'height': h,
-      'init_image': uri
+      'height': h
     }
 
-    // let xhr = new XMLHttpRequest();
-    // xhr.open("POST", URL_IP_ALPHA);
-    // xhr.setRequestHeader("Accept", "application/json");
-    // xhr.setRequestHeader("Content-Type", "application/json");
-    // xhr.send(imageParamsDict);
+    switch (generation_type) {
+      case 'new_image':
+        fetch(URL_NEW_IMAGE, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(imageParamsDict),
+        })
 
-    fetch(URL_IP_ALPHA, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(imageParamsDict),
-    })
+        break;
+
+      case 'inpaint_alpha':
+        var uri = imageSaveRef.current.uri()
+        // remove "data:image/png;base64,"
+        uri = uri.substring(22)
+
+        imageParamsDict['init_image'] = uri;
+
+        fetch(URL_IP_ALPHA, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(imageParamsDict),
+        })
+
+        break;
+    }
 
     addNewPlaceholder(x, y, w, h);
   };
-
-  const handleTestPost = () => {
-    fetch('https://us-central1-ai-canvas.cloudfunctions.net/function-test-post', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({'my' : 'data'}),
-    })
-
-  }
 
   // true if rectangle a and b overlap
   function overlap(a, b) {
@@ -575,7 +536,8 @@ const MyCanvas = (props) => {
 
       <div className="bar">
 
-        {isLogged === false ? (
+        {isLogged === true ? (
+          //TODO login login
           <GoogleLogin
             onSuccess={credentialResponse => {
               console.log(credentialResponse);
@@ -604,9 +566,6 @@ const MyCanvas = (props) => {
 
         )}
 
-        <button onClick={handleSubmit}> send socket </button>
-        <button onClick={handleTestPost}> test post </button>
-        
         {isMobile ? (
           <span>
             <button onClick={() => handleClickRefresh()}> Refresh </button>
@@ -620,15 +579,11 @@ const MyCanvas = (props) => {
           <span>
             <button onClick={() => handleClickRefresh()}> Refresh </button>
             <button onClick={() => { setIsMobile(!isMobile) }}> Mobile controls </button>
-            <button onClick={() => { cropImageToSelection() }}> Pre-save </button>
           </span>
         )}
-
-        <p className="coords">
-          {Math.floor(cameraX)}, {Math.floor(cameraY)}, {Math.floor(cameraZoom * 100) / 100}
-        </p>
-
       </div>
+
+      <div className="coords"> {Math.floor(cameraX)}, {Math.floor(cameraY)}, {Math.floor(cameraZoom * 100) / 100} </div>
 
       <Stage
         ref={stageRef}
@@ -718,10 +673,7 @@ const MyCanvas = (props) => {
 
       {
         imageSave !== null &&
-        <ImageSaverLayer
-          ref={imageSaveRef}
-          imageSave={imageSave}
-        />
+        <ImageSaverLayer ref={imageSaveRef} imageSave={imageSave}/>
       }
 
     </div>
