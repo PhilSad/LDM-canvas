@@ -17,7 +17,7 @@ const ImageSaverLayer = forwardRef((props, ref) => {
     useImperativeHandle(ref, () => ({
 
         download() {
-            downloadURI(saveLayerRef.current.toDataURL(), "crop.png")
+            downloadURI(saveLayerRef.current.toDataURL(), "IC-" + Date.now() + ".png")
         },
 
         uri() {

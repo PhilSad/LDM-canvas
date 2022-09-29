@@ -1,5 +1,5 @@
 import React from 'react';
-import { Image, Group, Rect } from 'react-konva';
+import { Group } from 'react-konva';
 import { Html } from 'react-konva-utils';
 import { SpinnerCircular } from 'spinners-react';
 
