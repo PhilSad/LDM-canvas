@@ -118,7 +118,6 @@ def new_image():
     bucket = storage_client.bucket('aicanvas-public-bucket')
 
     # todo save image
-
     buffered = BytesIO()
     generated.save(buffered, format="JPEG")
     img_str = base64.b64encode(buffered.getvalue())
