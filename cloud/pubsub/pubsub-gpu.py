@@ -16,8 +16,10 @@ subscription_path = subscriber.subscription_path(project_id, subscription_id)
 def callback(message: pubsub_v1.subscriber.message.Message) -> None:
     print(f"Received {message}.")
     data = json.loads(message.data)
+    action = data['action']
 
-    if 
+    if action == 'new image':
+        pass
 
 
     message.ack()
