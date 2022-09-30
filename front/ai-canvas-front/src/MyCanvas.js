@@ -28,6 +28,8 @@ const URL_STATUS_VM = "https://function-get-status-gpu-jujlepts2a-ew.a.run.app"
 
 const URL_GET_IMAGES = 'https://europe-west1-ai-canvas.cloudfunctions.net/function-get_images_for_pos'
 
+const URL_FUNCTION_IMAGEN = "https://imagen-pubsub-jujlepts2a-ew.a.run.app/"
+
 //draw states
 const SELECTING = "SELECTING";
 const PROMPTING = "PROMPTING";
@@ -504,10 +506,11 @@ const MyCanvas = (props) => {
       'width': w,
       'height': h
     }
-
+    
+    var url_function_imagen_with_action = URL_FUNCTION_IMAGEN + '?action=' + generation_type;
     switch (generation_type) {
       case 'new_image':
-        fetch(URL_NEW_IMAGE, {
+        fetch(url_function_imagen_with_action, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -524,7 +527,7 @@ const MyCanvas = (props) => {
 
         imageParamsDict['init_image'] = uri;
 
-        fetch(URL_IP_ALPHA, {
+        fetch(url_function_imagen_with_action, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -541,7 +544,7 @@ const MyCanvas = (props) => {
 
         imageParamsDict['init_image'] = uri;
 
-        fetch(URL_IMG2IMG, {
+        fetch(url_function_imagen_with_action, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
