@@ -44,6 +44,37 @@ pipe.disable_nsfw_filter()
 MAX_SIZE = 512
 STEPS = 50
 
+def connect_unix_socket() -> db.engine.base.Engine:
+    pool = db.create_engine(
+        url = db.engine.url.URL.create(
+            drivername="mysql+pymysql",
+            username=db_user,
+            password=db_pass,
+            host=db_ip,
+            port=3306,
+            database=db_name,
+        ))
+    return pool
+
+def getTable(name, engine):
+    metadata = db.MetaData()
+    return db.Table(name, metadata, autoload=True, autoload_with=engine)
+
+
+def save_to_sql(data_to_add):
+    # save image to db
+    engine = connect_unix_socket()
+    images = getTable('images', engine)
+
+    query = db.insert(images).values(**data_to_add)
+    engine.execute(query)
+
+
+def save_to_bucket(save_path, generated, bucket_path):
+    generated.save(save_path, quality=100)
+    blob_path_save_image = bucket.blob(bucket_path)
+    blob_path_save_image.upload_from_filename(save_path)
+
 
 
 def push_to_clients(channel, data):
@@ -71,24 +102,6 @@ def push_to_clients(channel, data):
 
     return 
 
-
-def connect_unix_socket() -> db.engine.base.Engine:
-
-
-    pool = db.create_engine(
-        url = db.engine.url.URL.create(
-            drivername="mysql+pymysql",
-            username=db_user,
-            password=db_pass,
-            host=db_ip,
-            port=3306,
-            database=db_name,
-        ))
-    return pool
-
-def getTable(name, engine):
-    metadata = db.MetaData()
-    return db.Table(name, metadata, autoload=True, autoload_with=engine)
 
 def get_mask(im):
     im = im.split()[-1].convert('1')
@@ -152,9 +165,6 @@ def diffuse(prompt, n_images=1, width=512, height=512, steps=50, init_image=None
 @app.route("/new_image/", methods=['POST'])
 def new_image():
 
-    engine = connect_unix_socket()
-    images = getTable('images', engine)
-
     storage_client = storage.Client()
     bucket = storage_client.bucket('aicanvas-public-bucket')
 
@@ -192,12 +202,9 @@ def new_image():
     # img_str = base64.b64encode(buffered.getvalue())
 
     ts = str(datetime.datetime.now().strftime("%Y%m%d%H%M%S%f"))
-    # decoded_prompt = base64.b64decode(prompt)
-    path = f'{room}/{ts}-{prompt}.png'
-
-    # save image to db
+    bucket_path = f'{room}/{ts}-{prompt}.png'
     data_to_add = dict(
-        path=path,
+        path=bucket_path,
         posX=posX,
         posY=posY,
         width = canvas_width,
@@ -205,17 +212,17 @@ def new_image():
         prompt = prompt
     )
 
-    query = db.insert(images).values(**data_to_add)
-    engine.execute(query)
+    save_to_sql(data_to_add)
 
-    # save image to bucket
     save_path = f'/tmp/{ts}.png'
-
-    generated.save(save_path, quality=100)
-    blob_path_save_image = bucket.blob(path)
-    blob_path_save_image.upload_from_filename(save_path)
+    save_to_bucket(save_path, generated, bucket_path)
 
     push_to_clients(room, data_to_add)
+
+    # decoded_prompt = base64.b64decode(prompt)
+
+
+    # save image to bucket
 
 
     return Response('OK', status=200)
