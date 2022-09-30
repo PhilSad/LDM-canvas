@@ -18,6 +18,11 @@ import datetime
 
 load_dotenv()
 
+db_user = os.environ["DB_USER"]  # e.g. 'my-database-user'
+db_pass = os.environ["DB_PASS"]  # e.g. 'my-database-password'
+db_name = os.environ["DB_NAME"]  # e.g. 'my-database'
+db_ip = os.environ["DB_IP"]  # private address
+
 storage_client = storage.Client()
 bucket = storage_client.bucket('aicanvas-public-bucket')
 
@@ -68,18 +73,16 @@ def push_to_clients(channel, data):
 
 
 def connect_unix_socket() -> db.engine.base.Engine:
-    db_user = os.environ["DB_USER"]  # e.g. 'my-database-user'
-    db_pass = os.environ["DB_PASS"]  # e.g. 'my-database-password'
-    db_name = os.environ["DB_NAME"]  # e.g. 'my-database'
-    unix_socket_path = os.environ["INSTANCE_UNIX_SOCKET"]  # e.g. '/cloudsql/project:region:instance'
+
 
     pool = db.create_engine(
-        db.engine.url.URL.create(
+        url = db.engine.url.URL.create(
             drivername="mysql+pymysql",
             username=db_user,
             password=db_pass,
+            host=db_ip,
+            port=3306,
             database=db_name,
-            query={"unix_socket": unix_socket_path},
         ))
     return pool
 
@@ -158,14 +161,15 @@ def new_image():
     params = request.get_json()
 
     b64prompt = params['prompt']
-    width = int(params['width'])
-    height = int(params['height'])
+    canvas_width = int(params['width'])
+    canvas_height = int(params['height'])
     posX = int(params['posX'])
     posY = int(params['posY'])
     room = params['room']
 
+    print(f'[DEBUG] Base 64 prompt : {b64prompt}')
 
-    width, height, round_width, round_height = adjust_size(width, height)
+    width, height, round_width, round_height = adjust_size(canvas_width, canvas_height)
 
     prompt = base64.b64decode(b64prompt)
     prompt = prompt.decode("utf-8")
@@ -188,16 +192,16 @@ def new_image():
     # img_str = base64.b64encode(buffered.getvalue())
 
     ts = str(datetime.datetime.now().strftime("%Y%m%d%H%M%S%f"))
-    decoded_prompt = base64.b64decode(prompt)
-    path = f'{room}/{ts}-{decoded_prompt}.png'
+    # decoded_prompt = base64.b64decode(prompt)
+    path = f'{room}/{ts}-{prompt}.png'
 
     # save image to db
     data_to_add = dict(
         path=path,
         posX=posX,
         posY=posY,
-        width = width,
-        height = height,
+        width = canvas_width,
+        height = canvas_height,
         prompt = prompt
     )
 
@@ -306,4 +310,49 @@ def inpaint_mask():
 
     img_str = base64.b64encode(buffered.getvalue())
 
+    return Response(img_str, status=200)
+
+
+@app.route("/img_to_img/", methods=['POST'])
+def img_to_img():
+    params = request.get_json()
+
+    b64prompt = params['prompt']
+    width = int(params['width'])
+    height = int(params['height'])
+    init_image= params['init_image']
+
+    width, height, round_width, round_height = adjust_size(width, height)
+
+    # decode base64 image
+    im = PIL.Image.open(BytesIO(base64.b64decode(init_image)))
+    im = im.crop((0, 0, width, height))
+    im = im.resize((round_width, round_height), PIL.Image.ANTIALIAS)
+    im = im.convert('RGB')
+
+    prompt = base64.b64decode(b64prompt)
+    prompt = prompt.decode("utf-8")
+    
+    generated = diffuse(
+            prompt=prompt,
+            width=round_width,
+            height=round_height,
+            init_image=im,
+            steps=STEPS
+            )[0]
+
+    generated = generated.resize((width, height), PIL.Image.ANTIALIAS)
+
+    # save to cloud
+    storage_client = storage.Client()
+    buffered = BytesIO()
+
+    generated.save("img2img.jpeg")
+
+    generated.save(buffered, format="JPEG")
+    bucket = storage_client.bucket('aicanvas-public-bucket')
+
+    # todo save image
+    
+    img_str = base64.b64encode(buffered.getvalue())
     return Response(img_str, status=200)
