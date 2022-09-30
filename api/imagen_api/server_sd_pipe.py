@@ -7,9 +7,16 @@ import base64
 import torch
 import PIL
 import numpy as np
-
+import json
+import requests
 from diffusionui import StableDiffusionPipeline
+from dotenv import load_dotenv
+import os
+import sqlalchemy as db
+from sqlalchemy import insert
+import datetime
 
+load_dotenv()
 
 storage_client = storage.Client()
 bucket = storage_client.bucket('aicanvas-public-bucket')
@@ -31,6 +38,54 @@ pipe.disable_nsfw_filter()
 
 MAX_SIZE = 512
 STEPS = 50
+
+
+
+def push_to_clients(channel, data):
+    APPSYNC_API_ENDPOINT_URL = "https://jsnbrfwmpfdkjnhocqnrnuibbq.appsync-api.us-east-1.amazonaws.com/graphql"
+
+
+    query = """
+        mutation Publish($data: AWSJSON!, $name: String!) {
+            publish(data: $data, name: $name) {
+                data
+                name
+            }
+        }"""
+
+#    channel_name = 'default'
+#    data = dict(my="data")
+
+    jsonData=json.dumps(data)
+    variables = json.dumps(dict(name=channel, data=jsonData))
+
+    headers = {'x-api-key' : "da2-xpnjchk6vbdfdi2qovntvm6fcq"}
+
+    response = requests.post(APPSYNC_API_ENDPOINT_URL, json={'query': query, 'variables' : variables}, headers=headers)
+    print(response.text)
+
+    return 
+
+
+def connect_unix_socket() -> db.engine.base.Engine:
+    db_user = os.environ["DB_USER"]  # e.g. 'my-database-user'
+    db_pass = os.environ["DB_PASS"]  # e.g. 'my-database-password'
+    db_name = os.environ["DB_NAME"]  # e.g. 'my-database'
+    unix_socket_path = os.environ["INSTANCE_UNIX_SOCKET"]  # e.g. '/cloudsql/project:region:instance'
+
+    pool = db.create_engine(
+        db.engine.url.URL.create(
+            drivername="mysql+pymysql",
+            username=db_user,
+            password=db_pass,
+            database=db_name,
+            query={"unix_socket": unix_socket_path},
+        ))
+    return pool
+
+def getTable(name, engine):
+    metadata = db.MetaData()
+    return db.Table(name, metadata, autoload=True, autoload_with=engine)
 
 def get_mask(im):
     im = im.split()[-1].convert('1')
@@ -93,17 +148,27 @@ def diffuse(prompt, n_images=1, width=512, height=512, steps=50, init_image=None
 
 @app.route("/new_image/", methods=['POST'])
 def new_image():
+
+    engine = connect_unix_socket()
+    images = getTable('images', engine)
+
+    storage_client = storage.Client()
+    bucket = storage_client.bucket('aicanvas-public-bucket')
+
     params = request.get_json()
 
     b64prompt = params['prompt']
     width = int(params['width'])
     height = int(params['height'])
+    posX = int(params['posX'])
+    posY = int(params['posY'])
+    room = params['room']
+
 
     width, height, round_width, round_height = adjust_size(width, height)
 
     prompt = base64.b64decode(b64prompt)
     prompt = prompt.decode("utf-8")
-
     generated = diffuse(
             prompt=prompt,
             height=round_height,
@@ -113,16 +178,43 @@ def new_image():
 
     generated = generated.resize((width, height), PIL.Image.ANTIALIAS)
 
-    # save to cloud
-    storage_client = storage.Client()
-    bucket = storage_client.bucket('aicanvas-public-bucket')
+    # # save to cloud
+    # storage_client = storage.Client()
+    # bucket = storage_client.bucket('aicanvas-public-bucket')
 
-    # todo save image
-    buffered = BytesIO()
-    generated.save(buffered, format="JPEG")
-    img_str = base64.b64encode(buffered.getvalue())
+    # # todo save image
+    # buffered = BytesIO()
+    # generated.save(buffered, format="JPEG")
+    # img_str = base64.b64encode(buffered.getvalue())
 
-    return Response(img_str, status=200)
+    ts = str(datetime.datetime.now().strftime("%Y%m%d%H%M%S%f"))
+    decoded_prompt = base64.b64decode(prompt)
+    path = f'{room}/{ts}-{decoded_prompt}.png'
+
+    # save image to db
+    data_to_add = dict(
+        path=path,
+        posX=posX,
+        posY=posY,
+        width = width,
+        height = height,
+        prompt = prompt
+    )
+
+    query = db.insert(images).values(**data_to_add)
+    engine.execute(query)
+
+    # save image to bucket
+    save_path = f'/tmp/{ts}.png'
+
+    generated.save(save_path, quality=100)
+    blob_path_save_image = bucket.blob(path)
+    blob_path_save_image.upload_from_filename(save_path)
+
+    push_to_clients(room, data_to_add)
+
+
+    return Response('OK', status=200)
 
 @app.route("/inpaint_alpha/", methods=['POST'])
 def inpaint_alpha():
