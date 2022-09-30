@@ -16,7 +16,7 @@ subscription_path = subscriber.subscription_path(project_id, subscription_id)
 
 
 
-URL_IMAGEN = "https://gpu.apipicaisso.ml"
+URL_IMAGEN = "localhost:5000"
 
 
 def callback(message: pubsub_v1.subscriber.message.Message) -> None:
