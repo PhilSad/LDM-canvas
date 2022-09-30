@@ -61,7 +61,6 @@ def getTable(name, engine):
     metadata = db.MetaData()
     return db.Table(name, metadata, autoload=True, autoload_with=engine)
 
-
 def save_to_sql(data_to_add):
     # save image to db
     engine = connect_unix_socket()
@@ -70,13 +69,10 @@ def save_to_sql(data_to_add):
     query = db.insert(images).values(**data_to_add)
     engine.execute(query)
 
-
 def save_to_bucket(save_path, generated, bucket_path):
     generated.save(save_path, quality=100)
     blob_path_save_image = bucket.blob(bucket_path)
     blob_path_save_image.upload_from_filename(save_path)
-
-
 
 def push_to_clients(channel, data):
     APPSYNC_API_ENDPOINT_URL = "https://jsnbrfwmpfdkjnhocqnrnuibbq.appsync-api.us-east-1.amazonaws.com/graphql"
@@ -102,7 +98,6 @@ def push_to_clients(channel, data):
     print(response.text)
 
     return 
-
 
 def get_mask(im):
     im = im.split()[-1].convert('1')
@@ -162,45 +157,55 @@ def diffuse(prompt, n_images=1, width=512, height=512, steps=50, init_image=None
 
     return generated
 
-def new_image(params):
-    b64prompt = params['prompt']
-    canvas_width = int(params['width'])
-    canvas_height = int(params['height'])
-    posX = int(params['posX'])
-    posY = int(params['posY'])
-    room = params['room']
+def generate_image(prompt, w, h, init_image=None, mask=None):
+    width, height, round_width, round_height = adjust_size(w, h)
 
-    print(f'[DEBUG] Base 64 prompt : {b64prompt}')
+    if(init_image is not None):
+        init_image = init_image.crop(0, 0, width, height)
+        init_image = init_image.resize((round_width, round_height), PIL.Image.ANTIALIAS)
+        init_image = init_image.convert('RGB')
 
-    width, height, round_width, round_height = adjust_size(canvas_width, canvas_height)
-
-    prompt = base64.b64decode(b64prompt)
-    prompt = prompt.decode("utf-8")
     generated = diffuse(
             prompt=prompt,
             height=round_height,
             width=round_width,
+            init_image=init_image,
+            mask=mask,
             steps=50
             )[0]
 
     generated = generated.resize((width, height), PIL.Image.ANTIALIAS)
-    ts = str(datetime.datetime.now().strftime("%Y%m%d%H%M%S%f"))
-    bucket_path = f'{room}/{ts}-{prompt}.png'
+    
+    return generated
 
-    data_to_add = dict(
-        path=bucket_path,
-        posX=posX,
-        posY=posY,
-        width = canvas_width,
-        height = canvas_height,
-        prompt = prompt
-    )
+def new_image(prompt, width, height):
+    prompt = base64.b64decode(params['prompt']).decode("utf-8")
+    x, y, w, h = [int(i) for i in [x, y, w, h]]
 
-    save_to_sql(data_to_add)
+    return generate_image(prompt, width, height)
 
-    save_path = f'/tmp/{ts}.png'
-    save_to_bucket(save_path, generated, bucket_path)
+def image_to_image(prompt, width, height, init_image):
+    prompt = base64.b64decode(params['prompt']).decode("utf-8")
+    w, h = [int(i) for i in [w, h]]
+    im = PIL.Image.open(BytesIO(base64.b64decode(init_image)))
 
-    push_to_clients(room, data_to_add)
+    return generate_image(prompt, int(width), int(height), im)
 
-    return
+def inpaint_alpha(prompt, width, height, init_image):
+    prompt = base64.b64decode(params['prompt']).decode("utf-8")
+    w, h = [int(i) for i in [w, h]]
+    im = PIL.Image.open(BytesIO(base64.b64decode(init_image)))
+
+    im = im.convert('RGBA')
+    noise = get_noise(im)
+    mask = get_mask(im)
+
+    return generate_image(prompt, int(width), int(height), noise, mask)
+
+def inpaint_mask(prompt, width, height, init_image, mask):
+    prompt = base64.b64decode(params['prompt']).decode("utf-8")
+    w, h = [int(i) for i in [w, h]]
+    im = PIL.Image.open(BytesIO(base64.b64decode(init_image)))
+    mask = PIL.Image.open(BytesIO(base64.b64decode(mask)))
+
+    return generate_image(prompt, int(width), int(height), im, mask)
