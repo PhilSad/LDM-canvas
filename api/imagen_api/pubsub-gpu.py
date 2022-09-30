@@ -4,14 +4,13 @@ from google.cloud import pubsub_v1
 import json
 import requests
 
+import imagen_lib as imagen
+
 project_id = "732264051436"
 subscription_id = "imagen-queue-sub"
-# Number of seconds the subscriber should listen for messages
 timeout = 20.0
 
 subscriber = pubsub_v1.SubscriberClient()
-# The `subscription_path` method creates a fully qualified identifier
-# in the form `projects/{project_id}/subscriptions/{subscription_id}`
 subscription_path = subscriber.subscription_path(project_id, subscription_id)
 
 
@@ -28,14 +27,9 @@ def callback(message: pubsub_v1.subscriber.message.Message) -> None:
     url_params  = data['url_params']
     post_params = data['post_params']
 
-    formated_url_params = '&'.join(f'{k}={v}' for k,v in url_params.items())
-    formated_url = f'{URL_IMAGEN}/{action}/?{formated_url_params}'
-    
-    print(formated_url)
-    print(post_params)
+    if action == 'new_image':
+        imagen.new_image(post_params)
 
-    resp = requests.request(method, formated_url, json=post_params)
-    print(resp)
     message.ack()
 
 
