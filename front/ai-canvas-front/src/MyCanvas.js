@@ -20,6 +20,7 @@ const URL_BUCKET = "https://storage.googleapis.com/aicanvas-public-bucket/"
 const URL_NEW_IMAGE = 'https://europe-west1-ai-canvas.cloudfunctions.net/new_image'
 const URL_IP_MASK = 'https://europe-west1-ai-canvas.cloudfunctions.net/inpaint_mask'
 const URL_IP_ALPHA = 'https://europe-west1-ai-canvas.cloudfunctions.net/inpaint_alpha/'
+const URL_IMG2IMG = 'https://europe-west1-ai-canvas.cloudfunctions.net/img_to_img/'
 
 const URL_START_VM = "https://function-start-vm-jujlepts2a-ew.a.run.app"
 const URL_STOP_VM = "https://function-stop-jujlepts2a-ew.a.run.app"
@@ -74,7 +75,8 @@ const MyCanvas = (props) => {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [imageDivList, setImageDivList] = useState([]);
-  const [placeholderList, setPlaceholderList] = useState([]);
+  const [placeholderList, setPlaceholderList] = useState(new Map());
+  const [coordRemovePH, setCoordRemovePH] = useState(null);
 
   const [isMobile, setIsMobile] = React.useState(false);
   const [isLogged, setIsLogged] = useState(false);
@@ -83,7 +85,7 @@ const MyCanvas = (props) => {
 
   function handle_receive_from_socket(data) {
     data = JSON.parse(data)
-    setPlaceholderList(prevState => _.tail(prevState));
+    removePlaceholder(data.posX, data.posY)
     addNewImage(URL_BUCKET + data.path, data.posX, data.posY, data.width, data.height, data.prompt)
   }
 
@@ -221,17 +223,27 @@ const MyCanvas = (props) => {
   }
 
   function addNewPlaceholder(x, y, w, h) {
-    // console.log('image added');
-    // console.log(src);
-    var img = {
+    var ph = {
       type: 'placeholder',
       x: x,
       y: y,
       w: w,
       h: h
     };
+    var copy = new Map(placeholderList);
+    copy.set(`${x},${y}`, ph);
+    setPlaceholderList(copy);
+  }
 
-    setPlaceholderList(prevState => [...prevState, img]);
+  function removePlaceholder(x, y) {
+    setPlaceholderList(prevState => {
+      var copy = new Map(prevState);
+
+      if (copy.has(`${x},${y}`))
+        copy.delete(`${x},${y}`);
+
+      return copy;
+    });
   }
 
   function addNewImage(src, x, y, w, h, prompt) {
@@ -457,7 +469,9 @@ const MyCanvas = (props) => {
   }
 
   const handleImg2Img = () => {
-
+    generation_type = "img_to_img";
+    cropImageToSelection();
+    switchState(PROMPTING);
   }
 
   const handleSave = () => {
@@ -511,6 +525,23 @@ const MyCanvas = (props) => {
         imageParamsDict['init_image'] = uri;
 
         fetch(URL_IP_ALPHA, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(imageParamsDict),
+        })
+
+        break;
+
+      case 'img_to_img':
+        var uri = imageSaveRef.current.uri()
+        // remove "data:image/png;base64,"
+        uri = uri.substring(22)
+
+        imageParamsDict['init_image'] = uri;
+
+        fetch(URL_IMG2IMG, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -636,19 +667,19 @@ const MyCanvas = (props) => {
 
         <Layer>
           {
-            placeholderList.map((img, i) => {
-              if (!img) {
+            Array.from(placeholderList.values()).map((pl, i) => {
+              if (!pl) {
                 return;
               }
 
-              var [x, y] = toRelativeSpace(img.x, img.y);
+              var [x, y] = toRelativeSpace(pl.x, pl.y);
               return (
                 <LoadPlaceholder
                   key={i}
                   x={x}
                   y={y}
-                  width={img.w * cameraZoom}
-                  height={img.h * cameraZoom}
+                  width={pl.w * cameraZoom}
+                  height={pl.h * cameraZoom}
                 />)
             })
           }
@@ -673,7 +704,7 @@ const MyCanvas = (props) => {
 
       {
         imageSave !== null &&
-        <ImageSaverLayer ref={imageSaveRef} imageSave={imageSave}/>
+        <ImageSaverLayer ref={imageSaveRef} imageSave={imageSave} />
       }
 
     </div>
