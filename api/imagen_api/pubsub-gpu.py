@@ -93,30 +93,39 @@ def callback(message: pubsub_v1.subscriber.message.Message) -> None:
     action = data['action']
     params = data['params']
 
+    b64prompt = params['prompt']
+    prompt = base64.b64decode(b64prompt)
+    prompt = prompt.decode("utf-8")
+
+    width = int(params['width'])
+    height = int(params['height'])
+
     # todo send ws with cur image uuid
 
     if   action == 'new_image':
-        generated = imagen.new_image(**params)
+        generated = imagen.new_image(prompt, width, height)
     
     elif action == 'img_to_img':
-        generated = imagen.image_to_image(**params)
+        init_image = params['init_image']
+        generated = imagen.image_to_image(prompt, width, height, init_image)
 
     elif action == 'inpaint_alpha':
-        generated = imagen.inpaint_alpha(**params)
+        init_image = params['init_image']
+        generated = imagen.inpaint_alpha(prompt, width, height, init_image)
     
     elif action == 'inpaint_mask':
-        generated = imagen.inpaint_mask(**params)
+        init_image = params['init_image']
+        mask = params['mask']
+        generated = imagen.inpaint_mask(prompt, width, height, init_image, mask)
     
     else:
         return
 
-    b64prompt = params['prompt']
-    canvas_width = int(params['width'])
-    canvas_height = int(params['height'])
     posX = int(params['posX'])
     posY = int(params['posY'])
     room = params['room']
 
+    b64prompt = params['prompt']
     prompt = base64.b64decode(b64prompt)
     prompt = prompt.decode("utf-8")
     
@@ -127,8 +136,8 @@ def callback(message: pubsub_v1.subscriber.message.Message) -> None:
         path=bucket_path,
         posX=posX,
         posY=posY,
-        width = canvas_width,
-        height = canvas_height,
+        width = width,
+        height = height,
         prompt = prompt
     )
 
