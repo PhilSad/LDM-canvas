@@ -143,8 +143,9 @@ def callback(message: pubsub_v1.subscriber.message.Message) -> None:
     message.ack()
 
 
+flow_control = pubsub_v1.types.FlowControl(max_messages=1)
 
-streaming_pull_future = subscriber.subscribe(subscription_path, callback=callback)
+streaming_pull_future = subscriber.subscribe(subscription_path, callback=callback, flow_control=flow_control)
 print(f"Listening for messages on {subscription_path}..\n")
 
 # Wrap subscriber in a 'with' block to automatically call close() when done.
