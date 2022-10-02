@@ -383,18 +383,21 @@ const MyCanvas = (props) => {
     if (e.evt.wheelDelta === 0)
       return;
 
-    var newZoom;
-    if (e.evt.wheelDelta > 0) {
-      newZoom = cameraZoom * CAMERA_ZOOM_SPEED;
-    } else {
-      newZoom = cameraZoom / CAMERA_ZOOM_SPEED;
-    }
+      var newZoom;
+      if (e.evt.wheelDelta > 0) {
+        newZoom = cameraZoom * CAMERA_ZOOM_SPEED;
+      } else {
+        newZoom = cameraZoom / CAMERA_ZOOM_SPEED;
+      }
+      
+      newZoom = Math.max(newZoom, MIN_ZOOM);
+      
+      var [ax, ay] = toGlobalSpace(cursor_pos[0], cursor_pos[1]);
 
-    newZoom = Math.max(newZoom, MIN_ZOOM);
-
-    var [ax, ay] = toGlobalSpace(cursor_pos[0], cursor_pos[1]);
-
-    moveCamera((ax - cursor_pos[0] / newZoom), (ay - cursor_pos[1] / newZoom), newZoom);
+      // init_x = (init_x * cameraZoom);
+      // init_y = (init_y * cameraZoom);
+    
+      moveCamera((ax - cursor_pos[0] / newZoom), (ay - cursor_pos[1] / newZoom), newZoom);
   }
 
   const handleTouchUp = (e) => {
@@ -410,6 +413,9 @@ const MyCanvas = (props) => {
   }
 
   const handleMouseUp = (e) => {
+    init_x = cursor_pos[0] - bkg_x;
+    init_y = cursor_pos[1] - bkg_y;
+
     switch (e.evt.which) {
       case 1:
         if (currentState === SELECTING) {
@@ -595,16 +601,20 @@ const MyCanvas = (props) => {
   function get_bkg_style() {    
     var size = BKG_DOT_SPACING * cameraZoom;
     
-    bkg_x = ((cursor_pos[0] - init_x));
-    bkg_y = ((cursor_pos[1] - init_y));
+    if(currentState != SELECTING) {
+      bkg_x = ((cursor_pos[0] - init_x));
+      bkg_y = ((cursor_pos[1] - init_y));
+    }
     
-    console.log(bkg_x,bkg_y);
+    var dot_size = Math.round(10 / cameraZoom);
+
+    console.log(dot_size);
 
     return {
       backgroundColor: "#fff",
       backgroundSize: `${size}px ${size}px`,
       backgroundPosition: `${bkg_x}px ${bkg_y}px`,
-      backgroundImage: "radial-gradient(rgb(200, 200, 200), transparent 10%)",
+      backgroundImage: `radial-gradient(rgb(200, 200, 200) 10%, transparent 0%)`,
       // backgroundImage: 'url(https://www.referenseo.com/wp-content/uploads/2019/03/image-attractive-960x540.jpg)',
       // backgroundRepeat: 'no-repeat'
     }
