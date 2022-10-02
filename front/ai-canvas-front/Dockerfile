@@ -27,4 +27,5 @@ WORKDIR /app
 COPY --from=build /app/build /app/
 RUN npm install -g serve
 # start app
-CMD ["serve", "-s", "./build/"]
+EXPOSE 8080
+CMD ["serve", "-s", "./build/", "-p", "8080" ]
