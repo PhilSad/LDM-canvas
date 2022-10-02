@@ -146,6 +146,7 @@ def callback(message: pubsub_v1.subscriber.message.Message) -> None:
     save_path = f'/tmp/{ts}.jpeg'
     save_to_bucket(save_path, generated, bucket_path)
 
+    data_to_add['action'] = 'new_image'
     push_to_clients(room, data_to_add)
 
 
