@@ -94,15 +94,22 @@ const MyCanvas = (props) => {
   const [isLogged, setIsLogged] = useState(false);
 
   const [room, setRoom] = useState('default');
-  
+
 
 
   function handle_receive_from_socket(data) {
     data = JSON.parse(data)
+
+    var z = Math.min(canvasW/+data.width, canvasH/+data.height) * 0.5;
+    var x = +data.posX - (canvasW/2)/z + +data.width/2
+    var y = +data.posY - (canvasH/2)/z + +data.height/2
+
     if (data.action == "new_image") {
       removePlaceholder(data.posX, data.posY)
       addNewImage(URL_BUCKET + data.path, data.posX, data.posY, data.width, data.height, data.prompt)
-      toast('New image:' + data.prompt + ' at (' + data.posX + ' ' + data.posX + ')', {
+      toast(<div onClick={() => {moveCamera(x, y, z)}}>
+        New image: {data.prompt} at ({data.posX}, {data.posY})
+      </div >, {
         position: "top-right",
         autoClose: 5000,
         hideProgressBar: false,
@@ -110,7 +117,7 @@ const MyCanvas = (props) => {
         pauseOnHover: true,
         draggable: true,
         progress: undefined,
-        });
+      });
     }
 
     if (data.action == "generating_image") {
@@ -307,14 +314,12 @@ const MyCanvas = (props) => {
 
   // movement handlers
   const handleTouchDown = (e) => {
-    console.log('down')
-
     var touchposx = e.currentTarget.pointerPos.x;
     var touchposy = e.currentTarget.pointerPos.y;
 
     cursor_pos = [touchposx, touchposy];
 
-    if (currentState === IDLE && moveState === READY) {
+    if (currentState === IDLE && moveState === IDLE) {
       handleMoveStart();
     } else if (currentState === IDLE && moveState === IDLE) {
       defineSelection(cursor_pos[0], cursor_pos[1]);
@@ -339,86 +344,67 @@ const MyCanvas = (props) => {
     }
   };
 
-  const handleTouchMove = (e) => {
-    console.log('move')
-
-    var offsets = stageRef.current.content.getBoundingClientRect();
-
-    var touchposx = e.currentTarget.pointerPos.x;
-    var touchposy = e.currentTarget.pointerPos.y;
-
-    if (currentState === SELECTING && moveState === IDLE) {
-
-      var w = ((touchposx - offsets.x) / cameraZoom + cameraX - posX);
-      var h = ((touchposy - offsets.y) / cameraZoom + cameraY - posY);
+  function handleMove() {
+    if (currentState === SELECTING) {
+      var w = (cursor_pos[0] / cameraZoom + cameraX - posX);
+      var h = (cursor_pos[1] / cameraZoom + cameraY - posY);
       setWidth(w);
       setHeight(h);
-    } else if (currentState === IDLE && moveState === MOVING) {
-      var movX = (touchposx) - camInitX;
-      var movY = (touchposy) - camInitY;
+    }
 
-      setCamInitX(touchposx);
-      setCamInitY(touchposy);
+    if (moveState === MOVING) {
+      var movX = cursor_pos[0] - camInitX;
+      var movY = cursor_pos[1] - camInitY;
+
+      setCamInitX(cursor_pos[0]);
+      setCamInitY(cursor_pos[1]);
 
       moveCamera((cameraX - movX / cameraZoom), (cameraY - movY / cameraZoom), cameraZoom);
     }
   }
 
+  const handleTouchMove = (e) => {
+    var touchposx = e.currentTarget.pointerPos.x;
+    var touchposy = e.currentTarget.pointerPos.y;
+    cursor_pos = [touchposx, touchposy];
+
+    handleMove();
+  }
+
   const handleMouseMove = (e) => {
-    var offsets = stageRef.current.content.getBoundingClientRect();
-    cursor_pos = [(e.evt.clientX - offsets.x), (e.evt.clientY - offsets.y)]
+    cursor_pos = [e.evt.clientX, e.evt.clientY];
 
-    switch (currentState) {
-      case SELECTING:
-        var w = (cursor_pos[0] / cameraZoom + cameraX - posX);
-        var h = (cursor_pos[1] / cameraZoom + cameraY - posY);
-
-        setWidth(w);
-        setHeight(h);
-        break;
-    }
-
-    switch (moveState) {
-      case MOVING:
-        var movX = cursor_pos[0] - camInitX;
-        var movY = cursor_pos[1] - camInitY;
-
-        setCamInitX(cursor_pos[0]);
-        setCamInitY(cursor_pos[1]);
-
-        moveCamera((cameraX - movX / cameraZoom), (cameraY - movY / cameraZoom), cameraZoom);
-        break;
-    }
+    handleMove();
   };
 
   const handleMouseScroll = (e) => {
     if (e.evt.wheelDelta === 0)
       return;
 
-      var newZoom;
-      if (e.evt.wheelDelta > 0) {
-        newZoom = cameraZoom * CAMERA_ZOOM_SPEED;
-      } else {
-        newZoom = cameraZoom / CAMERA_ZOOM_SPEED;
-      }
-      
-      newZoom = Math.max(newZoom, MIN_ZOOM);
-      
-      var [ax, ay] = toGlobalSpace(cursor_pos[0], cursor_pos[1]);
+    var newZoom;
+    if (e.evt.wheelDelta > 0) {
+      newZoom = cameraZoom * CAMERA_ZOOM_SPEED;
+    } else {
+      newZoom = cameraZoom / CAMERA_ZOOM_SPEED;
+    }
 
-      // init_x = (init_x * cameraZoom);
-      // init_y = (init_y * cameraZoom);
-    
-      moveCamera((ax - cursor_pos[0] / newZoom), (ay - cursor_pos[1] / newZoom), newZoom);
+    newZoom = Math.max(newZoom, MIN_ZOOM);
+
+    var [ax, ay] = toGlobalSpace(cursor_pos[0], cursor_pos[1]);
+
+    // init_x = (init_x * cameraZoom);
+    // init_y = (init_y * cameraZoom);
+
+    moveCamera((ax - cursor_pos[0] / newZoom), (ay - cursor_pos[1] / newZoom), newZoom);
   }
 
   function handleMoveStop() {
     moving = false;
-    switchMoveState(READY);
+    switchMoveState(IDLE);
   }
 
   const handleTouchUp = (e) => {
-    if (currentState === IDLE && moveState === MOVING) {
+    if (currentState === IDLE && moveState === IDLE) {
       handleMoveStop();
     } else if (currentState === SELECTING && moveState === IDLE) {
       switchState(INPUT_TYPE);
@@ -613,17 +599,13 @@ const MyCanvas = (props) => {
     return true;
   }
 
-  function get_bkg_style() {    
+  function get_bkg_style() {
     var size = BKG_DOT_SPACING * cameraZoom;
-    
-    if(moving) {
+
+    if (moving) {
       bkg_x = ((cursor_pos[0] - init_x));
       bkg_y = ((cursor_pos[1] - init_y));
     }
-    
-    var dot_size = Math.round(10 / cameraZoom);
-
-    console.log(dot_size);
 
     return {
       backgroundColor: "#fff",
@@ -638,19 +620,19 @@ const MyCanvas = (props) => {
   function handleFetchErrors(response) {
     if (!response.ok) {
       toast.error('Error ! :' + response.statusText, {
-          position: "bottom-center",
-          autoClose: 5000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          progress: undefined,
-        });
-        console.log(response);
-        throw Error(response.statusText);
+        position: "bottom-center",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+      console.log(response);
+      throw Error(response.statusText);
     }
     return response;
-}
+  }
 
   return (
     <div style={{ cursor: cursor }}>
@@ -799,15 +781,15 @@ const MyCanvas = (props) => {
       }
 
       <ToastContainer
-          position="bottom-center"
-          autoClose={5000}
-          hideProgressBar={false}
-          newestOnTop
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
+        position="bottom-center"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
       />
     </div>
   );
