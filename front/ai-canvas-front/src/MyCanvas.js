@@ -9,6 +9,7 @@ import _ from "lodash";
 import ImageSaverLayer from './imageSaveLayer';
 import Amplify from '@aws-amplify/core'
 import * as gen from './generated'
+import HelpModalButton from './helpModal'
 
 // import ImageSaver from './ImageSaver';
 // import * as env from './env.js';
@@ -84,6 +85,7 @@ const MyCanvas = (props) => {
   const [isLogged, setIsLogged] = useState(false);
 
   const [room, setRoom] = useState('default');
+  
 
 
   function handle_receive_from_socket(data) {
@@ -613,6 +615,7 @@ const MyCanvas = (props) => {
 
         )} */}
 
+        
         {isMobile ? (
           <span>
             <button onClick={() => handleClickRefresh()}> Refresh </button>
@@ -627,6 +630,7 @@ const MyCanvas = (props) => {
             <button onClick={() => handleClickRefresh()}> Refresh </button>
           </span>
         )}
+        <HelpModalButton />
       </div>
 
       <div className="coords"> {Math.floor(cameraX)}, {Math.floor(cameraY)}, {Math.floor(cameraZoom * 100) / 100} </div>

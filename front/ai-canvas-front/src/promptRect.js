@@ -1,7 +1,6 @@
 import React from 'react';
 import { Rect, Group } from 'react-konva';
 import { Html } from 'react-konva-utils';
-import Modal from 'react-bootstrap/Modal';
 
 function PromptRect(props) {
     var width = props.width;

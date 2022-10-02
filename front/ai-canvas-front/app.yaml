@@ -1,7 +1,10 @@
 runtime: nodejs16
 instance_class: F1
 
+
+
 automatic_scaling:
+  min_instances: 1
   max_instances: 1
 
 network:
@@ -12,7 +15,9 @@ handlers:
 - url: /(.*\..+)$
   static_files: build/\1
   upload: build/(.*\..+)$
+  secure: always
 # Catch all handler to index.html
 - url: /.*
   static_files: build/index.html
   upload: build/index.html
+  secure: always
