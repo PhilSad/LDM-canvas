@@ -55,6 +55,7 @@ let cursor_pos = [0, 0];
 
 var init_x = 0, init_y = 0;
 var bkg_x = 0, bkg_y = 0;
+var moving = false;
 
 const MyCanvas = (props) => {
   const stageRef = useRef(null);
@@ -292,6 +293,18 @@ const MyCanvas = (props) => {
     setImageDivList(prevState => [...prevState, img]);
   }
 
+  function handleMoveStart() {
+    moving = true;
+
+    setCamInitX(cursor_pos[0]);
+    setCamInitY(cursor_pos[1]);
+
+    init_x = cursor_pos[0] - bkg_x;
+    init_y = cursor_pos[1] - bkg_y;
+
+    switchMoveState(MOVING);
+  }
+
   // movement handlers
   const handleTouchDown = (e) => {
     console.log('down')
@@ -299,15 +312,12 @@ const MyCanvas = (props) => {
     var touchposx = e.currentTarget.pointerPos.x;
     var touchposy = e.currentTarget.pointerPos.y;
 
+    cursor_pos = [touchposx, touchposy];
+
     if (currentState === IDLE && moveState === READY) {
-      setCamInitX(touchposx);
-      setCamInitY(touchposy);
-      switchMoveState(MOVING)
+      handleMoveStart();
     } else if (currentState === IDLE && moveState === IDLE) {
-      var offsets = stageRef.current.content.getBoundingClientRect();
-      var x = (touchposx - offsets.x);
-      var y = (touchposy - offsets.y);
-      defineSelection(x, y);
+      defineSelection(cursor_pos[0], cursor_pos[1]);
     }
   }
 
@@ -318,23 +328,11 @@ const MyCanvas = (props) => {
         break;
 
       case 2:
-        setCamInitX(cursor_pos[0]);
-        setCamInitY(cursor_pos[1]);
-
-        init_x = cursor_pos[0] - bkg_x;
-        init_y = cursor_pos[1] - bkg_y;
-
-        switchMoveState(MOVING);
+        handleMoveStart();
         break;
 
       case 3:
-        setCamInitX(cursor_pos[0]);
-        setCamInitY(cursor_pos[1]);
-
-        init_x = cursor_pos[0] - bkg_x;
-        init_y = cursor_pos[1] - bkg_y;
-
-        switchMoveState(MOVING);
+        handleMoveStart();
         break;
 
       default:
@@ -414,11 +412,14 @@ const MyCanvas = (props) => {
       moveCamera((ax - cursor_pos[0] / newZoom), (ay - cursor_pos[1] / newZoom), newZoom);
   }
 
-  const handleTouchUp = (e) => {
-    console.log('up')
+  function handleMoveStop() {
+    moving = false;
+    switchMoveState(READY);
+  }
 
+  const handleTouchUp = (e) => {
     if (currentState === IDLE && moveState === MOVING) {
-      switchMoveState(READY);
+      handleMoveStop();
     } else if (currentState === SELECTING && moveState === IDLE) {
       switchState(INPUT_TYPE);
     }
@@ -438,11 +439,11 @@ const MyCanvas = (props) => {
         break;
 
       case 2:
-        switchMoveState(IDLE);
+        handleMoveStop()
         break;
 
       case 3:
-        switchMoveState(IDLE);
+        handleMoveStop()
         break;
 
       default:
@@ -612,11 +613,10 @@ const MyCanvas = (props) => {
     return true;
   }
 
-<<<<<<< HEAD
   function get_bkg_style() {    
     var size = BKG_DOT_SPACING * cameraZoom;
     
-    if(currentState != SELECTING) {
+    if(moving) {
       bkg_x = ((cursor_pos[0] - init_x));
       bkg_y = ((cursor_pos[1] - init_y));
     }
@@ -635,7 +635,6 @@ const MyCanvas = (props) => {
     }
   }
 
-=======
   function handleFetchErrors(response) {
     if (!response.ok) {
       toast.error('Error ! :' + response.statusText, {
@@ -652,7 +651,6 @@ const MyCanvas = (props) => {
     }
     return response;
 }
->>>>>>> 4f93e5b8d4c8935edd589470f3b23fcd1e3925a3
 
   return (
     <div style={{ cursor: cursor }}>
