@@ -28,5 +28,5 @@ COPY --from=build /app/build /app/
 RUN npm install -g serve
 # start app
 EXPOSE 8080
-RUN serve -s ./build/ -p 8080
+# RUN serve -s ./build/ -p 8080
 CMD ["serve", "-s", "./build/", "-p", "8080" ]
