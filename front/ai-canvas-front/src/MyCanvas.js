@@ -9,6 +9,10 @@ import _ from "lodash";
 import ImageSaverLayer from './imageSaveLayer';
 import Amplify from '@aws-amplify/core'
 import * as gen from './generated'
+import HelpModalButton from './helpModal'
+
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 // import ImageSaver from './ImageSaver';
 // import * as env from './env.js';
@@ -89,6 +93,7 @@ const MyCanvas = (props) => {
   const [isLogged, setIsLogged] = useState(false);
 
   const [room, setRoom] = useState('default');
+  
 
 
   function handle_receive_from_socket(data) {
@@ -96,6 +101,15 @@ const MyCanvas = (props) => {
     if (data.action == "new_image") {
       removePlaceholder(data.posX, data.posY)
       addNewImage(URL_BUCKET + data.path, data.posX, data.posY, data.width, data.height, data.prompt)
+      toast('New image:' + data.prompt + ' at (' + data.posX + ' ' + data.posX + ')', {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        });
     }
 
     if (data.action == "generating_image") {
@@ -549,7 +563,7 @@ const MyCanvas = (props) => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(imageParamsDict),
-        })
+        }).then(handleFetchErrors)
 
         break;
 
@@ -566,7 +580,7 @@ const MyCanvas = (props) => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(imageParamsDict),
-        })
+        }).then(handleFetchErrors)
 
         break;
 
@@ -583,7 +597,7 @@ const MyCanvas = (props) => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(imageParamsDict),
-        })
+        }).then(handleFetchErrors)
 
         break;
     }
@@ -598,6 +612,7 @@ const MyCanvas = (props) => {
     return true;
   }
 
+<<<<<<< HEAD
   function get_bkg_style() {    
     var size = BKG_DOT_SPACING * cameraZoom;
     
@@ -620,6 +635,24 @@ const MyCanvas = (props) => {
     }
   }
 
+=======
+  function handleFetchErrors(response) {
+    if (!response.ok) {
+      toast.error('Error ! :' + response.statusText, {
+          position: "bottom-center",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
+        console.log(response);
+        throw Error(response.statusText);
+    }
+    return response;
+}
+>>>>>>> 4f93e5b8d4c8935edd589470f3b23fcd1e3925a3
 
   return (
     <div style={{ cursor: cursor }}>
@@ -670,6 +703,7 @@ const MyCanvas = (props) => {
             <button onClick={() => handleClickRefresh()}> Refresh </button>
           </span>
         )}
+        <HelpModalButton />
       </div>
 
       <div className="coords"> {Math.floor(cameraX)}, {Math.floor(cameraY)}, {Math.floor(cameraZoom * 100) / 100} </div>
@@ -766,6 +800,17 @@ const MyCanvas = (props) => {
         <ImageSaverLayer ref={imageSaveRef} imageSave={imageSave} />
       }
 
+      <ToastContainer
+          position="bottom-center"
+          autoClose={5000}
+          hideProgressBar={false}
+          newestOnTop
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+      />
     </div>
   );
 
