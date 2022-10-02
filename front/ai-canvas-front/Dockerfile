@@ -1,5 +1,5 @@
 # pull official base image
-FROM node:alpine3.15 as build
+FROM node:16.17-alpine3.15 as build
 
 # set working directory
 WORKDIR /app
@@ -22,7 +22,7 @@ RUN npm run build
 
 
 
-FROM node:alpine3.15
+FROM node:16.17-alpine3.15
 WORKDIR /app
 COPY --from=build /app/build /app/
 RUN npm install -g serve
