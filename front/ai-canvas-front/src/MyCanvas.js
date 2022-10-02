@@ -11,6 +11,9 @@ import Amplify from '@aws-amplify/core'
 import * as gen from './generated'
 import HelpModalButton from './helpModal'
 
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 // import ImageSaver from './ImageSaver';
 // import * as env from './env.js';
 // import * as request from './requests'
@@ -93,6 +96,15 @@ const MyCanvas = (props) => {
     if (data.action == "new_image") {
       removePlaceholder(data.posX, data.posY)
       addNewImage(URL_BUCKET + data.path, data.posX, data.posY, data.width, data.height, data.prompt)
+      toast('New image:' + data.prompt + ' at (' + data.posX + ' ' + data.posX + ')', {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        });
     }
 
     if (data.action == "generating_image") {
@@ -531,7 +543,7 @@ const MyCanvas = (props) => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(imageParamsDict),
-        })
+        }).then(handleFetchErrors)
 
         break;
 
@@ -548,7 +560,7 @@ const MyCanvas = (props) => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(imageParamsDict),
-        })
+        }).then(handleFetchErrors)
 
         break;
 
@@ -565,7 +577,7 @@ const MyCanvas = (props) => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(imageParamsDict),
-        })
+        }).then(handleFetchErrors)
 
         break;
     }
@@ -579,6 +591,23 @@ const MyCanvas = (props) => {
     if (a.y >= b.y + b.h || b.y >= a.y + a.h) return false;
     return true;
   }
+
+  function handleFetchErrors(response) {
+    if (!response.ok) {
+      toast.error('Error ! :' + response.statusText, {
+          position: "bottom-center",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
+        console.log(response);
+        throw Error(response.statusText);
+    }
+    return response;
+}
 
   return (
     <div style={{ cursor: cursor }}>
@@ -615,7 +644,6 @@ const MyCanvas = (props) => {
 
         )} */}
 
-        
         {isMobile ? (
           <span>
             <button onClick={() => handleClickRefresh()}> Refresh </button>
@@ -726,6 +754,17 @@ const MyCanvas = (props) => {
         <ImageSaverLayer ref={imageSaveRef} imageSave={imageSave} />
       }
 
+      <ToastContainer
+          position="bottom-center"
+          autoClose={5000}
+          hideProgressBar={false}
+          newestOnTop
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+      />
     </div>
   );
 
