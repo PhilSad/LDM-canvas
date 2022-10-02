@@ -26,10 +26,7 @@ FROM node:16.17-alpine3.15
 WORKDIR /app
 COPY --from=build /app/build /app/
 RUN npm install -g serve
-RUN ls
-RUN pwd
-RUN ls /app/build
 # start app
 EXPOSE 8080
 # RUN serve -s ./build/ -p 8080
-CMD ["serve", "-s", "/app/build/", "-p", "8080" ]
+CMD ["serve", "-s", "/app", "-p", "8080" ]
