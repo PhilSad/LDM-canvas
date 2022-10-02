@@ -85,15 +85,15 @@ const MyCanvas = (props) => {
 
   const [room, setRoom] = useState('default');
 
-  
+
   function handle_receive_from_socket(data) {
     data = JSON.parse(data)
-    if ( data.action == "new_image" ){
+    if (data.action == "new_image") {
       removePlaceholder(data.posX, data.posY)
-      addNewImage(URL_BUCKET + data.path, data.posX, data.posY, data.width, data.height, data.prompt)  
+      addNewImage(URL_BUCKET + data.path, data.posX, data.posY, data.width, data.height, data.prompt)
     }
 
-    if ( data.action == "generating_image"){
+    if (data.action == "generating_image") {
       addNewPlaceholder(data.posX, data.posY, data.width, data.height)
     }
   }
@@ -107,13 +107,11 @@ const MyCanvas = (props) => {
   //on page load
   useEffect(() => {
     const onPageLoad = () => {
-      console.log("page laoded");
-      
       setIsMobile(window.innerWidth <= 768);
 
-      var x = searchParams.get("x") !== null ? searchParams.get("x") : 0;
-      var y = searchParams.get("y") !== null ? searchParams.get("y") : 0;
-      var zoom = searchParams.get("zoom") !== null ? searchParams.get("zoom") : 1;
+      var x = searchParams.get("x") !== null ? +searchParams.get("x") : 0;
+      var y = searchParams.get("y") !== null ? +searchParams.get("y") : 0;
+      var zoom = searchParams.get("zoom") !== null ? +searchParams.get("zoom") : 1;
 
       handleClickRefresh();
 
@@ -241,9 +239,13 @@ const MyCanvas = (props) => {
       w: w,
       h: h
     };
-    var copy = new Map(placeholderList);
-    copy.set(`${x},${y}`, ph);
-    setPlaceholderList(copy);
+
+    setPlaceholderList(prevState => {
+      var copy = new Map(prevState);
+      copy.set(`${x},${y}`, ph);
+      return copy;
+    });
+
   }
 
   function removePlaceholder(x, y) {
@@ -337,10 +339,10 @@ const MyCanvas = (props) => {
   }
 
   const handleMouseMove = (e) => {
-    var offsets = stageRef.current.content.getBoundingClientRect();
-
     switch (currentState) {
       case SELECTING:
+        var offsets = stageRef.current.content.getBoundingClientRect();
+
         var w = ((e.evt.clientX - offsets.x) / cameraZoom + cameraX - posX);
         var h = ((e.evt.clientY - offsets.y) / cameraZoom + cameraY - posY);
 
@@ -439,7 +441,7 @@ const MyCanvas = (props) => {
   }
 
   const handleClickRefresh = () => {
-    setImageDivList([]); 
+    setImageDivList([]);
 
     var url_get_image_with_params = URL_GET_IMAGES + '?posX=0&posY=0&width=100&height=100';
 
@@ -517,7 +519,7 @@ const MyCanvas = (props) => {
       'width': w,
       'height': h
     }
-    
+
     var url_function_imagen_with_action = URL_FUNCTION_IMAGEN + '?action=' + generation_type;
     switch (generation_type) {
       case 'new_image':

@@ -42,7 +42,7 @@ class URLImage extends React.Component {
                 y={this.props.y}
                 onMouseEnter={this.handleEnter}
                 onMouseLeave={this.handleLeave}
-                draggable={true}
+                // draggable={true}
             >
                 <Image
                     width={this.props.width}
