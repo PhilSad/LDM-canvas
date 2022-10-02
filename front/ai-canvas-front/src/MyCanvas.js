@@ -87,8 +87,14 @@ const MyCanvas = (props) => {
 
   function handle_receive_from_socket(data) {
     data = JSON.parse(data)
-    removePlaceholder(data.posX, data.posY)
-    addNewImage(URL_BUCKET + data.path, data.posX, data.posY, data.width, data.height, data.prompt)
+    if ( data.action == "new_image" ){
+      removePlaceholder(data.posX, data.posY)
+      addNewImage(URL_BUCKET + data.path, data.posX, data.posY, data.width, data.height, data.prompt)  
+    }
+
+    if ( data.action == "generating_image"){
+      addNewPlaceholder(data.posX, data.posY, data.width, data.height)
+    }
   }
 
   //socket
