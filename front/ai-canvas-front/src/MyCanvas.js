@@ -96,8 +96,6 @@ const MyCanvas = (props) => {
     if ( data.action == "generating_image"){
       addNewPlaceholder(data.posX, data.posY, data.width, data.height)
     }
-    removePlaceholder(data.posX, data.posY)
-    addNewImage(URL_BUCKET + data.path, data.posX, data.posY, data.width, data.height, data.prompt)
   }
 
   //socket
