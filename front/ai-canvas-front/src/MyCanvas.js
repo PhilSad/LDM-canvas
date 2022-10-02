@@ -44,8 +44,13 @@ const READY = "READY";
 const CAMERA_SPEED = 1;
 const CAMERA_ZOOM_SPEED = 1.1;
 const MIN_ZOOM = 0.01;
+const BKG_DOT_SPACING = 20;
 
 let generation_type;
+let cursor_pos = [0, 0];
+
+var init_x = 0, init_y = 0;
+var bkg_x = 0, bkg_y = 0;
 
 const MyCanvas = (props) => {
   const stageRef = useRef(null);
@@ -275,6 +280,8 @@ const MyCanvas = (props) => {
 
   // movement handlers
   const handleTouchDown = (e) => {
+    console.log('down')
+
     var touchposx = e.currentTarget.pointerPos.x;
     var touchposy = e.currentTarget.pointerPos.y;
 
@@ -293,21 +300,26 @@ const MyCanvas = (props) => {
   const handleMouseDown = (e) => {
     switch (e.evt.which) {
       case 1:
-        var offsets = stageRef.current.content.getBoundingClientRect();
-        var x = (e.evt.clientX - offsets.x);
-        var y = (e.evt.clientY - offsets.y);
-        defineSelection(x, y);
+        defineSelection(cursor_pos[0], cursor_pos[1]);
         break;
 
       case 2:
-        setCamInitX(e.evt.clientX);
-        setCamInitY(e.evt.clientY);
+        setCamInitX(cursor_pos[0]);
+        setCamInitY(cursor_pos[1]);
+
+        init_x = cursor_pos[0] - bkg_x;
+        init_y = cursor_pos[1] - bkg_y;
+
         switchMoveState(MOVING);
         break;
 
       case 3:
-        setCamInitX(e.evt.clientX);
-        setCamInitY(e.evt.clientY);
+        setCamInitX(cursor_pos[0]);
+        setCamInitY(cursor_pos[1]);
+
+        init_x = cursor_pos[0] - bkg_x;
+        init_y = cursor_pos[1] - bkg_y;
+
         switchMoveState(MOVING);
         break;
 
@@ -316,6 +328,8 @@ const MyCanvas = (props) => {
   };
 
   const handleTouchMove = (e) => {
+    console.log('move')
+
     var offsets = stageRef.current.content.getBoundingClientRect();
 
     var touchposx = e.currentTarget.pointerPos.x;
@@ -339,12 +353,13 @@ const MyCanvas = (props) => {
   }
 
   const handleMouseMove = (e) => {
+    var offsets = stageRef.current.content.getBoundingClientRect();
+    cursor_pos = [(e.evt.clientX - offsets.x), (e.evt.clientY - offsets.y)]
+
     switch (currentState) {
       case SELECTING:
-        var offsets = stageRef.current.content.getBoundingClientRect();
-
-        var w = ((e.evt.clientX - offsets.x) / cameraZoom + cameraX - posX);
-        var h = ((e.evt.clientY - offsets.y) / cameraZoom + cameraY - posY);
+        var w = (cursor_pos[0] / cameraZoom + cameraX - posX);
+        var h = (cursor_pos[1] / cameraZoom + cameraY - posY);
 
         setWidth(w);
         setHeight(h);
@@ -353,11 +368,11 @@ const MyCanvas = (props) => {
 
     switch (moveState) {
       case MOVING:
-        var movX = (e.evt.clientX) - camInitX;
-        var movY = (e.evt.clientY) - camInitY;
+        var movX = cursor_pos[0] - camInitX;
+        var movY = cursor_pos[1] - camInitY;
 
-        setCamInitX(e.evt.clientX);
-        setCamInitY(e.evt.clientY);
+        setCamInitX(cursor_pos[0]);
+        setCamInitY(cursor_pos[1]);
 
         moveCamera((cameraX - movX / cameraZoom), (cameraY - movY / cameraZoom), cameraZoom);
         break;
@@ -377,15 +392,14 @@ const MyCanvas = (props) => {
 
     newZoom = Math.max(newZoom, MIN_ZOOM);
 
-    var offsets = stageRef.current.content.getBoundingClientRect();
-    var x = (e.evt.clientX - offsets.x);
-    var y = (e.evt.clientY - offsets.y);
-    var [ax, ay] = toGlobalSpace(x, y);
+    var [ax, ay] = toGlobalSpace(cursor_pos[0], cursor_pos[1]);
 
-    moveCamera((ax - x / newZoom), (ay - y / newZoom), newZoom);
+    moveCamera((ax - cursor_pos[0] / newZoom), (ay - cursor_pos[1] / newZoom), newZoom);
   }
 
   const handleTouchUp = (e) => {
+    console.log('up')
+
     if (currentState === IDLE && moveState === MOVING) {
       switchMoveState(READY);
     } else if (currentState === SELECTING && moveState === IDLE) {
@@ -578,6 +592,25 @@ const MyCanvas = (props) => {
     return true;
   }
 
+  function get_bkg_style() {    
+    var size = BKG_DOT_SPACING * cameraZoom;
+    
+    bkg_x = ((cursor_pos[0] - init_x));
+    bkg_y = ((cursor_pos[1] - init_y));
+    
+    console.log(bkg_x,bkg_y);
+
+    return {
+      backgroundColor: "#fff",
+      backgroundSize: `${size}px ${size}px`,
+      backgroundPosition: `${bkg_x}px ${bkg_y}px`,
+      backgroundImage: "radial-gradient(rgb(200, 200, 200), transparent 10%)",
+      // backgroundImage: 'url(https://www.referenseo.com/wp-content/uploads/2019/03/image-attractive-960x540.jpg)',
+      // backgroundRepeat: 'no-repeat'
+    }
+  }
+
+
   return (
     <div style={{ cursor: cursor }}>
 
@@ -633,6 +666,7 @@ const MyCanvas = (props) => {
 
       <Stage
         ref={stageRef}
+        style={get_bkg_style()}
 
         width={canvasW}
         height={canvasH}
