@@ -15,16 +15,16 @@ COPY package-lock.json ./
 RUN npm install -g npm
 RUN npm ci
 RUN npm install react-scripts@3.4.1 -g 
-RUN npm install -g serve
+COPY . ./
 RUN npm run build
 
 # add app
-COPY . ./
 
 
 
 FROM node:13.12.0-alpine
 WORKDIR /app
 COPY --from=build /app/build /app/
+RUN npm install -g serve
 # start app
 CMD ["serve", "-s", "./build/"]
