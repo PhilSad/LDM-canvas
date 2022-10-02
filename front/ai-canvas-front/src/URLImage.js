@@ -33,20 +33,8 @@ class URLImage extends React.Component {
         // if you keep same image object during source updates
         // you will have to update layer manually:
         // this.imageNode.getLayer().batchDraw();
-    };
-    handleEnter = () => {
-        this.setState({
-            infoVisible: false,
-        });
     }
-    handleLeave = () => {
-        this.setState({
-            infoVisible: false,
-        });
-    }
-    handleClick = () => {
-        alert(this.props.src);
-    }
+
     render() {
         return (
             <Group
@@ -54,6 +42,7 @@ class URLImage extends React.Component {
                 y={this.props.y}
                 onMouseEnter={this.handleEnter}
                 onMouseLeave={this.handleLeave}
+                draggable={true}
             >
                 <Image
                     width={this.props.width}

@@ -85,6 +85,7 @@ const MyCanvas = (props) => {
 
   const [room, setRoom] = useState('default');
 
+  
   function handle_receive_from_socket(data) {
     data = JSON.parse(data)
     removePlaceholder(data.posX, data.posY)
@@ -100,13 +101,15 @@ const MyCanvas = (props) => {
   //on page load
   useEffect(() => {
     const onPageLoad = () => {
+      console.log("page laoded");
+      
       setIsMobile(window.innerWidth <= 768);
-
-      handleClickRefresh();
 
       var x = searchParams.get("x") !== null ? searchParams.get("x") : 0;
       var y = searchParams.get("y") !== null ? searchParams.get("y") : 0;
       var zoom = searchParams.get("zoom") !== null ? searchParams.get("zoom") : 1;
+
+      handleClickRefresh();
 
       moveCamera(x, y, zoom);
     };
@@ -130,7 +133,7 @@ const MyCanvas = (props) => {
         window.removeEventListener("load", onPageLoad);
       }
     }
-  }, []);
+  }, [room]);
 
   function switchState(state) {
     switch (state) {
@@ -430,6 +433,8 @@ const MyCanvas = (props) => {
   }
 
   const handleClickRefresh = () => {
+    setImageDivList([]); 
+
     var url_get_image_with_params = URL_GET_IMAGES + '?posX=0&posY=0&width=100&height=100';
 
     fetch(url_get_image_with_params).then((data) => data.json())
@@ -570,7 +575,7 @@ const MyCanvas = (props) => {
 
       <div className="bar">
 
-        {isLogged === true ? (
+        {/* {isLogged === true ? (
           //TODO login login
           <GoogleLogin
             onSuccess={credentialResponse => {
@@ -598,7 +603,7 @@ const MyCanvas = (props) => {
           }}> Logout </button>
 
 
-        )}
+        )} */}
 
         {isMobile ? (
           <span>
@@ -612,7 +617,6 @@ const MyCanvas = (props) => {
         ) : (
           <span>
             <button onClick={() => handleClickRefresh()}> Refresh </button>
-            <button onClick={() => { setIsMobile(!isMobile) }}> Mobile controls </button>
           </span>
         )}
       </div>
@@ -649,7 +653,7 @@ const MyCanvas = (props) => {
               ) {
                 var [x, y] = toRelativeSpace(img.x, img.y);
 
-                // display image only if the area is > 10px
+                // display image only if the area is > 25px
                 if (img.w * cameraZoom * img.h * cameraZoom > 25) {
                   return (
                     <URLImage
