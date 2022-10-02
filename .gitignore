@@ -8,3 +8,4 @@ cloud/gylwww3c.bmp
 cloud/functions/out.png
 cloud/.env
 notebooks/.env
+api/imagen_api/.env

@@ -36,18 +36,18 @@ def load_model_from_config(config, ckpt, verbose=False):
 
 class StableDiffusionGenerator:
     params = type('params', (object,), dict(
-        ddim_steps=50,
-        ddim_eta=0.0,
-        n_iter=2,
+        ddim_steps=25,
+        ddim_eta=0,
+        n_iter=1,
         width=512,
         height=512,
-        n_samples=3,
+        n_samples=1,
         scale=7.5,
-        seed=42,
+        seed=-1,
         precision='autocast',
         C=4,
         f=8,
-        plms=False,
+        plms=True,
         laion400m=False,
     ))
     
@@ -55,8 +55,8 @@ class StableDiffusionGenerator:
         # C: latent channels
         # f: downsampling factor 
         
-        config = OmegaConf.load("./models_bindings/models/stable-diffusion/stable-diffusion-v1/v1-inference.yaml")
-        ckpt = "./models_bindings/models/stable-diffusion/stable-diffusion-v1/model.ckpt"
+        config = OmegaConf.load("/home/kollai/LDM-canvas/api/imagen_api/models_bindings/models/stable-diffusion/stable-diffusion-v1/v1-inference.yaml")
+        ckpt = "/home/kollai/LDM-canvas/api/imagen_api/models_bindings/models/stable-diffusion/stable-diffusion-v1/model.ckpt"
         model = load_model_from_config(config, ckpt)
         
         device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")

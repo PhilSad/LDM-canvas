@@ -14,43 +14,44 @@ storage_client = storage.Client()
 
 bucket = storage_client.bucket('aicanvas-public-bucket')
 
-CUR_IMAGE_PATH = './images/cur_image.png'
 app = Flask(__name__)
 CORS(app)
 
 
 generator = StableDiffusionGenerator()
 
+MAX_SIZE = 512
 
 @app.route("/imagine/")
 def imagine():
-   
-
     b64prompt = request.args.get('prompt')
     posX = int(request.args.get('posX'))
     posY = int(request.args.get('posY'))
     width = int(request.args.get('width'))
     height = int(request.args.get('height'))
 
+    print(width, height)
+
+    ratio = width/height
+    if(ratio > 1):
+        width = MAX_SIZE
+        height = ((round(MAX_SIZE * 1/ratio) + 32) // 64) * 64
+        height= int(max(height, 64))
+    else:
+        height = MAX_SIZE
+        width = ((round(MAX_SIZE * ratio) + 32) // 64) * 64
+        width = int(max(width, 64))
+
     prompt = base64.b64decode(b64prompt)
-    print(prompt)
     prompt = prompt.decode("utf-8")
-    print(prompt)
-    generated = generator.imagine(prompt, 512, 512)
 
-    generated = generated.resize((width, height))
+    print(width, height)
 
-    generated.save(CUR_IMAGE_PATH)
+    generated = generator.imagine(prompt, width, height)
 
     # save to cloud
     storage_client = storage.Client()
     bucket = storage_client.bucket('aicanvas-public-bucket')
-    blob_generated = bucket.blob('cur_generated.png')
-    blob_history = bucket.blob(f'history/{str(time.time())}-{prompt}.png')
-
-    blob_generated.upload_from_filename(CUR_IMAGE_PATH)
-    blob_history.upload_from_filename(CUR_IMAGE_PATH)
-    
 
     # todo save image
 
