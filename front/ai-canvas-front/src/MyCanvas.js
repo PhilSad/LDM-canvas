@@ -624,7 +624,7 @@ const MyCanvas = (props) => {
 
   function handleFetchErrors(response) {
     if (!response.ok) {
-      toast.error('Error ! :' + response.statusText, {
+      toast.error('Error ! Are you connected ?', {
         position: "bottom-center",
         autoClose: 5000,
         hideProgressBar: false,
@@ -658,6 +658,7 @@ const MyCanvas = (props) => {
               console.log('Login Failed');
             }}
             useOneTap
+            auto_select
           //todo add auto login
 
           />
