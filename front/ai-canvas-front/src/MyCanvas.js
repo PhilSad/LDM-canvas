@@ -108,6 +108,7 @@ const MyCanvas = (props) => {
     }
 
     if (data.action == "generating_image") {
+      console.log(data.queue_size)
       addNewPlaceholder(data.posX, data.posY, data.width, data.height)
     }
   }
