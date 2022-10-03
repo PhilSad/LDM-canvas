@@ -93,6 +93,8 @@ def callback(message: pubsub_v1.subscriber.message.Message) -> None:
     action = data['action']
     params = data['params']
 
+    print(params)
+
     b64prompt = params['prompt']
     prompt = base64.b64decode(b64prompt)
     prompt = prompt.decode("utf-8")
@@ -141,13 +143,22 @@ def callback(message: pubsub_v1.subscriber.message.Message) -> None:
         prompt = prompt
     )
 
-    save_to_sql(data_to_add)
 
     save_path = f'/tmp/{ts}.jpeg'
     save_to_bucket(save_path, generated, bucket_path)
 
     data_to_add['action'] = 'new_image'
-    push_to_clients(room, data_to_add)
+    push_to_clients(room, data_to_add)    
+
+    data_to_bdd = dict(
+        uuid = params['uuid'],
+        path=bucket_path,
+        status = 'generated'
+    )
+    json_request = dict(action='update_row', table = 'images', data = data_to_bdd)
+
+    requests.post('https://sql-actions-jujlepts2a-ew.a.run.app', json = json_request)
+
 
 
     message.ack()

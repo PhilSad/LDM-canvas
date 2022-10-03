@@ -46,10 +46,11 @@ function PromptRect(props) {
 
                             {props.currentState === "INPUT_TYPE" &&
                                 <div>
-                                    <button className='choiceButton' title="New Image" onClick={() => props.handleNewImage()}>Ni</button>
-                                    <button className='choiceButton' title="Inpainting Alpha" onClick={() => props.handleInpaintAlpha()}>Ip</button>
-                                    <button className='choiceButton' title="Image To Image" onClick={() => props.handleImg2Img()}>i2i</button>
-                                    <button className='choiceButton green' title="Save Selection" onClick={() => props.handleSave()}>Sv</button>
+                                    <img className='choiceButton blue' src="images/new_image.png" alt="new image" onClick={() => props.handleNewImage()} />
+                                    <img className='choiceButton yellow' src="images/inpaint.png" alt="inpaint" onClick={() => props.handleInpaintAlpha()} />
+                                    <img className='choiceButton red' src="images/img2img.png" alt="img2img" onClick={() => props.handleImg2Img()} />
+                                    <img className='choiceButton green' src="images/save.png" alt="save" onClick={() => props.handleSave()} />
+
                                 </div>
                             }
 
