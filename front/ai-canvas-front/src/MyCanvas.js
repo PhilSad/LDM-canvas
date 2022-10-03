@@ -660,7 +660,7 @@ const MyCanvas = (props) => {
             useOneTap
             auto_select
           //todo add auto login
-
+          
           />
         ) : (
 

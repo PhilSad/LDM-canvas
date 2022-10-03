@@ -24,10 +24,10 @@ export default function HelpModalButton() {
           <br/><br/>
           <b>Left click</b> : make a selection and select one of the modes
           <ul>
-            <li><b>NI</b>: Generate a new image from scratch </li>
-            <li><b>IA</b>: Only generate empty parts in the selection </li>
-            <li><b>I2I</b>: Start the generation with the selection as init. image </li>
-            <li><b>SV</b>: Download the selection as jpeg</li>
+            <li><b>New Image</b>: Generate a new image from scratch </li>
+            <li><b>Inpaint Transparent</b>: Only generate empty parts in the selection for seamless effect </li>
+            <li><b>Image to Image</b>: Start the generation with the selection as init. image </li>
+            <li><b>Save</b>: Download the selection as jpeg</li>
           </ul>
         </Modal.Body>
 
