@@ -9,3 +9,4 @@ cloud/functions/out.png
 cloud/.env
 notebooks/.env
 api/imagen_api/.env
+notebooks/*
