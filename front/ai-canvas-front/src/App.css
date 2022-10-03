@@ -89,6 +89,12 @@ input {
   width: 150px;
 }
 
+.canvas {
+  background-color: #ffffff;
+  background-size: 15px 15px;
+  background-image: radial-gradient(rgb(200, 200, 200) 10%, transparent 0%);
+}
+
 /* sidebar */
 
 .sidebar.open {

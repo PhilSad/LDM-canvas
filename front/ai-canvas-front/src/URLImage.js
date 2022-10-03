@@ -4,26 +4,30 @@ import { Image, Group, Rect } from 'react-konva';
 class URLImage extends React.Component {
     state = {
         image: null,
-        infoVisible: false
+        infoVisible: true
     };
+
     componentDidMount() {
         this.loadImage();
     }
-    componentDidUpdate(oldProps) {
-        if (oldProps.src !== this.props.src) {
-            this.loadImage();
-        }
-    }
+
+    // componentDidUpdate(oldProps) {
+    //     if (oldProps.src !== this.props.src) {
+    //         this.loadImage();
+    //     }
+    // }
+
     componentWillUnmount() {
         this.image.removeEventListener('load', this.handleLoad);
     }
+
     loadImage() {
-        // save to "this" to remove "load" handler on unmount
         this.image = new window.Image();
         this.image.src = this.props.src;
         this.image.crossOrigin = 'Anonymous';
         this.image.addEventListener('load', this.handleLoad);
     }
+
     handleLoad = () => {
         // after setState react-konva will update canvas and redraw the layer
         // because "image" property is changed
@@ -42,27 +46,20 @@ class URLImage extends React.Component {
                 y={this.props.y}
                 onMouseEnter={this.handleEnter}
                 onMouseLeave={this.handleLeave}
-                // draggable={true}
             >
+                <Rect
+                    width={this.props.width}
+                    height={this.props.height}
+                    fill={this.props.avg_color}
+                />
+
                 <Image
                     width={this.props.width}
                     height={this.props.height}
                     image={this.state.image}
-                    ref={(node) => {
-                        this.imageNode = node;
-                    }}
-                    stroke="red"
-                    strokeWidth={this.state.infoVisible ? 1 : 0}
+                    ref={(node) => { this.imageNode = node; }}
+                    onClick={this.handleClick}
                 />
-                {this.state.infoVisible &&
-
-                    <Rect
-                        width={this.props.width * 0.1}
-                        height={this.props.width * 0.1}
-                        onClick={this.handleClick}
-                        fill="red"
-                    />
-                }
             </Group>
         );
     }
