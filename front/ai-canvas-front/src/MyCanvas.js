@@ -624,7 +624,7 @@ const MyCanvas = (props) => {
 
   function handleFetchErrors(response) {
     if (!response.ok) {
-      toast.error('Error ! Are you connected ?', {
+      toast.error('Error ! You need to sign in with Google at the top left of the page', {
         position: "bottom-center",
         autoClose: 5000,
         hideProgressBar: false,
@@ -660,7 +660,7 @@ const MyCanvas = (props) => {
             useOneTap
             auto_select
           //todo add auto login
-          
+
           />
         ) : (
 
