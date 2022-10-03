@@ -16,7 +16,7 @@ import 'react-toastify/dist/ReactToastify.css';
 
 // import ImageSaver from './ImageSaver';
 // import * as env from './env.js';
-// import * as request from './requests'
+import * as requests from './requests'
 
 Amplify.configure(gen.config)
 
@@ -94,6 +94,9 @@ const MyCanvas = (props) => {
   const [isLogged, setIsLogged] = useState(false);
 
   const [room, setRoom] = useState('default');
+
+  const [credential, setCredential] = useState('');
+
 
 
 
@@ -534,6 +537,7 @@ const MyCanvas = (props) => {
     hideSelectionRect();
 
     var imageParamsDict = {
+      'credential' : credential,
       'prompt': btoa(prompt),
       'room': room,
       'posX': x,
@@ -640,13 +644,14 @@ const MyCanvas = (props) => {
 
       <div className="top_button_bar">
 
-        {/* {isLogged === true ? (
+        { isLogged === false ? (
           //TODO login login
           <GoogleLogin
             onSuccess={credentialResponse => {
               console.log(credentialResponse);
               setIsLogged(true);
-              // request.send_connexion_request(credentialResponse.credential)
+              setCredential(credentialResponse.credential)
+              requests.send_connexion_request(credentialResponse.credential)
 
             }}
             onError={() => {
@@ -658,17 +663,16 @@ const MyCanvas = (props) => {
           />
         ) : (
 
-
-
           <button onClick={() => {
             googleLogout();
             setIsLogged(false);
+            setCredential('');
             console.log(isLogged);
             // todo add logout=1 dans l'url et enlever le automatic login s'il est present
           }}> Logout </button>
 
 
-        )} */}
+        )}
 
         {isMobile ? (
           <span>
