@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Stage, Layer, Rect} from 'react-konva';
+import { Stage, Layer, Rect } from 'react-konva';
 import { createSearchParams, useSearchParams } from "react-router-dom";
 import URLImage from './URLImage';
 import PromptRect from './promptRect';
@@ -168,6 +168,18 @@ const MyCanvas = (props) => {
     switchState(IDLE);
     switch (mode) {
       case EDIT:
+        if (!isLogged) {
+          toast.error('You must be connected to use edit mode', {
+            position: "bottom-center",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
+          return;
+        }
         break;
 
       case VIEW:
@@ -232,6 +244,7 @@ const MyCanvas = (props) => {
   function toGlobalSpace(x, y) {
     x = +cameraX + +x / cameraZoom;
     y = +cameraY + +y / cameraZoom;
+
     return [x, y]
   }
 
@@ -250,14 +263,7 @@ const MyCanvas = (props) => {
 
   // define a new selection
   function defineSelection(x, y) {
-    if (isLogged === false)
-      return;
-
     [x, y] = toGlobalSpace(x, y);
-
-    //if we click on the current rect, we don't want to start a new selection
-    if (x > posX && x < posX + width && y > posY && y < posY + height)
-      return;
 
     setPosX(x);
     setPosY(y);
@@ -325,7 +331,6 @@ const MyCanvas = (props) => {
 
       case EDIT:
         defineSelection(cursor_pos[0], cursor_pos[1]);
-
         switchState(SELECT);
         break;
     }
@@ -333,15 +338,6 @@ const MyCanvas = (props) => {
 
   function handleMove() {
     switch (currentMode) {
-      case EDIT:
-        if (currentState == SELECT) {
-          var w = (cursor_pos[0] / cameraZoom + cameraX - posX);
-          var h = (cursor_pos[1] / cameraZoom + cameraY - posY);
-          setWidth(w);
-          setHeight(h);
-        }
-        break;
-
       case VIEW:
         if (currentState == MOVE) {
           var movX = cursor_pos[0] - camInitX;
@@ -351,6 +347,15 @@ const MyCanvas = (props) => {
           setCamInitY(cursor_pos[1]);
 
           moveCamera((cameraX - movX / cameraZoom), (cameraY - movY / cameraZoom), cameraZoom);
+        }
+        break;
+
+      case EDIT:
+        if (currentState == SELECT) {
+          var w = (cursor_pos[0] / cameraZoom + cameraX - posX);
+          var h = (cursor_pos[1] / cameraZoom + cameraY - posY);
+          setWidth(w);
+          setHeight(h);
         }
         break;
     }
@@ -615,8 +620,8 @@ const MyCanvas = (props) => {
 
         <Layer ref={imageLayerRef}>
           <Rect
-          width={canvasW}
-          height={canvasH}
+            width={canvasW}
+            height={canvasH}
           />
 
           {
