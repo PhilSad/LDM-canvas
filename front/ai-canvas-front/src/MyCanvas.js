@@ -9,6 +9,10 @@ import _ from "lodash";
 import ImageSaverLayer from './imageSaveLayer';
 import Amplify from '@aws-amplify/core'
 import * as gen from './generated'
+import HelpModalButton from './helpModal'
+
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 // import ImageSaver from './ImageSaver';
 // import * as env from './env.js';
@@ -44,8 +48,14 @@ const READY = "READY";
 const CAMERA_SPEED = 1;
 const CAMERA_ZOOM_SPEED = 1.1;
 const MIN_ZOOM = 0.01;
+const BKG_DOT_SPACING = 20;
 
 let generation_type;
+let cursor_pos = [0, 0];
+
+var init_x = 0, init_y = 0;
+var bkg_x = 0, bkg_y = 0;
+var moving = false;
 
 const MyCanvas = (props) => {
   const stageRef = useRef(null);
@@ -85,14 +95,32 @@ const MyCanvas = (props) => {
 
   const [room, setRoom] = useState('default');
 
+
+
   function handle_receive_from_socket(data) {
     data = JSON.parse(data)
-    if ( data.action == "new_image" ){
+
+    var z = Math.min(canvasW/+data.width, canvasH/+data.height) * 0.5;
+    var x = +data.posX - (canvasW/2)/z + +data.width/2
+    var y = +data.posY - (canvasH/2)/z + +data.height/2
+
+    if (data.action == "new_image") {
       removePlaceholder(data.posX, data.posY)
-      addNewImage(URL_BUCKET + data.path, data.posX, data.posY, data.width, data.height, data.prompt)  
+      addNewImage(URL_BUCKET + data.path, data.posX, data.posY, data.width, data.height, data.prompt)
+      toast(<div onClick={() => {moveCamera(x, y, z)}}>
+        New image: {data.prompt} at ({data.posX}, {data.posY})
+      </div >, {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
     }
 
-    if ( data.action == "generating_image"){
+    if (data.action == "generating_image") {
       addNewPlaceholder(data.posX, data.posY, data.width, data.height)
     }
   }
@@ -108,11 +136,11 @@ const MyCanvas = (props) => {
     const onPageLoad = () => {
       setIsMobile(window.innerWidth <= 768);
 
-      handleClickRefresh();
+      var x = searchParams.get("x") !== null ? +searchParams.get("x") : 0;
+      var y = searchParams.get("y") !== null ? +searchParams.get("y") : 0;
+      var zoom = searchParams.get("zoom") !== null ? +searchParams.get("zoom") : 1;
 
-      var x = searchParams.get("x") !== null ? searchParams.get("x") : 0;
-      var y = searchParams.get("y") !== null ? searchParams.get("y") : 0;
-      var zoom = searchParams.get("zoom") !== null ? searchParams.get("zoom") : 1;
+      handleClickRefresh();
 
       moveCamera(x, y, zoom);
     };
@@ -136,7 +164,7 @@ const MyCanvas = (props) => {
         window.removeEventListener("load", onPageLoad);
       }
     }
-  }, []);
+  }, [room]);
 
   function switchState(state) {
     switch (state) {
@@ -238,9 +266,13 @@ const MyCanvas = (props) => {
       w: w,
       h: h
     };
-    var copy = new Map(placeholderList);
-    copy.set(`${x},${y}`, ph);
-    setPlaceholderList(copy);
+
+    setPlaceholderList(prevState => {
+      var copy = new Map(prevState);
+      copy.set(`${x},${y}`, ph);
+      return copy;
+    });
+
   }
 
   function removePlaceholder(x, y) {
@@ -268,95 +300,81 @@ const MyCanvas = (props) => {
     setImageDivList(prevState => [...prevState, img]);
   }
 
+  function handleMoveStart() {
+    moving = true;
+
+    setCamInitX(cursor_pos[0]);
+    setCamInitY(cursor_pos[1]);
+
+    init_x = cursor_pos[0] - bkg_x;
+    init_y = cursor_pos[1] - bkg_y;
+
+    switchMoveState(MOVING);
+  }
+
   // movement handlers
   const handleTouchDown = (e) => {
     var touchposx = e.currentTarget.pointerPos.x;
     var touchposy = e.currentTarget.pointerPos.y;
 
-    if (currentState === IDLE && moveState === READY) {
-      setCamInitX(touchposx);
-      setCamInitY(touchposy);
-      switchMoveState(MOVING)
+    cursor_pos = [touchposx, touchposy];
+
+    if (currentState === IDLE && moveState === IDLE) {
+      handleMoveStart();
     } else if (currentState === IDLE && moveState === IDLE) {
-      var offsets = stageRef.current.content.getBoundingClientRect();
-      var x = (touchposx - offsets.x);
-      var y = (touchposy - offsets.y);
-      defineSelection(x, y);
+      defineSelection(cursor_pos[0], cursor_pos[1]);
     }
   }
 
   const handleMouseDown = (e) => {
     switch (e.evt.which) {
       case 1:
-        var offsets = stageRef.current.content.getBoundingClientRect();
-        var x = (e.evt.clientX - offsets.x);
-        var y = (e.evt.clientY - offsets.y);
-        defineSelection(x, y);
+        defineSelection(cursor_pos[0], cursor_pos[1]);
         break;
 
       case 2:
-        setCamInitX(e.evt.clientX);
-        setCamInitY(e.evt.clientY);
-        switchMoveState(MOVING);
+        handleMoveStart();
         break;
 
       case 3:
-        setCamInitX(e.evt.clientX);
-        setCamInitY(e.evt.clientY);
-        switchMoveState(MOVING);
+        handleMoveStart();
         break;
 
       default:
     }
   };
 
-  const handleTouchMove = (e) => {
-    var offsets = stageRef.current.content.getBoundingClientRect();
-
-    var touchposx = e.currentTarget.pointerPos.x;
-    var touchposy = e.currentTarget.pointerPos.y;
-
-    if (currentState === SELECTING && moveState === IDLE) {
-
-      var w = ((touchposx - offsets.x) / cameraZoom + cameraX - posX);
-      var h = ((touchposy - offsets.y) / cameraZoom + cameraY - posY);
+  function handleMove() {
+    if (currentState === SELECTING) {
+      var w = (cursor_pos[0] / cameraZoom + cameraX - posX);
+      var h = (cursor_pos[1] / cameraZoom + cameraY - posY);
       setWidth(w);
       setHeight(h);
-    } else if (currentState === IDLE && moveState === MOVING) {
-      var movX = (touchposx) - camInitX;
-      var movY = (touchposy) - camInitY;
+    }
 
-      setCamInitX(touchposx);
-      setCamInitY(touchposy);
+    if (moveState === MOVING) {
+      var movX = cursor_pos[0] - camInitX;
+      var movY = cursor_pos[1] - camInitY;
+
+      setCamInitX(cursor_pos[0]);
+      setCamInitY(cursor_pos[1]);
 
       moveCamera((cameraX - movX / cameraZoom), (cameraY - movY / cameraZoom), cameraZoom);
     }
   }
 
+  const handleTouchMove = (e) => {
+    var touchposx = e.currentTarget.pointerPos.x;
+    var touchposy = e.currentTarget.pointerPos.y;
+    cursor_pos = [touchposx, touchposy];
+
+    handleMove();
+  }
+
   const handleMouseMove = (e) => {
-    var offsets = stageRef.current.content.getBoundingClientRect();
+    cursor_pos = [e.evt.clientX, e.evt.clientY];
 
-    switch (currentState) {
-      case SELECTING:
-        var w = ((e.evt.clientX - offsets.x) / cameraZoom + cameraX - posX);
-        var h = ((e.evt.clientY - offsets.y) / cameraZoom + cameraY - posY);
-
-        setWidth(w);
-        setHeight(h);
-        break;
-    }
-
-    switch (moveState) {
-      case MOVING:
-        var movX = (e.evt.clientX) - camInitX;
-        var movY = (e.evt.clientY) - camInitY;
-
-        setCamInitX(e.evt.clientX);
-        setCamInitY(e.evt.clientY);
-
-        moveCamera((cameraX - movX / cameraZoom), (cameraY - movY / cameraZoom), cameraZoom);
-        break;
-    }
+    handleMove();
   };
 
   const handleMouseScroll = (e) => {
@@ -372,17 +390,22 @@ const MyCanvas = (props) => {
 
     newZoom = Math.max(newZoom, MIN_ZOOM);
 
-    var offsets = stageRef.current.content.getBoundingClientRect();
-    var x = (e.evt.clientX - offsets.x);
-    var y = (e.evt.clientY - offsets.y);
-    var [ax, ay] = toGlobalSpace(x, y);
+    var [ax, ay] = toGlobalSpace(cursor_pos[0], cursor_pos[1]);
 
-    moveCamera((ax - x / newZoom), (ay - y / newZoom), newZoom);
+    // init_x = (init_x * cameraZoom);
+    // init_y = (init_y * cameraZoom);
+
+    moveCamera((ax - cursor_pos[0] / newZoom), (ay - cursor_pos[1] / newZoom), newZoom);
+  }
+
+  function handleMoveStop() {
+    moving = false;
+    switchMoveState(IDLE);
   }
 
   const handleTouchUp = (e) => {
-    if (currentState === IDLE && moveState === MOVING) {
-      switchMoveState(READY);
+    if (currentState === IDLE && moveState === IDLE) {
+      handleMoveStop();
     } else if (currentState === SELECTING && moveState === IDLE) {
       switchState(INPUT_TYPE);
     }
@@ -391,6 +414,9 @@ const MyCanvas = (props) => {
   }
 
   const handleMouseUp = (e) => {
+    init_x = cursor_pos[0] - bkg_x;
+    init_y = cursor_pos[1] - bkg_y;
+
     switch (e.evt.which) {
       case 1:
         if (currentState === SELECTING) {
@@ -399,11 +425,11 @@ const MyCanvas = (props) => {
         break;
 
       case 2:
-        switchMoveState(IDLE);
+        handleMoveStop()
         break;
 
       case 3:
-        switchMoveState(IDLE);
+        handleMoveStop()
         break;
 
       default:
@@ -436,6 +462,8 @@ const MyCanvas = (props) => {
   }
 
   const handleClickRefresh = () => {
+    setImageDivList([]);
+
     var url_get_image_with_params = URL_GET_IMAGES + '?posX=0&posY=0&width=100&height=100';
 
     fetch(url_get_image_with_params).then((data) => data.json())
@@ -512,7 +540,7 @@ const MyCanvas = (props) => {
       'width': w,
       'height': h
     }
-    
+
     var url_function_imagen_with_action = URL_FUNCTION_IMAGEN + '?action=' + generation_type;
     switch (generation_type) {
       case 'new_image':
@@ -522,7 +550,7 @@ const MyCanvas = (props) => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(imageParamsDict),
-        })
+        }).then(handleFetchErrors)
 
         break;
 
@@ -539,7 +567,7 @@ const MyCanvas = (props) => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(imageParamsDict),
-        })
+        }).then(handleFetchErrors)
 
         break;
 
@@ -556,7 +584,7 @@ const MyCanvas = (props) => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(imageParamsDict),
-        })
+        }).then(handleFetchErrors)
 
         break;
     }
@@ -571,12 +599,47 @@ const MyCanvas = (props) => {
     return true;
   }
 
+  function get_bkg_style() {
+    var size = BKG_DOT_SPACING * cameraZoom;
+
+    if (moving) {
+      bkg_x = ((cursor_pos[0] - init_x));
+      bkg_y = ((cursor_pos[1] - init_y));
+    }
+
+    return {
+      backgroundColor: "#fff",
+      backgroundSize: `${size}px ${size}px`,
+      backgroundPosition: `${bkg_x}px ${bkg_y}px`,
+      backgroundImage: `radial-gradient(rgb(200, 200, 200) 10%, transparent 0%)`,
+      // backgroundImage: 'url(https://www.referenseo.com/wp-content/uploads/2019/03/image-attractive-960x540.jpg)',
+      // backgroundRepeat: 'no-repeat'
+    }
+  }
+
+  function handleFetchErrors(response) {
+    if (!response.ok) {
+      toast.error('Error ! :' + response.statusText, {
+        position: "bottom-center",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+      console.log(response);
+      throw Error(response.statusText);
+    }
+    return response;
+  }
+
   return (
     <div style={{ cursor: cursor }}>
 
-      <div className="bar">
+      <div className="top_button_bar">
 
-        {isLogged === true ? (
+        {/* {isLogged === true ? (
           //TODO login login
           <GoogleLogin
             onSuccess={credentialResponse => {
@@ -604,7 +667,7 @@ const MyCanvas = (props) => {
           }}> Logout </button>
 
 
-        )}
+        )} */}
 
         {isMobile ? (
           <span>
@@ -618,15 +681,16 @@ const MyCanvas = (props) => {
         ) : (
           <span>
             <button onClick={() => handleClickRefresh()}> Refresh </button>
-            <button onClick={() => { setIsMobile(!isMobile) }}> Mobile controls </button>
           </span>
         )}
+        <HelpModalButton />
       </div>
 
       <div className="coords"> {Math.floor(cameraX)}, {Math.floor(cameraY)}, {Math.floor(cameraZoom * 100) / 100} </div>
 
       <Stage
         ref={stageRef}
+        style={get_bkg_style()}
 
         width={canvasW}
         height={canvasH}
@@ -655,7 +719,7 @@ const MyCanvas = (props) => {
               ) {
                 var [x, y] = toRelativeSpace(img.x, img.y);
 
-                // display image only if the area is > 10px
+                // display image only if the area is > 25px
                 if (img.w * cameraZoom * img.h * cameraZoom > 25) {
                   return (
                     <URLImage
@@ -716,6 +780,17 @@ const MyCanvas = (props) => {
         <ImageSaverLayer ref={imageSaveRef} imageSave={imageSave} />
       }
 
+      <ToastContainer
+        position="bottom-center"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
     </div>
   );
 
