@@ -87,7 +87,11 @@ const MyCanvas = (props) => {
   const [imageDivList, setImageDivList] = useState([]);
   const [placeholderList, setPlaceholderList] = useState(new Map());
 
+  //mobile
   const [isMobile, setIsMobile] = React.useState(false);
+  const [touchesDist, setTouchesDist] = React.useState(Infinity);
+  const [cameraZoomStart, setCameraZoomStart] = React.useState(1);
+  
   const [isLogged, setIsLogged] = useState(false);
 
   const [room, setRoom] = useState('default');
@@ -378,10 +382,20 @@ const MyCanvas = (props) => {
 
   // movement handlers
   const handleTouchDown = (e) => {
+    if (e.evt.touches.length == 2) {
+      var touch1 = e.evt.touches[0];
+      var touch2 = e.evt.touches[1];
+
+      var dist = Math.sqrt(Math.pow(touch1.clientX - touch2.clientX, 2) + Math.pow(touch1.clientY - touch2.clientY, 2)) 
+
+      setTouchesDist(dist);
+      setCameraZoomStart(cameraZoom);
+      return;
+    }
+
     var touchposx = e.evt.touches[0].clientX;
     var touchposy = e.evt.touches[0].clientY;
     cursor_pos = [touchposx, touchposy];
-
     handleDown();
   }
 
@@ -394,11 +408,25 @@ const MyCanvas = (props) => {
   }
 
   const handleTouchMove = (e) => {
-    var touchposx = e.currentTarget.pointerPos.x;
-    var touchposy = e.currentTarget.pointerPos.y;
-    cursor_pos = [touchposx, touchposy];
+    if (e.evt.touches.length == 1) {
+      var touchposx = e.evt.touches[0].clientX;
+      var touchposy = e.evt.touches[0].clientY;
+      cursor_pos = [touchposx, touchposy];
+      handleMove();
+    } else if (e.evt.touches.length == 2) {
+      var touch1 = e.evt.touches[0];
+      var touch2 = e.evt.touches[1];
+      var dist = Math.sqrt(Math.pow(touch1.clientX - touch2.clientX, 2) + Math.pow(touch1.clientY - touch2.clientY, 2)) 
+      
+      var newZoom = cameraZoomStart * (dist/touchesDist)
+      newZoom = Math.max(newZoom, MIN_ZOOM);
 
-    handleMove();
+      var zoomCenterX = (touch1.clientX + touch2.clientX)/2;
+      var zoomCenterY = (touch1.clientY + touch2.clientY)/2;
+      var [ax, ay] = toGlobalSpace(zoomCenterX, zoomCenterY);
+
+      moveCamera((ax - zoomCenterX / newZoom), (ay - zoomCenterY / newZoom), newZoom);
+    }
   }
 
   const handleMouseMove = (e) => {
@@ -426,6 +454,7 @@ const MyCanvas = (props) => {
   }
 
   const handleTouchUp = (e) => {
+    setCameraZoomStart(cameraZoom);
     handleUp();
   }
 
@@ -582,17 +611,6 @@ const MyCanvas = (props) => {
         )}
 
         <button onClick={() => handleClickRefresh()}> Refresh </button>
-
-        {isMobile ? (
-          <span>
-            <button onClick={() => setCameraZoom(cameraZoom * 1.1)}> Z+ </button>
-            <button onClick={() => setCameraZoom(cameraZoom * 0.9)}> Z- </button>
-          </span>
-        ) : (
-          <span>
-          </span>
-        )}
-
         <button onClick={() => switchMode(VIEW)}> View </button>
         <button onClick={() => switchMode(EDIT)}> Edit </button>
         <HelpModalButton />
