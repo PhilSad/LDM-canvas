@@ -4,7 +4,7 @@ import SideBar from "./SideBar";
 
 const InfiniteCanvas = (props) => {
 
-    const [sidebarOpen, setSideBarOpen] = useState(true);
+    const [sidebarOpen, setSideBarOpen] = useState(false);
     const handleViewSidebar = () => {
         setSideBarOpen(!sidebarOpen);
     };
@@ -12,7 +12,7 @@ const InfiniteCanvas = (props) => {
     return (
         <>
             <MyCanvas />
-            <SideBar isOpen={sidebarOpen} toggleSidebar={handleViewSidebar} />
+            {/* <SideBar isOpen={sidebarOpen} toggleSidebar={handleViewSidebar} /> */}
         </>
     );
 }

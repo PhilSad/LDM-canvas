@@ -685,7 +685,9 @@ const MyCanvas = (props) => {
         )}
         <HelpModalButton />
       </div>
-      
+
+      <div className="coords"> {Math.floor(cameraX)}, {Math.floor(cameraY)}, {Math.floor(cameraZoom * 100) / 100} </div>
+
       <Stage
         ref={stageRef}
         style={get_bkg_style()}
