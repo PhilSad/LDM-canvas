@@ -13,6 +13,32 @@ input, button {
   font-size: 20px;
 }
 
+.top_button_bar {
+  position: absolute;
+  /* background-color: rgb(245, 227, 212);
+  border-bottom: solid;
+  border-width: 5px;
+  border-color: rgb(187, 137, 95); */
+
+  width: 100%;
+  height: 70px;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  padding: 10px 0 0 10px;
+}
+
+.top_button_bar button {
+  color: black;
+  background-color: rgba(212, 230, 245);
+  box-shadow: -5px 5px rgb(61, 168, 255);
+  transition: all 0.15s;
+}
+
+.top_button_bar button:hover {
+  box-shadow: -3px 3px rgb(61, 168, 255);
+}
+
 input {
   padding-right: 10px;
   padding-left: 10px;
@@ -26,22 +52,6 @@ input {
   padding-left: 20px;
 }
 
-button {
-  background-color: black;
-  color: beige;
-  border: solid;
-  border-width: 2px;
-  border-color: white;
-  cursor: pointer;
-}
-
-.bar {
-  position: absolute;
-  top: 0;
-  left: 0;
-  z-index: 1;
-}
-
 .info {
   height: 40px;
   width: 40px;
@@ -50,22 +60,22 @@ button {
   background-color: rgb(252, 220, 208);
 }
 
-.coords {
-  position: absolute;
-  top: 0;
-  right: 10px;
-  background-color: white;
-  z-index: 99;
-  padding-left: 5px;
-  padding-right: 5px;
+.choiceButton {
+  height: 40px;
+  width: 40px;
+  margin: 0;
+  padding: 5px;
+  border-radius: 5px;
+  margin-left: 5px;
+  transition: all 0.1s ease-out;
 }
 
-.choiceButton {
-  height: 30px;
-  width: 30px;
-  margin: 0;
-  padding: 0;
+.choiceButton:hover {
+  cursor: pointer;
+  margin-top: -3px;
+  transition: all 0.1s ease-out;
 }
+
 
 .choiceButtonCont {
   width: 400px;
@@ -75,9 +85,92 @@ button {
   display: flex;
   justify-content: space-around;
   margin: auto;
+  padding: 0;
   width: 150px;
 }
 
+/* sidebar */
+
+.sidebar.open {
+  right: 0;
+}
+
+.sidebar {
+  position: absolute;
+  top: 0;
+  right: -300px;
+  height: 100%;
+  width: 300px;
+  transition: right 0.3s ease-in-out;
+  background-color: lightgray;
+  background-color: rgb(231, 244, 254);
+  border: 5px solid rgb(61, 168, 255);
+  border-right-width: 0;
+  border-top-width: 0;
+  padding: 10px;
+  z-index: 1;
+}
+
+.sidebar h4 {
+  margin-top: 30px;
+}
+
+.sidebar-toggle {
+  position: absolute;
+  top: 5%;
+  left: -40px;
+  height: 60px;
+  width: 40px;
+  background-color: rgba(212, 230, 245);
+  border: 5px solid rgb(61, 168, 255);
+  border-right-width: 0;
+  z-index: 1;
+}
+
+.coords {
+  position: absolute;
+  white-space: nowrap;
+  top: 0;
+  right: 300px;
+  background-color: rgb(255, 255, 255);
+  z-index: 1;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+/* colors */
+
+.blue {
+  background-color: rgba(212, 230, 245);
+}
+
+.blue:hover {
+  background-color: rgb(102, 184, 250);
+}
+
+.yellow {
+  /* background-color: rgb(245, 245, 212); */
+  background-color: rgba(212, 230, 245);
+}
+
+.yellow:hover {
+  background-color: rgb(250, 245, 102);
+}
+
 .green {
-  background-color: green;
+  /* background-color: rgb(212, 245, 216); */
+  background-color: rgba(212, 230, 245);
+}
+
+.green:hover {
+  background-color: rgb(102, 250, 119);
+}
+
+.red {
+  /* background-color: rgb(245, 212, 240); */
+  background-color: rgba(212, 230, 245);
+}
+
+.red:hover {
+  background-color: rgb(250, 102, 233);
 }

@@ -637,7 +637,7 @@ const MyCanvas = (props) => {
   return (
     <div style={{ cursor: cursor }}>
 
-      <div className="bar">
+      <div className="top_button_bar">
 
         {/* {isLogged === true ? (
           //TODO login login
@@ -685,9 +685,7 @@ const MyCanvas = (props) => {
         )}
         <HelpModalButton />
       </div>
-
-      <div className="coords"> {Math.floor(cameraX)}, {Math.floor(cameraY)}, {Math.floor(cameraZoom * 100) / 100} </div>
-
+      
       <Stage
         ref={stageRef}
         style={get_bkg_style()}
