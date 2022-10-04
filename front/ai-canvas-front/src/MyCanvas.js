@@ -44,6 +44,7 @@ const CHOOSE_TYPE = "CHOOSE_TYPE";
 //camera speed
 const CAMERA_ZOOM_SPEED = 1.1;
 const MIN_ZOOM = 0.01;
+const MAX_ZOOM = 1;
 
 let generation_type;
 let cursor_pos = [0, 0];
@@ -132,7 +133,7 @@ const MyCanvas = (props) => {
 
       var x = searchParams.get("x") !== null ? +searchParams.get("x") : 0;
       var y = searchParams.get("y") !== null ? +searchParams.get("y") : 0;
-      var zoom = searchParams.get("zoom") !== null ? +searchParams.get("zoom") : 1;
+      var zoom = searchParams.get("zoom") !== null ? + searchParams.get("zoom")/100 : 1;
 
       handleClickRefresh();
 
@@ -236,7 +237,7 @@ const MyCanvas = (props) => {
 
   function setSearchParam() {
     setSearchParams(
-      createSearchParams({ x: Math.round(cameraX), y: Math.round(cameraY), zoom: Math.round(cameraZoom * 100) / 100 })
+      createSearchParams({ x: Math.round(cameraX), y: Math.round(cameraY), zoom: Math.round(cameraZoom * 100) })
     );
   }
 
@@ -421,6 +422,8 @@ const MyCanvas = (props) => {
       var dist = Math.sqrt(Math.pow(touch1.clientX - touch2.clientX, 2) + Math.pow(touch1.clientY - touch2.clientY, 2))
 
       var newZoom = cameraZoomStart * (dist / touchesDist)
+      
+      newZoom = Math.min(newZoom, MAX_ZOOM);
       newZoom = Math.max(newZoom, MIN_ZOOM);
 
       var zoomCenterX = (touch1.clientX + touch2.clientX) / 2;
@@ -448,6 +451,7 @@ const MyCanvas = (props) => {
       newZoom = cameraZoom / CAMERA_ZOOM_SPEED;
     }
 
+    newZoom = Math.min(newZoom, MAX_ZOOM);
     newZoom = Math.max(newZoom, MIN_ZOOM);
 
     var [ax, ay] = toGlobalSpace(cursor_pos[0], cursor_pos[1]);
@@ -618,7 +622,7 @@ const MyCanvas = (props) => {
         <HelpModalButton />
       </div>
 
-      <div className="coords"> {Math.floor(cameraX)}, {Math.floor(cameraY)}, {Math.floor(cameraZoom * 100) / 100} </div>
+      <div className="coords"> {Math.floor(cameraX)}, {Math.floor(cameraY)}, {Math.floor(cameraZoom * 100)} </div>
 
       <Stage
         ref={stageRef}
