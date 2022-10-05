@@ -531,6 +531,12 @@ const MyCanvas = (props) => {
     switchState(PROMPT);
   }
 
+  const handleSave = () => {
+    cropImageToSelection();
+
+    setTimeout(function () { imageSaveRef.current.download(); }, 100);
+  }
+
   const handleSend = () => {
     var x = Math.floor(posX)
     var y = Math.floor(posY)
@@ -709,6 +715,7 @@ const MyCanvas = (props) => {
               height={height * cameraZoom}
               handlePromptButtons={handlePromptButtons}
               handleSend={handleSend}
+              handleSave={handleSave}
               currentState={currentState}
               currentMode={currentMode}
             />
