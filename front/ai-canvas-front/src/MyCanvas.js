@@ -18,6 +18,7 @@ import 'react-toastify/dist/ReactToastify.css';
 // import * as env from './env.js';
 import * as requests from './requests'
 
+
 Amplify.configure(gen.config)
 
 const URL_BUCKET = "https://storage.googleapis.com/aicanvas-public-bucket/"
@@ -644,7 +645,7 @@ const MyCanvas = (props) => {
 
       <div className="top_button_bar">
 
-        { isLogged === false ? (
+        { isLogged === false ? ( 
           //TODO login login
           <GoogleLogin
             onSuccess={credentialResponse => {
