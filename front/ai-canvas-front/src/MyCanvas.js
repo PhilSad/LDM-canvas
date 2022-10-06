@@ -572,7 +572,7 @@ Hub.listen('api', (data) => {
       'height': h
     }
 
-    if (generation_type === "inpaint_alpha" || generation_type === "img_to_img") {
+    if (generation_type === "outpainting" || generation_type === "img_to_img") {
       var uri = imageSaveRef.current.uri()
       uri = uri.substring(22);
       imageParamsDict['init_image'] = uri;
