@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Stage, Layer, Rect} from 'react-konva';
+import { Stage, Layer, Rect } from 'react-konva';
 import { createSearchParams, useSearchParams } from "react-router-dom";
 import URLImage from './URLImage';
 import PromptRect from './promptRect';
 import LoadPlaceholder from './LoadPlaceholder';
 import { GoogleLogin, googleLogout } from '@react-oauth/google';
-import _ from "lodash";
 import ImageSaverLayer from './imageSaveLayer';
 import Amplify from '@aws-amplify/core'
 import * as gen from './generated'
@@ -24,10 +23,6 @@ import { Hub } from 'aws-amplify';
 Amplify.configure(gen.config)
 
 const URL_BUCKET = "https://storage.googleapis.com/aicanvas-public-bucket/"
-const URL_NEW_IMAGE = 'https://europe-west1-ai-canvas.cloudfunctions.net/new_image'
-const URL_IP_MASK = 'https://europe-west1-ai-canvas.cloudfunctions.net/inpaint_mask'
-const URL_IP_ALPHA = 'https://europe-west1-ai-canvas.cloudfunctions.net/inpaint_alpha/'
-const URL_IMG2IMG = 'https://europe-west1-ai-canvas.cloudfunctions.net/img_to_img/'
 
 const URL_START_VM = "https://function-start-vm-jujlepts2a-ew.a.run.app"
 const URL_STOP_VM = "https://function-stop-jujlepts2a-ew.a.run.app"
@@ -50,10 +45,9 @@ const MOVE = "MOVE";
 const CHOOSE_TYPE = "CHOOSE_TYPE";
 
 //camera speed
-const CAMERA_SPEED = 1;
 const CAMERA_ZOOM_SPEED = 1.1;
 const MIN_ZOOM = 0.01;
-const BKG_DOT_SPACING = 20;
+const MAX_ZOOM = 1;
 
 let generation_type;
 let cursor_pos = [0, 0];
@@ -90,7 +84,10 @@ const MyCanvas = (props) => {
   const [imageDivList, setImageDivList] = useState([]);
   const [placeholderList, setPlaceholderList] = useState(new Map());
 
-  const [isMobile, setIsMobile] = React.useState(false);
+  //mobile
+  const [touchesDist, setTouchesDist] = React.useState(Infinity);
+  const [cameraZoomStart, setCameraZoomStart] = React.useState(1);
+
   const [isLogged, setIsLogged] = useState(false);
 
   const [room, setRoom] = useState('default');
@@ -104,7 +101,7 @@ const MyCanvas = (props) => {
     var x = +data.posX - (canvasW / 2) / z + +data.width / 2
     var y = +data.posY - (canvasH / 2) / z + +data.height / 2
 
-    if (data.action == "new_image") {
+    if (data.action === "new_image") {
       removePlaceholder(data.posX, data.posY)
       addNewImage(URL_BUCKET + data.path, data.posX, data.posY, data.width, data.height, data.prompt)
       toast(<div onClick={() => { moveCamera(x, y, z) }}>
@@ -120,7 +117,7 @@ const MyCanvas = (props) => {
       });
     }
 
-    if (data.action == "generating_image") {
+    if (data.action === "generating_image") {
       console.log(data.queue_size)
       addNewPlaceholder(data.posX, data.posY, data.width, data.height)
     }
@@ -146,11 +143,11 @@ Hub.listen('api', (data) => {
   //on page load
   useEffect(() => {
     const onPageLoad = () => {
-      setIsMobile(window.innerWidth <= 768);
+      // setIsMobile(window.innerWidth <= 768);
 
       var x = searchParams.get("x") !== null ? +searchParams.get("x") : 0;
       var y = searchParams.get("y") !== null ? +searchParams.get("y") : 0;
-      var zoom = searchParams.get("zoom") !== null ? +searchParams.get("zoom") : 1;
+      var zoom = searchParams.get("zoom") !== null ? + searchParams.get("zoom")/100 : 1;
 
       handleClickRefresh();
 
@@ -182,11 +179,25 @@ Hub.listen('api', (data) => {
     switchState(IDLE);
     switch (mode) {
       case EDIT:
+        if (!isLogged) {
+          toast.error('You must be connected to use edit mode', {
+            position: "bottom-center",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
+          return;
+        }
         break;
 
       case VIEW:
         hideSelectionRect();
         break;
+
+      default:
     }
 
     setCurrentMode(mode);
@@ -224,6 +235,8 @@ Hub.listen('api', (data) => {
           setHeight(Math.abs(height));
         }
         break;
+
+      default:
     }
 
     setCurrentState(state);
@@ -238,7 +251,7 @@ Hub.listen('api', (data) => {
 
   function setSearchParam() {
     setSearchParams(
-      createSearchParams({ x: Math.round(cameraX), y: Math.round(cameraY), zoom: Math.round(cameraZoom * 100) / 100 })
+      createSearchParams({ x: Math.round(cameraX), y: Math.round(cameraY), zoom: Math.round(cameraZoom * 100) })
     );
   }
 
@@ -246,6 +259,7 @@ Hub.listen('api', (data) => {
   function toGlobalSpace(x, y) {
     x = +cameraX + +x / cameraZoom;
     y = +cameraY + +y / cameraZoom;
+
     return [x, y]
   }
 
@@ -264,14 +278,7 @@ Hub.listen('api', (data) => {
 
   // define a new selection
   function defineSelection(x, y) {
-    if (isLogged === false)
-      return;
-
     [x, y] = toGlobalSpace(x, y);
-
-    //if we click on the current rect, we don't want to start a new selection
-    if (x > posX && x < posX + width && y > posY && y < posY + height)
-      return;
 
     setPosX(x);
     setPosY(y);
@@ -339,25 +346,17 @@ Hub.listen('api', (data) => {
 
       case EDIT:
         defineSelection(cursor_pos[0], cursor_pos[1]);
-
         switchState(SELECT);
         break;
+
+      default:
     }
   }
 
   function handleMove() {
     switch (currentMode) {
-      case EDIT:
-        if (currentState == SELECT) {
-          var w = (cursor_pos[0] / cameraZoom + cameraX - posX);
-          var h = (cursor_pos[1] / cameraZoom + cameraY - posY);
-          setWidth(w);
-          setHeight(h);
-        }
-        break;
-
       case VIEW:
-        if (currentState == MOVE) {
+        if (currentState === MOVE) {
           var movX = cursor_pos[0] - camInitX;
           var movY = cursor_pos[1] - camInitY;
 
@@ -367,6 +366,17 @@ Hub.listen('api', (data) => {
           moveCamera((cameraX - movX / cameraZoom), (cameraY - movY / cameraZoom), cameraZoom);
         }
         break;
+
+      case EDIT:
+        if (currentState === SELECT) {
+          var w = (cursor_pos[0] / cameraZoom + cameraX - posX);
+          var h = (cursor_pos[1] / cameraZoom + cameraY - posY);
+          setWidth(w);
+          setHeight(h);
+        }
+        break;
+
+      default:
     }
   }
 
@@ -378,36 +388,64 @@ Hub.listen('api', (data) => {
         break;
 
       case EDIT:
-        if (currentState == SELECT) {
+        if (currentState === SELECT) {
           switchState(CHOOSE_TYPE);
         }
         break;
+
+      default:
     }
   }
 
   // movement handlers
   const handleTouchDown = (e) => {
+    if (e.evt.touches.length === 2) {
+      var touch1 = e.evt.touches[0];
+      var touch2 = e.evt.touches[1];
+
+      var dist = Math.sqrt(Math.pow(touch1.clientX - touch2.clientX, 2) + Math.pow(touch1.clientY - touch2.clientY, 2))
+
+      setTouchesDist(dist);
+      setCameraZoomStart(cameraZoom);
+      return;
+    }
+
     var touchposx = e.evt.touches[0].clientX;
     var touchposy = e.evt.touches[0].clientY;
     cursor_pos = [touchposx, touchposy];
-
     handleDown();
   }
 
   const handleMouseDown = (e) => {
     cursor_pos = [e.evt.clientX, e.evt.clientY];
 
-    if (e.evt.which == 1) {
+    if (e.evt.which === 1) {
       handleDown();
     }
   }
 
   const handleTouchMove = (e) => {
-    var touchposx = e.currentTarget.pointerPos.x;
-    var touchposy = e.currentTarget.pointerPos.y;
-    cursor_pos = [touchposx, touchposy];
+    if (e.evt.touches.length === 1) {
+      var touchposx = e.evt.touches[0].clientX;
+      var touchposy = e.evt.touches[0].clientY;
+      cursor_pos = [touchposx, touchposy];
+      handleMove();
+    } else if (e.evt.touches.length === 2) {
+      var touch1 = e.evt.touches[0];
+      var touch2 = e.evt.touches[1];
+      var dist = Math.sqrt(Math.pow(touch1.clientX - touch2.clientX, 2) + Math.pow(touch1.clientY - touch2.clientY, 2))
 
-    handleMove();
+      var newZoom = cameraZoomStart * (dist / touchesDist)
+      
+      newZoom = Math.min(newZoom, MAX_ZOOM);
+      newZoom = Math.max(newZoom, MIN_ZOOM);
+
+      var zoomCenterX = (touch1.clientX + touch2.clientX) / 2;
+      var zoomCenterY = (touch1.clientY + touch2.clientY) / 2;
+      var [ax, ay] = toGlobalSpace(zoomCenterX, zoomCenterY);
+
+      moveCamera((ax - zoomCenterX / newZoom), (ay - zoomCenterY / newZoom), newZoom);
+    }
   }
 
   const handleMouseMove = (e) => {
@@ -427,6 +465,7 @@ Hub.listen('api', (data) => {
       newZoom = cameraZoom / CAMERA_ZOOM_SPEED;
     }
 
+    newZoom = Math.min(newZoom, MAX_ZOOM);
     newZoom = Math.max(newZoom, MIN_ZOOM);
 
     var [ax, ay] = toGlobalSpace(cursor_pos[0], cursor_pos[1]);
@@ -435,11 +474,12 @@ Hub.listen('api', (data) => {
   }
 
   const handleTouchUp = (e) => {
+    setCameraZoomStart(cameraZoom);
     handleUp();
   }
 
   const handleMouseUp = (e) => {
-    if (e.evt.which == 1) {
+    if (e.evt.which === 1) {
       handleUp();
     }
   };
@@ -503,6 +543,12 @@ Hub.listen('api', (data) => {
     }
 
     switchState(PROMPT);
+  }
+
+  const handleSave = () => {
+    cropImageToSelection();
+
+    setTimeout(function () { imageSaveRef.current.download(); }, 100);
   }
 
   const handleSend = () => {
@@ -592,23 +638,12 @@ Hub.listen('api', (data) => {
         )}
 
         <button onClick={() => handleClickRefresh()}> Refresh </button>
-
-        {isMobile ? (
-          <span>
-            <button onClick={() => setCameraZoom(cameraZoom * 1.1)}> Z+ </button>
-            <button onClick={() => setCameraZoom(cameraZoom * 0.9)}> Z- </button>
-          </span>
-        ) : (
-          <span>
-          </span>
-        )}
-
         <button onClick={() => switchMode(VIEW)}> View </button>
         <button onClick={() => switchMode(EDIT)}> Edit </button>
         <HelpModalButton />
       </div>
 
-      <div className="coords"> {Math.floor(cameraX)}, {Math.floor(cameraY)}, {Math.floor(cameraZoom * 100) / 100} </div>
+      <div className="coords"> {Math.floor(cameraX)}, {Math.floor(cameraY)}, {Math.floor(cameraZoom * 100)} </div>
 
       <Stage
         ref={stageRef}
@@ -630,8 +665,8 @@ Hub.listen('api', (data) => {
 
         <Layer ref={imageLayerRef}>
           <Rect
-          width={canvasW}
-          height={canvasH}
+            width={canvasW}
+            height={canvasH}
           />
 
           {
@@ -694,6 +729,8 @@ Hub.listen('api', (data) => {
               width={width * cameraZoom}
               height={height * cameraZoom}
               handlePromptButtons={handlePromptButtons}
+              handleSend={handleSend}
+              handleSave={handleSave}
               currentState={currentState}
               currentMode={currentMode}
             />

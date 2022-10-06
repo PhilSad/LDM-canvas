@@ -1,6 +1,5 @@
 import './App.css';
 import './MyCanvas'
-import MyCanvas from './MyCanvas';
 import InfiniteCanvas from './InfiniteCanvas';
 import React from 'react';
 import { BrowserRouter, Routes, Route } from "react-router-dom";

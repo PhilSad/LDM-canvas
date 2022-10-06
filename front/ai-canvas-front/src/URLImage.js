@@ -4,7 +4,7 @@ import { Image, Group, Rect } from 'react-konva';
 class URLImage extends React.Component {
     state = {
         image: null,
-        infoVisible: true
+        infoVisible: false
     };
 
     componentDidMount() {
@@ -28,7 +28,22 @@ class URLImage extends React.Component {
         this.image.addEventListener('load', this.handleLoad);
     }
 
+    handleEnter = () => {
+        if (this.props.mode === "VIEW")
+            this.setState({ infoVisible: true });
+    }
+    handleLeave = () => {
+        if (this.props.mode === "VIEW")
+            this.setState({ infoVisible: false });
+    }
+    handleClick = () => {
+        console.log(this.props.prompt);
+    }
+
     handleLoad = () => {
+        if (this.props.state === "VIEW")
+            this.setState({ infoVisible: false });
+
         // after setState react-konva will update canvas and redraw the layer
         // because "image" property is changed
         this.setState({
@@ -46,6 +61,7 @@ class URLImage extends React.Component {
                 y={this.props.y}
                 onMouseEnter={this.handleEnter}
                 onMouseLeave={this.handleLeave}
+                onClick={this.handleClick}
             >
                 <Rect
                     width={this.props.width}
@@ -59,6 +75,12 @@ class URLImage extends React.Component {
                     image={this.state.image}
                     ref={(node) => { this.imageNode = node; }}
                     onClick={this.handleClick}
+                />
+
+                <Rect
+                    width={this.props.width}
+                    height={this.props.height}
+                    fill={this.state.infoVisible ? "rgba(240,240,240,0.5)" : null}
                 />
             </Group>
         );
