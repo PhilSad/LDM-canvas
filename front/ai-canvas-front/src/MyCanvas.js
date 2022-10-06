@@ -18,6 +18,9 @@ import 'react-toastify/dist/ReactToastify.css';
 // import * as env from './env.js';
 import * as requests from './requests'
 
+import { CONNECTION_STATE_CHANGE, ConnectionState } from '@aws-amplify/pubsub';
+import { Hub } from 'aws-amplify';
+
 Amplify.configure(gen.config)
 
 const URL_BUCKET = "https://storage.googleapis.com/aicanvas-public-bucket/"
@@ -125,9 +128,20 @@ const MyCanvas = (props) => {
 
   //socket
   useEffect(() => {
-    const subscription = gen.subscribe(room, ({ data }) => handle_receive_from_socket(data))
+    const subscription = gen.subscribe(room, ({ data }) => handle_receive_from_socket(data),
+                                              (error) => console.warn(error))
     return () => subscription.unsubscribe()
   }, [room])
+
+
+Hub.listen('api', (data) => {
+  const { payload } = data;
+  if (payload.event === CONNECTION_STATE_CHANGE) {
+    const connectionState = payload.data.connectionState;
+    console.log(connectionState);
+  }
+});
+
 
   //on page load
   useEffect(() => {

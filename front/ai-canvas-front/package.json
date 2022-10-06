@@ -8,6 +8,7 @@
     "@react-oauth/google": "^0.2.8",
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.3.0",
+    "aws-amplify": "^4.3.37",
     "konva": "^8.3.11",
     "react": "^18.2.0",
     "react-bootstrap": "^2.5.0",
