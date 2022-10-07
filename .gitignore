@@ -10,3 +10,9 @@ cloud/.env
 notebooks/.env
 api/imagen_api/.env
 notebooks/*
+models_bindings/models/dalle-mini-mega/dalle_bart_mega/decoder.pt
+models_bindings/models/dalle-mini-mega/dalle_bart_mega/encoder.pt
+models_bindings/models/dalle-mini-mega/dalle_bart_mega/merges.txt
+models_bindings/models/dalle-mini-mega/dalle_bart_mega/vocab.json
+models_bindings/models/dalle-mini-mega/vqgan/detoker.pt
+*.pyc

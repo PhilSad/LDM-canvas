@@ -44,6 +44,8 @@ pipe.disable_nsfw_filter()
 MAX_SIZE = 512
 STEPS = 50
 
+print("Stable Diffusion model loaded")
+
 def connect_unix_socket() -> db.engine.base.Engine:
     pool = db.create_engine(
         url = db.engine.url.URL.create(

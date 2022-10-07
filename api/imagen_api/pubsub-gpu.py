@@ -111,9 +111,9 @@ def callback(message: pubsub_v1.subscriber.message.Message) -> None:
         init_image = params['init_image']
         generated = imagen.image_to_image(prompt, width, height, init_image)
 
-    elif action == 'inpaint_alpha':
+    elif action == 'outpainting':
         init_image = params['init_image']
-        generated = imagen.inpaint_alpha(prompt, width, height, init_image)
+        generated = imagen.outpainting(prompt, width, height, init_image, strength=0.2)
     
     elif action == 'inpaint_mask':
         init_image = params['init_image']
