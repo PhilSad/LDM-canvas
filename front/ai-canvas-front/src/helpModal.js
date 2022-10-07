@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 
 
 export default function HelpModalButton() {
-  const [showHelpModal, setShowHelpModal] = useState(false);
+  const [showHelpModal, setShowHelpModal] = useState(true);
 
   const handleClose = () => setShowHelpModal(false);
   const handleShow = () => setShowHelpModal(true);
@@ -20,14 +20,14 @@ export default function HelpModalButton() {
           <Modal.Title>How to use Kollai infinite canvas</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <b>Right click/Middle Click</b> : move the camera, explore the canvas
+          <b>View Mode</b> : move the camera, explore the canvas
           <br/><br/>
-          <b>Left click</b> : make a selection and select one of the modes
+          <b>Edit mode</b> : make a selection and select one of the modes
           <ul>
-            <li><b>NI</b>: Generate a new image from scratch </li>
-            <li><b>IA</b>: Only generate empty parts in the selection </li>
-            <li><b>I2I</b>: Start the generation with the selection as init. image </li>
-            <li><b>SV</b>: Download the selection as jpeg</li>
+            <li><b>New Image</b>: Generate a new image from scratch </li>
+            <li><b>Inpaint Transparent</b>: Only generate empty parts in the selection for seamless effect </li>
+            <li><b>Image to Image</b>: Start the generation with the selection as init. image </li>
+            <li><b>Save</b>: Download the selection as jpeg</li>
           </ul>
         </Modal.Body>
 

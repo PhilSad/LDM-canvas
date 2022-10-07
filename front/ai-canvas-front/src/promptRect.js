@@ -44,17 +44,17 @@ function PromptRect(props) {
                     <Html>
                         <div className='choiceButtonCont'>
 
-                            {props.currentState === "INPUT_TYPE" &&
+                            {props.currentState === "CHOOSE_TYPE" &&
                                 <div>
-                                    <img className='choiceButton blue' src="images/new_image.png" alt="new image" onClick={() => props.handleNewImage()} />
-                                    <img className='choiceButton yellow' src="images/inpaint.png" alt="inpaint" onClick={() => props.handleInpaintAlpha()} />
-                                    <img className='choiceButton red' src="images/img2img.png" alt="img2img" onClick={() => props.handleImg2Img()} />
-                                    <img className='choiceButton green' src="images/save.png" alt="save" onClick={() => props.handleSave()} />
+                                    <img className='choiceButton blue' src="images/new_image.png" alt="new image" title='New Image' onClick={() => props.handlePromptButtons("new_image")} />
+                                    <img className='choiceButton yellow' src="images/inpaint.png" alt="outpainting" title='Outpainting' onClick={() => props.handlePromptButtons("outpainting")} />
+                                    <img className='choiceButton red' src="images/img2img.png" alt="img2img" title='Image to Image' onClick={() => props.handlePromptButtons("img_to_img")} />
+                                    <img className='choiceButton green' src="images/save.png" alt="save" title='Save Selection' onClick={() => props.handleSave("save")} />
 
                                 </div>
                             }
 
-                            {props.currentState === "PROMPTING" &&
+                            {props.currentState === "PROMPT" &&
                                 <div>
                                     <input id="prompt_input" placeholder="Image prompt" autoFocus />
                                     <button onClick={() => props.handleSend()} >
