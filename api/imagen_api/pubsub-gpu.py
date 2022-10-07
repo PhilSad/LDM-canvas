@@ -60,7 +60,7 @@ def save_to_sql(data_to_add):
 
 
 def save_to_bucket(save_path, generated, bucket_path):
-    generated.save(save_path, quality=50)
+    generated.save(save_path, quality=100)
     blob_path_save_image = bucket.blob(bucket_path)
     blob_path_save_image.upload_from_filename(save_path)
 
