@@ -90,7 +90,7 @@ const MyCanvas = (props) => {
 
   const [isLogged, setIsLogged] = useState(false);
 
-  const [room, setRoom] = useState('default');
+  const [room, setRoom] = useState(searchParams.get("room") !== null ? searchParams.get("room") : "default");
 
   const [credential, setCredential] = useState('');
 
@@ -148,6 +148,7 @@ Hub.listen('api', (data) => {
       var x = searchParams.get("x") !== null ? +searchParams.get("x") : 0;
       var y = searchParams.get("y") !== null ? +searchParams.get("y") : 0;
       var zoom = searchParams.get("zoom") !== null ? + searchParams.get("zoom")/100 : 1;
+
 
       handleClickRefresh();
 
@@ -251,7 +252,7 @@ Hub.listen('api', (data) => {
 
   function setSearchParam() {
     setSearchParams(
-      createSearchParams({ x: Math.round(cameraX), y: Math.round(cameraY), zoom: Math.round(cameraZoom * 100) })
+      createSearchParams({ room:room, x: Math.round(cameraX), y: Math.round(cameraY), zoom: Math.round(cameraZoom * 100) })
     );
   }
 
@@ -509,7 +510,7 @@ Hub.listen('api', (data) => {
   const handleClickRefresh = () => {
     setImageDivList([]);
 
-    var url_get_image_with_params = URL_GET_IMAGES + '?posX=0&posY=0&width=100&height=100';
+    var url_get_image_with_params = URL_GET_IMAGES + '?posX=0&posY=0&width=100&height=100&room='+room;
 
     fetch(url_get_image_with_params).then((data) => data.json())
       .then((json) => json.message)
