@@ -9,7 +9,7 @@ else:
     nb = sys.argv[1]
 
 def dont_stop():
-    command = ['python3', 'pubsub-gpu.py']
+    command = ['python3', 'imagen.py']
     retval = 1
     while retval != 0:      # a return value of zero indicates a normal exit
         print('lauchning process')

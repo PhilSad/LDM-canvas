@@ -91,6 +91,11 @@ def generate_image(prompt, w, h, init_image=None, mask=None):
             steps=50
             )[0]
 
+    if(mask is not None):
+        ga = np.array(generated.convert('RGBA'))
+        ga[:, :, -1] = np.array(mask)[:, :, -1]
+        generated = PIL.Image.fromarray(ga)
+
     generated = generated.resize((width, height), PIL.Image.ANTIALIAS)
     
     return generated
