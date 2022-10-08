@@ -9,6 +9,7 @@ import ImageSaverLayer from './imageSaveLayer';
 import Amplify from '@aws-amplify/core'
 import * as gen from './generated'
 import HelpModalButton from './helpModal'
+import CoordsModal from './coordsModal'
 
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -72,6 +73,9 @@ const MyCanvas = (props) => {
   const [canvasW, setCanvasW] = useState(window.innerWidth);
   const [canvasH, setCanvasH] = useState(window.innerHeight);
 
+  //room
+  const [room, setRoom] = useState('default');
+
   //camera
   const [camInitX, setCamInitX] = useState(0);
   const [camInitY, setCamInitY] = useState(0);
@@ -90,7 +94,6 @@ const MyCanvas = (props) => {
 
   const [isLogged, setIsLogged] = useState(false);
 
-  const [room, setRoom] = useState(searchParams.get("room") !== null ? searchParams.get("room") : "default");
 
   const [credential, setCredential] = useState('');
 
@@ -126,18 +129,18 @@ const MyCanvas = (props) => {
   //socket
   useEffect(() => {
     const subscription = gen.subscribe(room, ({ data }) => handle_receive_from_socket(data),
-                                              (error) => console.warn(error))
+      (error) => console.warn(error))
     return () => subscription.unsubscribe()
   }, [room])
 
 
-Hub.listen('api', (data) => {
-  const { payload } = data;
-  if (payload.event === CONNECTION_STATE_CHANGE) {
-    const connectionState = payload.data.connectionState;
-    console.log(connectionState);
-  }
-});
+  Hub.listen('api', (data) => {
+    const { payload } = data;
+    if (payload.event === CONNECTION_STATE_CHANGE) {
+      const connectionState = payload.data.connectionState;
+      console.log(connectionState);
+    }
+  });
 
 
   //on page load
@@ -147,11 +150,12 @@ Hub.listen('api', (data) => {
 
       var x = searchParams.get("x") !== null ? +searchParams.get("x") : 0;
       var y = searchParams.get("y") !== null ? +searchParams.get("y") : 0;
-      var zoom = searchParams.get("zoom") !== null ? + searchParams.get("zoom")/100 : 1;
-
+      var zoom = searchParams.get("zoom") !== null ? +searchParams.get("zoom") / 100 : 1;
+      var room = searchParams.get("room") !== null ? searchParams.get("room") : "default";
 
       handleClickRefresh();
 
+      setRoom(room);
       moveCamera(x, y, zoom);
     };
 
@@ -252,7 +256,7 @@ Hub.listen('api', (data) => {
 
   function setSearchParam() {
     setSearchParams(
-      createSearchParams({ room:room, x: Math.round(cameraX), y: Math.round(cameraY), zoom: Math.round(cameraZoom * 100) })
+      createSearchParams({ room: room, x: Math.round(cameraX), y: Math.round(cameraY), zoom: Math.round(cameraZoom * 100) })
     );
   }
 
@@ -333,7 +337,11 @@ Hub.listen('api', (data) => {
       prompt: prompt
     };
 
-    setImageDivList(prevState => [...prevState, img]);
+    //add last
+    // setImageDivList(prevState => [...prevState, img]);
+
+    //add first
+    setImageDivList(prevState => [img, ...prevState]);
   }
 
   function handleDown() {
@@ -384,7 +392,7 @@ Hub.listen('api', (data) => {
   function handleUp() {
     switch (currentMode) {
       case VIEW:
-        setSearchParam();
+        // setSearchParam();
         switchState(IDLE);
         break;
 
@@ -437,7 +445,7 @@ Hub.listen('api', (data) => {
       var dist = Math.sqrt(Math.pow(touch1.clientX - touch2.clientX, 2) + Math.pow(touch1.clientY - touch2.clientY, 2))
 
       var newZoom = cameraZoomStart * (dist / touchesDist)
-      
+
       newZoom = Math.min(newZoom, MAX_ZOOM);
       newZoom = Math.max(newZoom, MIN_ZOOM);
 
@@ -510,7 +518,7 @@ Hub.listen('api', (data) => {
   const handleClickRefresh = () => {
     setImageDivList([]);
 
-    var url_get_image_with_params = URL_GET_IMAGES + '?posX=0&posY=0&width=100&height=100&room='+room;
+    var url_get_image_with_params = URL_GET_IMAGES + '?posX=0&posY=0&width=100&height=100&room=' + room;
 
     fetch(url_get_image_with_params).then((data) => data.json())
       .then((json) => json.message)
@@ -644,7 +652,12 @@ Hub.listen('api', (data) => {
         <HelpModalButton />
       </div>
 
-      <div className="coords"> {Math.floor(cameraX)}, {Math.floor(cameraY)}, {Math.floor(cameraZoom * 100)} </div>
+      <CoordsModal
+        x={Math.round(cameraX)}
+        y={Math.round(cameraY)}
+        zoom={Math.round(cameraZoom * 100)}
+        room={room}
+      />
 
       <Stage
         ref={stageRef}

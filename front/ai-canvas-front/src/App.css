@@ -4,15 +4,6 @@ html, body {
   overflow: hidden
 }
 
-input, button {
-  border-radius: 5px;
-  border-style: groove;
-  height: 40px;
-  border: 0;
-  margin-right: 9px;
-  font-size: 20px;
-}
-
 .top_button_bar {
   position: absolute;
   /* background-color: rgb(245, 227, 212);
@@ -30,6 +21,14 @@ input, button {
 
 .top_button_bar button {
   color: black;
+
+  border-radius: 5px;
+  border-style: groove;
+  height: 40px;
+  border: 0;
+  margin-right: 9px;
+  font-size: 20px;
+
   background-color: rgba(212, 230, 245);
   box-shadow: -5px 5px rgb(61, 168, 255);
   transition: all 0.15s;
@@ -142,6 +141,14 @@ input {
   z-index: 1;
   padding-left: 5px;
   padding-right: 5px;
+}
+
+.coords:hover {
+  cursor: pointer;
+}
+
+.shareLink input {
+  font-size: 15px;
 }
 
 /* colors */
