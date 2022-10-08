@@ -87,7 +87,7 @@ def push_to_clients(channel, data):
 
 
 def callback(message: pubsub_v1.subscriber.message.Message) -> None:
-    print(f"Received {message}.")
+    # print(f"Received {message}.")
     data = json.loads(message.data)
 
     action = data['action']
@@ -132,7 +132,7 @@ def callback(message: pubsub_v1.subscriber.message.Message) -> None:
     prompt = prompt.decode("utf-8")
     
     ts = str(datetime.datetime.now().strftime("%Y%m%d%H%M%S%f"))
-    bucket_path = f'{room}/{ts}-{prompt}.jpeg'
+    bucket_path = f'{room}/{ts}-{prompt}.webp'
 
     data_to_add = dict(
         path=bucket_path,
