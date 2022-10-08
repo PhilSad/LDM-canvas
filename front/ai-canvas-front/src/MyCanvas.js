@@ -54,6 +54,7 @@ let generation_type;
 let cursor_pos = [0, 0];
 
 const MyCanvas = (props) => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const stageRef = useRef(null);
   const imageLayerRef = useRef(null);
   const imageSaveRef = useRef(null);
@@ -74,7 +75,7 @@ const MyCanvas = (props) => {
   const [canvasH, setCanvasH] = useState(window.innerHeight);
 
   //room
-  const [room, setRoom] = useState('default');
+  const [room, setRoom] = useState(searchParams.get("room") !== null ? searchParams.get("room") : "default");
 
   //camera
   const [camInitX, setCamInitX] = useState(0);
@@ -83,7 +84,6 @@ const MyCanvas = (props) => {
   const [cameraY, setCameraY] = useState(0);
   const [cameraZoom, setCameraZoom] = useState(1);
 
-  const [searchParams, setSearchParams] = useSearchParams();
 
   const [imageDivList, setImageDivList] = useState([]);
   const [placeholderList, setPlaceholderList] = useState(new Map());
@@ -107,7 +107,9 @@ const MyCanvas = (props) => {
     if (data.action === "new_image") {
       removePlaceholder(data.posX, data.posY)
       addNewImage(URL_BUCKET + data.path, data.posX, data.posY, data.width, data.height, data.prompt)
+
       toast(<div onClick={() => { moveCamera(x, y, z) }}>
+
         New image: {data.prompt} at ({data.posX}, {data.posY})
       </div >, {
         position: "top-right",
@@ -151,11 +153,12 @@ const MyCanvas = (props) => {
       var x = searchParams.get("x") !== null ? +searchParams.get("x") : 0;
       var y = searchParams.get("y") !== null ? +searchParams.get("y") : 0;
       var zoom = searchParams.get("zoom") !== null ? +searchParams.get("zoom") / 100 : 1;
-      var room = searchParams.get("room") !== null ? searchParams.get("room") : "default";
+
+      // var room = searchParams.get("room") !== null ? searchParams.get("room") : "default";
+      // setRoom(room);
 
       handleClickRefresh();
 
-      setRoom(room);
       moveCamera(x, y, zoom);
     };
 
@@ -338,10 +341,12 @@ const MyCanvas = (props) => {
     };
 
     //add last
-    // setImageDivList(prevState => [...prevState, img]);
+    setImageDivList(prevState => [...prevState, img]);
 
     //add first
-    setImageDivList(prevState => [img, ...prevState]);
+    // setImageDivList(prevState => [img, ...prevState]);
+    // setImageDivList([img])
+    
   }
 
   function handleDown() {
@@ -446,9 +451,6 @@ const MyCanvas = (props) => {
 
       var newZoom = cameraZoomStart * (dist / touchesDist)
 
-      newZoom = Math.min(newZoom, MAX_ZOOM);
-      newZoom = Math.max(newZoom, MIN_ZOOM);
-
       var zoomCenterX = (touch1.clientX + touch2.clientX) / 2;
       var zoomCenterY = (touch1.clientY + touch2.clientY) / 2;
       var [ax, ay] = toGlobalSpace(zoomCenterX, zoomCenterY);
@@ -475,7 +477,7 @@ const MyCanvas = (props) => {
     }
 
     newZoom = Math.min(newZoom, MAX_ZOOM);
-    newZoom = Math.max(newZoom, MIN_ZOOM);
+    // newZoom = Math.max(newZoom, MIN_ZOOM);
 
     var [ax, ay] = toGlobalSpace(cursor_pos[0], cursor_pos[1]);
 

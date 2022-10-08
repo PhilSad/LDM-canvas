@@ -11,7 +11,7 @@ export default function CoordsModal(props) {
     const handleClose = () => setShowCoordModal(false);
     const handleShow = () => setShowCoordModal(true);
 
-    const copyLink = () => {
+    function copyLink() {
         console.log("Link copied in clipboard");
         navigator.clipboard.writeText(linkurl);
     }
@@ -29,8 +29,8 @@ export default function CoordsModal(props) {
                 <Modal.Body>
                     <p> Use this link to share your current position</p>
                     <div className="shareLink">
-                        <input type="textbox" value={linkurl} readonly="readonly" />
-                        <button onclick={navigator.clipboard.writeText(linkurl)}>Copy text</button>
+                        <input type="textbox" value={linkurl} readOnly={"readonly"} />
+                        <button onClick={copyLink}>Copy text</button>
                     </div>
                 </Modal.Body>
             </Modal>
