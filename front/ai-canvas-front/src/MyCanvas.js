@@ -78,12 +78,14 @@ const MyCanvas = (props) => {
   const [room, setRoom] = useState(searchParams.get("room") !== null ? searchParams.get("room") : "default");
 
   //camera
+  const [camera, setCamera] = useState({
+    x: 0,
+    y: 0,
+    zoom: 1
+  })
+
   const [camInitX, setCamInitX] = useState(0);
   const [camInitY, setCamInitY] = useState(0);
-  const [cameraX, setCameraX] = useState(0);
-  const [cameraY, setCameraY] = useState(0);
-  const [cameraZoom, setCameraZoom] = useState(1);
-
 
   const [imageDivList, setImageDivList] = useState([]);
   const [placeholderList, setPlaceholderList] = useState(new Map());
@@ -252,28 +254,30 @@ const MyCanvas = (props) => {
 
   //smove camera and set zoom
   function moveCamera(x, y, zoom) {
-    setCameraX(x);
-    setCameraY(y);
-    setCameraZoom(zoom);
+    setCamera({
+      x: x,
+      y: y,
+      zoom: zoom
+    })
   }
 
   function setSearchParam() {
     setSearchParams(
-      createSearchParams({ room: room, x: Math.round(cameraX), y: Math.round(cameraY), zoom: Math.round(cameraZoom * 100) })
+      createSearchParams({ room: room, x: Math.round(camera.x), y: Math.round(camera.y), zoom: Math.round(camera.zoom * 100) })
     );
   }
 
   // convert coordinates system
   function toGlobalSpace(x, y) {
-    x = +cameraX + +x / cameraZoom;
-    y = +cameraY + +y / cameraZoom;
+    x = +camera.x + +x / camera.zoom;
+    y = +camera.y + +y / camera.zoom;
 
     return [x, y]
   }
 
   function toRelativeSpace(x, y) {
-    x = (x - cameraX) * cameraZoom;
-    y = (y - cameraY) * cameraZoom;
+    x = (x - camera.x) * camera.zoom;
+    y = (y - camera.y) * camera.zoom;
     return [x, y]
   }
 
@@ -377,14 +381,14 @@ const MyCanvas = (props) => {
           setCamInitX(cursor_pos[0]);
           setCamInitY(cursor_pos[1]);
 
-          moveCamera((cameraX - movX / cameraZoom), (cameraY - movY / cameraZoom), cameraZoom);
+          moveCamera((camera.x - movX / camera.zoom), (camera.y - movY / camera.zoom), camera.zoom);
         }
         break;
 
       case EDIT:
         if (currentState === SELECT) {
-          var w = (cursor_pos[0] / cameraZoom + cameraX - posX);
-          var h = (cursor_pos[1] / cameraZoom + cameraY - posY);
+          var w = (cursor_pos[0] / camera.zoom + camera.x - posX);
+          var h = (cursor_pos[1] / camera.zoom + camera.y - posY);
           setWidth(w);
           setHeight(h);
         }
@@ -420,7 +424,7 @@ const MyCanvas = (props) => {
       var dist = Math.sqrt(Math.pow(touch1.clientX - touch2.clientX, 2) + Math.pow(touch1.clientY - touch2.clientY, 2))
 
       setTouchesDist(dist);
-      setCameraZoomStart(cameraZoom);
+      setCameraZoomStart(camera.zoom);
       return;
     }
 
@@ -471,9 +475,9 @@ const MyCanvas = (props) => {
 
     var newZoom;
     if (e.evt.wheelDelta > 0) {
-      newZoom = cameraZoom * CAMERA_ZOOM_SPEED;
+      newZoom = camera.zoom * CAMERA_ZOOM_SPEED;
     } else {
-      newZoom = cameraZoom / CAMERA_ZOOM_SPEED;
+      newZoom = camera.zoom / CAMERA_ZOOM_SPEED;
     }
 
     newZoom = Math.min(newZoom, MAX_ZOOM);
@@ -485,7 +489,7 @@ const MyCanvas = (props) => {
   }
 
   const handleTouchUp = (e) => {
-    setCameraZoomStart(cameraZoom);
+    setCameraZoomStart(camera.zoom);
     handleUp();
   }
 
@@ -499,7 +503,7 @@ const MyCanvas = (props) => {
     let image = new window.Image();
 
     var [x, y] = toRelativeSpace(posX, posY);
-    var [w, h] = [width * cameraZoom, height * cameraZoom];
+    var [w, h] = [width * camera.zoom, height * camera.zoom];
 
     // the biggest side must be 512px
     var pixelRatio = 512 / Math.max(w, h);
@@ -655,9 +659,9 @@ const MyCanvas = (props) => {
       </div>
 
       <CoordsModal
-        x={Math.round(cameraX)}
-        y={Math.round(cameraY)}
-        zoom={Math.round(cameraZoom * 100)}
+        x={Math.round(camera.x)}
+        y={Math.round(camera.y)}
+        zoom={Math.round(camera.zoom * 100)}
         room={room}
       />
 
@@ -688,10 +692,10 @@ const MyCanvas = (props) => {
           {
             imageDivList.map((img, i) => {
               var cameraBox = {
-                x: cameraX - (window.innerWidth / cameraZoom) * 0.125,
-                y: cameraY - (window.innerHeight / cameraZoom) * 0.125,
-                w: (window.innerWidth / cameraZoom) * 1.25,
-                h: (window.innerHeight / cameraZoom) * 1.25
+                x: camera.x - (window.innerWidth / camera.zoom) * 0.125,
+                y: camera.y - (window.innerHeight / camera.zoom) * 0.125,
+                w: (window.innerWidth / camera.zoom) * 1.25,
+                h: (window.innerHeight / camera.zoom) * 1.25
               }
               if (
                 overlap(cameraBox, img)
@@ -699,7 +703,7 @@ const MyCanvas = (props) => {
                 var [x, y] = toRelativeSpace(img.x, img.y);
 
                 // display image only if the area is > 25px
-                if (img.w * cameraZoom * img.h * cameraZoom > 25) {
+                if (img.w * camera.zoom * img.h * camera.zoom > 25) {
                   return (
                     <URLImage
                       key={i}
@@ -707,8 +711,8 @@ const MyCanvas = (props) => {
                       x={x}
                       y={y}
                       avg_color={"#FFFADA"}
-                      width={img.w * cameraZoom}
-                      height={img.h * cameraZoom}
+                      width={img.w * camera.zoom}
+                      height={img.h * camera.zoom}
                       prompt={img.prompt}
                       mode={currentMode}
                     />)
@@ -732,18 +736,18 @@ const MyCanvas = (props) => {
                   key={i}
                   x={x}
                   y={y}
-                  width={pl.w * cameraZoom}
-                  height={pl.h * cameraZoom}
+                  width={pl.w * camera.zoom}
+                  height={pl.h * camera.zoom}
                 />)
             })
           }
 
-          {Math.abs(width * cameraZoom * height * cameraZoom) > 100 &&
+          {Math.abs(width * camera.zoom * height * camera.zoom) > 100 &&
             <PromptRect
-              x={(posX - cameraX) * cameraZoom}
-              y={(posY - cameraY) * cameraZoom}
-              width={width * cameraZoom}
-              height={height * cameraZoom}
+              x={(posX - camera.x) * camera.zoom}
+              y={(posY - camera.y) * camera.zoom}
+              width={width * camera.zoom}
+              height={height * camera.zoom}
               handlePromptButtons={handlePromptButtons}
               handleSend={handleSend}
               handleSave={handleSave}
