@@ -25,14 +25,13 @@ Amplify.configure(gen.config)
 
 const URL_BUCKET = "https://storage.googleapis.com/aicanvas-public-bucket/"
 
-const URL_START_VM = "https://function-start-vm-jujlepts2a-ew.a.run.app"
-const URL_STOP_VM = "https://function-stop-jujlepts2a-ew.a.run.app"
-const URL_STATUS_VM = "https://function-get-status-gpu-jujlepts2a-ew.a.run.app"
+// const URL_START_VM = "https://function-start-vm-jujlepts2a-ew.a.run.app"
+// const URL_STOP_VM = "https://function-stop-jujlepts2a-ew.a.run.app"
+// const URL_STATUS_VM = "https://function-get-status-gpu-jujlepts2a-ew.a.run.app"
 
-const URL_GET_IMAGES = 'https://europe-west1-ai-canvas.cloudfunctions.net/function-get_images_for_pos'
+const URL_GET_IMAGES = 'http://localhost:5000/get_images_for_room/'
 
-const URL_FUNCTION_IMAGEN = "https://imagen-pubsub-jujlepts2a-ew.a.run.app/"
-
+const URL_FUNCTION_IMAGEN = "http://localhost:5000/imagen/"
 
 //modes
 const EDIT = "EDIT";
@@ -83,7 +82,6 @@ const MyCanvas = (props) => {
   const [cameraX, setCameraX] = useState(0);
   const [cameraY, setCameraY] = useState(0);
   const [cameraZoom, setCameraZoom] = useState(1);
-
 
   const [imageDivList, setImageDivList] = useState([]);
   const [placeholderList, setPlaceholderList] = useState(new Map());
@@ -529,13 +527,13 @@ const MyCanvas = (props) => {
       }));
   };
 
-  const handleStartVm = () => {
-    fetch(URL_START_VM).then((data) => alert('VM SARTED'));
-  };
+  // const handleStartVm = () => {
+  //   fetch(URL_START_VM).then((data) => alert('VM SARTED'));
+  // };
 
-  const handleStopVm = () => {
-    fetch(URL_STOP_VM).then((data) => alert('VM STOPPED'));
-  };
+  // const handleStopVm = () => {
+  //   fetch(URL_STOP_VM).then((data) => alert('VM STOPPED'));
+  // };
 
   const handleStatusVm = () => {
     // fetch(URL_STATUS_VM).then(data => data.json()).
