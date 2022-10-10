@@ -47,6 +47,10 @@ input, button {
   box-shadow: -3px 3px rgb(61, 168, 255);
 }
 
+.modifiersTextArea {
+  width: 100%;
+}
+
 input {
   padding-right: 10px;
   padding-left: 10px;
@@ -84,7 +88,6 @@ input {
   transition: all 0.1s ease-out;
 }
 
-
 .choiceButtonCont {
   width: 400px;
 }
@@ -118,7 +121,7 @@ input {
   transition: right 0.3s ease-in-out;
   background-color: lightgray;
   background-color: rgb(231, 244, 254);
-  border: 5px solid rgb(61, 168, 255);
+  border: 2px solid rgb(61, 168, 255);
   border-right-width: 0;
   border-top-width: 0;
   padding: 10px;
@@ -136,7 +139,7 @@ input {
   height: 60px;
   width: 40px;
   background-color: rgba(212, 230, 245);
-  border: 5px solid rgb(61, 168, 255);
+  border: 2px solid rgb(61, 168, 255);
   border-right-width: 0;
   z-index: 1;
 }
@@ -158,6 +161,23 @@ input {
 
 .shareLink input {
   font-size: 15px;
+}
+
+.history {
+  background-color: white;
+  height: 300px;
+  max-height: 300px;
+  overflow-x: hidden;
+  overflow-y: scroll;
+}
+
+.histLine {
+  white-space: nowrap;
+}
+
+.histLine:hover {
+  cursor: pointer;
+  color: grey;
 }
 
 /* colors */

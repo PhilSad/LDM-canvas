@@ -4,19 +4,16 @@ import { createSearchParams, useSearchParams } from "react-router-dom";
 import URLImage from './URLImage';
 import PromptRect from './promptRect';
 import LoadPlaceholder from './LoadPlaceholder';
-import { GoogleLogin, googleLogout } from '@react-oauth/google';
 import ImageSaverLayer from './imageSaveLayer';
 import Amplify from '@aws-amplify/core'
 import * as gen from './generated'
 import HelpModalButton from './helpModal'
-import CoordsModal from './coordsModal'
 
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 // import ImageSaver from './ImageSaver';
 // import * as env from './env.js';
-import * as requests from './requests'
 
 import { CONNECTION_STATE_CHANGE, ConnectionState } from '@aws-amplify/pubsub';
 import { Hub } from 'aws-amplify';
@@ -58,7 +55,7 @@ const MyCanvas = (props) => {
   const stageRef = useRef(null);
   const imageLayerRef = useRef(null);
   const imageSaveRef = useRef(null);
-  
+
   const [oneClickControls, setOneClickControls] = useState(false);
   const [imageSave, setImageSave] = useState(null);
 
@@ -86,18 +83,16 @@ const MyCanvas = (props) => {
 
   const [cursor, setCursor] = useState('default');
 
-  const [canvasW, setCanvasW] = useState(window.innerWidth);
-  const [canvasH, setCanvasH] = useState(window.innerHeight);
+  const [canvasMeta, setCanvasMeta] = useState({
+    w: window.innerWidth,
+    h: window.innerHeight
+  })
 
   //room
   const [room, setRoom] = useState(searchParams.get("room") !== null ? searchParams.get("room") : "default");
 
   //camera
-  const [camera, setCamera] = useState({
-    x: 0,
-    y: 0,
-    zoom: 1
-  })
+  let camera = props.camera;
 
   const [camInitX, setCamInitX] = useState(0);
   const [camInitY, setCamInitY] = useState(0);
@@ -109,22 +104,19 @@ const MyCanvas = (props) => {
   const [touchesDist, setTouchesDist] = React.useState(Infinity);
   const [cameraZoomStart, setCameraZoomStart] = React.useState(1);
 
-  const [isLogged, setIsLogged] = useState(false);
-
-  const [credential, setCredential] = useState('');
-
   function handle_receive_from_socket(data) {
     data = JSON.parse(data)
 
-    var z = Math.min(canvasW / +data.width, canvasH / +data.height) * 0.5;
-    var x = +data.posX - (canvasW / 2) / z + +data.width / 2
-    var y = +data.posY - (canvasH / 2) / z + +data.height / 2
+    var z = Math.min(canvasMeta.w / +data.width, canvasMeta.h / +data.height) * 0.5;
+    var x = +data.posX - (canvasMeta.w / 2) / z + +data.width / 2
+    var y = +data.posY - (canvasMeta.h / 2) / z + +data.height / 2
 
     if (data.action === "new_image") {
       removePlaceholder(data.posX, data.posY)
       addNewImage(URL_BUCKET + data.path, data.posX, data.posY, data.width, data.height, data.prompt)
+      props.setHistory(prevState => [...prevState, data])
 
-      toast(<div onClick={() => { moveCamera(x, y, z) }}>
+      toast(<div onClick={() => { camera.move(x, y, z) }}>
 
         New image: {data.prompt} at ({data.posX}, {data.posY})
       </div >, {
@@ -164,7 +156,16 @@ const MyCanvas = (props) => {
   //on page load
   useEffect(() => {
     const onPageLoad = () => {
-      // setIsMobile(window.innerWidth <= 768);
+      setOneClickControls(window.innerWidth <= 768);
+
+      const onPageResize = () => {
+        setCanvasMeta({
+          w: window.innerWidth,
+          h: window.innerHeight,
+        });
+      }
+
+      window.addEventListener("resize", onPageResize);
 
       var x = searchParams.get("x") !== null ? +searchParams.get("x") : 0;
       var y = searchParams.get("y") !== null ? +searchParams.get("y") : 0;
@@ -175,15 +176,8 @@ const MyCanvas = (props) => {
 
       handleClickRefresh();
 
-      moveCamera(x, y, zoom);
+      camera.move(x, y, zoom);
     };
-
-    const onPageResize = () => {
-      setCanvasW(window.innerWidth);
-      setCanvasH(window.innerHeight);
-    }
-
-    window.addEventListener("resize", onPageResize);
 
     window.addEventListener('contextmenu', event => event.preventDefault());
 
@@ -203,7 +197,7 @@ const MyCanvas = (props) => {
     switchState(IDLE);
     switch (mode) {
       case EDIT:
-        if (!isLogged) {
+        if (!props.isLogged) {
           toast.error('You must be connected to use edit mode', {
             position: "bottom-center",
             autoClose: 5000,
@@ -264,15 +258,6 @@ const MyCanvas = (props) => {
     }
 
     setCurrentState(state);
-  }
-
-  //smove camera and set zoom
-  function moveCamera(x, y, zoom) {
-    setCamera({
-      x: x,
-      y: y,
-      zoom: zoom
-    })
   }
 
   function setSearchParam() {
@@ -395,7 +380,7 @@ const MyCanvas = (props) => {
           setCamInitX(cursor_pos[0]);
           setCamInitY(cursor_pos[1]);
 
-          moveCamera((camera.x - movX / camera.zoom), (camera.y - movY / camera.zoom), camera.zoom);
+          camera.move((camera.x - movX / camera.zoom), (camera.y - movY / camera.zoom), camera.zoom);
         }
         break;
 
@@ -484,7 +469,7 @@ const MyCanvas = (props) => {
       var zoomCenterY = (touch1.clientY + touch2.clientY) / 2;
       var [ax, ay] = toGlobalSpace(zoomCenterX, zoomCenterY);
 
-      moveCamera((ax - zoomCenterX / newZoom), (ay - zoomCenterY / newZoom), newZoom);
+      camera.move((ax - zoomCenterX / newZoom), (ay - zoomCenterY / newZoom), newZoom);
     }
   }
 
@@ -509,7 +494,7 @@ const MyCanvas = (props) => {
 
     var [ax, ay] = toGlobalSpace(cursor_pos[0], cursor_pos[1]);
 
-    moveCamera((ax - cursor_pos[0] / newZoom), (ay - cursor_pos[1] / newZoom), newZoom);
+    camera.move((ax - cursor_pos[0] / newZoom), (ay - cursor_pos[1] / newZoom), newZoom);
   }
 
   const handleTouchUp = (e) => {
@@ -603,13 +588,13 @@ const MyCanvas = (props) => {
     var w = Math.floor(width)
     var h = Math.floor(height)
 
-    var prompt = document.getElementById('prompt_input').value
+    var prompt = document.getElementById('prompt_input').value + ' ' + props.modifiers
     document.getElementById('prompt_input').value = ''
 
     hideSelectionRect();
 
     var imageParamsDict = {
-      'credential': credential,
+      'credential': props.credential,
       'prompt': btoa(prompt),
       'room': room,
       'posX': x,
@@ -656,37 +641,10 @@ const MyCanvas = (props) => {
   return (
     <div style={{ cursor: cursor }}>
       <div className="top_button_bar">
-        {isLogged === false ? (
-
-          <GoogleLogin //TODO login login
-            onSuccess={credentialResponse => {
-              console.log(credentialResponse);
-              setIsLogged(true);
-              setCredential(credentialResponse.credential)
-              requests.send_connexion_request(credentialResponse.credential)
-
-            }}
-            onError={() => {
-              console.log('Login Failed');
-            }}
-            useOneTap
-            auto_select
-          //todo add auto login
-
-          />
-        ) : (
-          <button onClick={() => {
-            googleLogout();
-            setIsLogged(false);
-            setCredential('');
-            // todo add logout=1 dans l'url et enlever le automatic login s'il est present
-          }}> Logout </button>
-        )}
-
         {oneClickControls ? (
           <>
-          <button onClick={() => switchMode(VIEW)}> View </button>
-          <button onClick={() => switchMode(EDIT)}> Edit </button>
+            <button onClick={() => switchMode(VIEW)}> View </button>
+            <button onClick={() => switchMode(EDIT)}> Edit </button>
           </>
         ) : (
           <button onClick={() => setOneClickControls(true)}> Mobile controls </button>
@@ -697,20 +655,13 @@ const MyCanvas = (props) => {
         <HelpModalButton />
       </div>
 
-      <CoordsModal
-        x={Math.round(camera.x)}
-        y={Math.round(camera.y)}
-        zoom={Math.round(camera.zoom * 100)}
-        room={room}
-      />
-
       <Stage
         ref={stageRef}
 
         className={"canvas"}
 
-        width={canvasW}
-        height={canvasH}
+        width={canvasMeta.w}
+        height={canvasMeta.h}
 
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
@@ -724,8 +675,8 @@ const MyCanvas = (props) => {
 
         <Layer ref={imageLayerRef}>
           <Rect
-            width={canvasW}
-            height={canvasH}
+            width={canvasMeta.w}
+            height={canvasMeta.h}
           />
 
           {
