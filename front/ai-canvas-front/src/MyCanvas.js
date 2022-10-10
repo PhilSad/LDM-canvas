@@ -58,17 +58,32 @@ const MyCanvas = (props) => {
   const stageRef = useRef(null);
   const imageLayerRef = useRef(null);
   const imageSaveRef = useRef(null);
-
+  
+  const [oneClickControls, setOneClickControls] = useState(false);
   const [imageSave, setImageSave] = useState(null);
 
   const [currentMode, setCurrentMode] = useState(VIEW);
   const [currentState, setCurrentState] = useState(IDLE);
 
+  const [selectRect, setSelectRect] = useState({
+    x: 0,
+    y: 0,
+    w: 0,
+    h: 0
+  })
+
   const [posX, setPosX] = useState(0);
   const [posY, setPosY] = useState(0);
-
   const [width, setWidth] = useState(0);
   const [height, setHeight] = useState(0);
+
+  const [selectionRect, setSelectionRect] = useState({
+    x: 0,
+    y: 0,
+    width: 0,
+    height: 0
+  })
+
   const [cursor, setCursor] = useState('default');
 
   const [canvasW, setCanvasW] = useState(window.innerWidth);
@@ -95,7 +110,6 @@ const MyCanvas = (props) => {
   const [cameraZoomStart, setCameraZoomStart] = React.useState(1);
 
   const [isLogged, setIsLogged] = useState(false);
-
 
   const [credential, setCredential] = useState('');
 
@@ -350,7 +364,7 @@ const MyCanvas = (props) => {
     //add first
     // setImageDivList(prevState => [img, ...prevState]);
     // setImageDivList([img])
-    
+
   }
 
   function handleDown() {
@@ -436,9 +450,20 @@ const MyCanvas = (props) => {
 
   const handleMouseDown = (e) => {
     cursor_pos = [e.evt.clientX, e.evt.clientY];
+    if (oneClickControls) {
+      handleDown();
+      return;
+    }
 
     if (e.evt.which === 1) {
-      handleDown();
+      defineSelection(cursor_pos[0], cursor_pos[1]);
+      switchMode(EDIT);
+      switchState(SELECT);
+    } else if (e.evt.which === 3) {
+      setCamInitX(cursor_pos[0]);
+      setCamInitY(cursor_pos[1]);
+      switchMode(VIEW);
+      switchState(MOVE);
     }
   }
 
@@ -465,7 +490,6 @@ const MyCanvas = (props) => {
 
   const handleMouseMove = (e) => {
     cursor_pos = [e.evt.clientX, e.evt.clientY];
-
     handleMove();
   }
 
@@ -494,10 +518,17 @@ const MyCanvas = (props) => {
   }
 
   const handleMouseUp = (e) => {
-    if (e.evt.which === 1) {
+    if (oneClickControls) {
       handleUp();
+      return;
     }
-  };
+
+    if (e.evt.which === 1) {
+      switchState(CHOOSE_TYPE);
+    } else if (e.evt.which === 3) {
+      switchState(IDLE);
+    }
+  }
 
   const cropImageToSelection = () => {
     let image = new window.Image();
@@ -652,9 +683,17 @@ const MyCanvas = (props) => {
           }}> Logout </button>
         )}
 
+        {oneClickControls ? (
+          <>
+          <button onClick={() => switchMode(VIEW)}> View </button>
+          <button onClick={() => switchMode(EDIT)}> Edit </button>
+          </>
+        ) : (
+          <button onClick={() => setOneClickControls(true)}> Mobile controls </button>
+        )
+        }
+
         <button onClick={() => handleClickRefresh()}> Refresh </button>
-        <button onClick={() => switchMode(VIEW)}> View </button>
-        <button onClick={() => switchMode(EDIT)}> Edit </button>
         <HelpModalButton />
       </div>
 
