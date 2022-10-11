@@ -51,29 +51,6 @@ def update_from_sql(table, row_to_update):
     engine.execute(query)
 
 
-def sql(params):
-
-    params = request.get_json()
-    action = params['action']
-
-    engine = connect_unix_socket()
-    metadata = db.MetaData()
-
-
-    table = db.Table(params['table'], metadata, autoload=True, autoload_with=engine)
-
-    if action == 'insert_row':
-        insert_to_sql(engine, table, params['data'])
-    
-    if action == 'update_row':
-        update_from_sql(engine, table, params['data'])
-    
-
-    if action == 'insert_if_not_exist':
-        insert_to_sql(engine, table, params['data'])
-
-
-
 def get_table(name):
     return db.Table(name, db.MetaData(), autoload=True, autoload_with=engine)
 
@@ -88,4 +65,3 @@ def get_images_from_room(room):
     result_as_dict = [dict(res) for res in result_as_dict]
     
     return result_as_dict
-    return (dict(message=result_as_dict), 201, headers)

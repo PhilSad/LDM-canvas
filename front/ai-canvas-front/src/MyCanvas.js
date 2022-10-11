@@ -23,15 +23,18 @@ import { Hub } from 'aws-amplify';
 
 Amplify.configure(gen.config)
 
+
+
 const URL_BUCKET = "https://storage.googleapis.com/aicanvas-public-bucket/"
 
 // const URL_START_VM = "https://function-start-vm-jujlepts2a-ew.a.run.app"
 // const URL_STOP_VM = "https://function-stop-jujlepts2a-ew.a.run.app"
 // const URL_STATUS_VM = "https://function-get-status-gpu-jujlepts2a-ew.a.run.app"
 
-const URL_GET_IMAGES = 'http://localhost:5000/get_images_for_room/'
+const BACK_BASE_URL = process.env.REACT_APP_BACK_URL;
 
-const URL_FUNCTION_IMAGEN = "http://localhost:5000/imagen/"
+const URL_GET_IMAGES = BACK_BASE_URL + '/get_images_for_room/'
+const URL_FUNCTION_IMAGEN = BACK_BASE_URL + "/imagen/"
 
 //modes
 const EDIT = "EDIT";
