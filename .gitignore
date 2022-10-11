@@ -16,3 +16,6 @@ models_bindings/models/dalle-mini-mega/dalle_bart_mega/merges.txt
 models_bindings/models/dalle-mini-mega/dalle_bart_mega/vocab.json
 models_bindings/models/dalle-mini-mega/vqgan/detoker.pt
 *.pyc
+*.env
+api/tests/cloud_sql_proxy
+api/tests/tests.ipynb
