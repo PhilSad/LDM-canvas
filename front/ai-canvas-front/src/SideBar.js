@@ -1,8 +1,16 @@
 import React, { useState } from "react";
 import CoordsModal from './coordsModal'
 import { GoogleLogin, googleLogout } from '@react-oauth/google';
-
+import SignInModalButton from "./signinModal";
 import * as requests from './requests'
+import { firebaseConfig } from './firebaseConfig';
+import { getAuth, signOut } from "firebase/auth";
+import { initializeApp } from "firebase/app";
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+
 
 const SideBar = props => {
     const sidebarClass = props.isOpen ? "sidebar open" : "sidebar";
@@ -72,22 +80,42 @@ const SideBar = props => {
             </div>
 
             <h4>Parameters</h4>
+            
+            {logged === true ? (
+                <button onClick={() =>{
+                    signOut(auth)
+                    props.setIsLogged(true);
+                    setLogged(true);
+                }
+                } > 
+                Log out</button>
+            ):(
+            <SignInModalButton  
+                onLoginSuccess={credentialResponse => {
+                    props.setIsLogged(true);
+                    setLogged(true);
+                    props.setCredential(credentialResponse.credential)
+                    requests.send_connexion_request(credentialResponse.credential)
+                    console.log('user has been logged in !')
+                    }
+                }
+            />
+            )
+        }
 
-            {!logged ? (
-                <GoogleLogin //TODO login login
-                    onSuccess={credentialResponse => {
+            {/* {logged === false ? (
+                <SignInModalButton 
+                    onLoginSuccess={credentialResponse => {
                         props.setIsLogged(true);
                         setLogged(true);
                         props.setCredential(credentialResponse.credential)
                         requests.send_connexion_request(credentialResponse.credential)
-
+                        console.log('user has been logged in !')
                     }}
                     onError={() => {
                         console.log('Login Failed');
                     }}
-                    useOneTap
-                    auto_select
-                //todo add auto login
+
                 />
             ) : (
                 <button onClick={() => {
@@ -97,7 +125,7 @@ const SideBar = props => {
                     props.setCredential('');
                     // todo add logout=1 dans l'url et enlever le automatic login s'il est present
                 }}> Logout </button>
-            )}
+            )} */}
 
 
         </div>
