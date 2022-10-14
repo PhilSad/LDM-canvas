@@ -84,18 +84,20 @@ const SideBar = props => {
             {logged === true ? (
                 <button onClick={() =>{
                     signOut(auth)
-                    props.setIsLogged(true);
-                    setLogged(true);
+                    props.setIsLogged(false);
+                    setLogged(false);
                 }
                 } > 
                 Log out</button>
             ):(
-            <SignInModalButton  
+            <SignInModalButton
+                
                 onLoginSuccess={credentialResponse => {
+                    console.log(credentialResponse)
                     props.setIsLogged(true);
                     setLogged(true);
-                    props.setCredential(credentialResponse.credential)
-                    requests.send_connexion_request(credentialResponse.credential)
+                    props.setCredential(credentialResponse)
+                    requests.send_connexion_request(credentialResponse)
                     console.log('user has been logged in !')
                     }
                 }

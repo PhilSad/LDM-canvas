@@ -11,7 +11,7 @@ import { useSignInWithGoogle, useAuthState } from 'react-firebase-hooks/auth';
 
 
 export default function SignInModalButton(props) {
-  const [showModal, setShowModal] = useState(true);
+  const [showModal, setShowModal] = useState(false);
   const handleClose = () => setShowModal(false);
   const handleShow = () => setShowModal(true);
 
