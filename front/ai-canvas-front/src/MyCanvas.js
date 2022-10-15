@@ -12,6 +12,8 @@ import HelpModalButton from './helpModal'
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { auth } from './auth/Auth';
 // import ImageSaver from './ImageSaver';
 // import * as env from './env.js';
 
@@ -109,6 +111,12 @@ const MyCanvas = (props) => {
   //mobile
   const [touchesDist, setTouchesDist] = React.useState(Infinity);
   const [cameraZoomStart, setCameraZoomStart] = React.useState(1);
+
+  const [user, loading, error] = useAuthState(auth);
+
+  console.log(user)
+  console.log(loading)
+  console.log(error)
 
   function handle_receive_from_socket(data) {
     data = JSON.parse(data)
