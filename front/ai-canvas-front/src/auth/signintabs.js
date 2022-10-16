@@ -22,43 +22,6 @@ function SigninTabs({user}) {
     const [passwordLogin, setPasswordLogin] = useState('');
     const [pseudoCreate, setPseudoCreate] = useState('');
 
-    const BACK_BASE_URL = process.env.REACT_APP_BACK_URL;
-
-    async function registerUserfromMail(email, password, pseudo) {
-        await createUserWithEmailAndPassword(email, password)
-        if (!errorMail) {
-            fetch(BACK_BASE_URL + "/register_from_email/", {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(
-                    {
-                        'email': email,
-                        'pseudo': pseudo
-                    }
-                ),
-            })
-        }
-    }
-    console.log(user)
-
-    async function registerUserfromGoogle(email) {
-
-        signInWithGoogle().then((data) => console.log(user))
-/*        if (errorGoogle === false)
-        fetch(BACK_BASE_URL + "/register_from_google/", {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(
-                {
-                    'credential': userGoogle.credential
-                }
-            ),
-        })*/
-    }
 
 return (
     <Tabs
