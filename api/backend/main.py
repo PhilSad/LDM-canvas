@@ -39,12 +39,14 @@ def update_bdd_after_image_generation():
     db_operations.update_from_sql('images', params)
     return 'ok'
 
-@app.route("/register_from_google/", methods=['POST'])
-def register_from_google():
+@app.route("/register_user/", methods=['POST'])
+def register_user():
     params = request.get_json()
 
     token = params['credential']
-    pseudo = str(random.randint(10000000, 90000000))
+    pseudo = params.get('pseudo')
+    if pseudo is None:
+        pseudo = str(random.randint(10000000, 90000000))
 
     idinfo = users_operations.validate_access_token_and_get_user(token)
     if idinfo == False:
@@ -52,33 +54,12 @@ def register_from_google():
     if db_operations.check_if_user_exist(idinfo['email']):
         return 'user already exist', 201
          
-
-    data_to_bdd = dict(email = idinfo['email'], name = idinfo['name'], pseudo = pseudo)
-
-    db_operations.insert_to_sql('users', data_to_bdd)
-
-    return ('OK', 200)
-
-@app.route("/register_from_email/")
-def register_from_email():
-    params = request.get_json()
-
-    print(params)
-    email = params['email']
-    pseudo = params['pass']
-    
-    if not db_operations.check_if_user_exist(email):
-        return 'user already exist', 200
-         
-
-    data_to_bdd = dict(email = email, pseudo = pseudo)
+    print(idinfo)
+    data_to_bdd = dict(email = idinfo['email'], name = idinfo.get('name'), pseudo = pseudo)
 
     db_operations.insert_to_sql('users', data_to_bdd)
 
     return ('OK', 200)
- 
-
-
 
 
 

@@ -1,11 +1,11 @@
-import { initializeApp } from "firebase/app";
+import {initializeApp} from "firebase/app";
 import {
-    GoogleAuthProvider,
-    getAuth,
-    signInWithPopup,
-    signInWithEmailAndPassword,
     createUserWithEmailAndPassword,
+    getAuth,
+    GoogleAuthProvider,
     sendPasswordResetEmail,
+    signInWithEmailAndPassword,
+    signInWithPopup,
     signOut,
 } from "firebase/auth";
 
@@ -31,7 +31,7 @@ const signInWithGoogle = async () => {
         const user = res.user;
         console.log(res)
         console.log(user)
-        fetch(BACK_BASE_URL + "/register_from_google/", {
+        fetch(BACK_BASE_URL + "/register_user/", {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -57,11 +57,24 @@ const logInWithEmailAndPassword = async (email, password) => {
         alert(err.message);
     }
 };
-const registerWithEmailAndPassword = async (name, email, password) => {
+const registerWithEmailAndPassword = async (pseudo, email, password) => {
     try {
         const res = await createUserWithEmailAndPassword(auth, email, password);
         const user = res.user;
-        console.log(user)
+        console.log(res)
+        fetch(BACK_BASE_URL + "/register_user/", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(
+                {
+                    'credential': res._tokenResponse.idToken,
+                    'pseudo': pseudo
+                }
+            ),
+        })
+
     } catch (err) {
         console.error(err);
         alert(err.message);

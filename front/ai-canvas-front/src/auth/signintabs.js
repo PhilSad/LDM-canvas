@@ -1,16 +1,11 @@
 import React, {useState} from 'react';
 import Tab from 'react-bootstrap/Tab';
 import Tabs from 'react-bootstrap/Tabs';
-import {
-    useSignInWithGoogle,
-    useAuthState,
-    useCreateUserWithEmailAndPassword,
-    useSignInWithEmailAndPassword
-} from 'react-firebase-hooks/auth';
-import {auth} from './Auth';
+import {useCreateUserWithEmailAndPassword} from 'react-firebase-hooks/auth';
+import {auth, logInWithEmailAndPassword, registerWithEmailAndPassword, signInWithGoogle} from './Auth';
 import {GoogleLoginButton} from "react-social-login-buttons";
 import TextField from '@mui/joy/TextField';
-import{signInWithGoogle, logInWithEmailAndPassword} from "./Auth";
+import {Box, Button} from "@mui/joy";
 
 
 function SigninTabs({user}) {
@@ -32,6 +27,7 @@ return (
     >
         <Tab eventKey="login" title="Login">
             <GoogleLoginButton onClick={() => signInWithGoogle()}/>
+            <br/>
             <TextField
                 type="email"
                 label="Email"
@@ -47,6 +43,12 @@ return (
                 onChange={(e) => setPasswordLogin(e.target.value)}
                 placeholder="password"
             />
+            <br/>
+            <Box textAlign={'center'}>
+                <Button onClick={() => logInWithEmailAndPassword(emailLogin, passwordLogin)}>
+                    Login
+                </Button>
+            </Box>
         </Tab>
         <Tab eventKey="createAccount" title="Create Account">
             <TextField
@@ -71,9 +73,12 @@ return (
                 onChange={(e) => setPseudoCreate(e.target.value)}
                 placeholder="pseudo"
             />
-            <button onClick={() => registerUserfromMail(emailCreate, passwordCreate, pseudoCreate)}>
-                Register
-            </button>
+            <br/>
+            <Box textAlign={"center"}>
+                <Button onClick={() => registerWithEmailAndPassword(pseudoCreate, emailCreate, passwordCreate)}>
+                    Register
+                </Button>
+            </Box>
 
         </Tab>
     </Tabs>

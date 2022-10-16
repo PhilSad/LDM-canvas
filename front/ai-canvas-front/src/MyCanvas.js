@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Stage, Layer, Rect } from 'react-konva';
-import { createSearchParams, useSearchParams } from "react-router-dom";
+import React, {useEffect, useRef, useState} from 'react';
+import {Layer, Rect, Stage} from 'react-konva';
+import {createSearchParams, useSearchParams} from "react-router-dom";
 import URLImage from './URLImage';
 import PromptRect from './promptRect';
 import LoadPlaceholder from './LoadPlaceholder';
@@ -9,16 +9,15 @@ import Amplify from '@aws-amplify/core'
 import * as gen from './generated'
 import HelpModalButton from './helpModal'
 
-import { ToastContainer, toast } from 'react-toastify';
+import {toast, ToastContainer} from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-import { useAuthState } from 'react-firebase-hooks/auth';
-import { auth } from './auth/Auth';
+import {useAuthState} from 'react-firebase-hooks/auth';
+import {auth} from './auth/Auth';
 // import ImageSaver from './ImageSaver';
 // import * as env from './env.js';
-
-import { CONNECTION_STATE_CHANGE, ConnectionState } from '@aws-amplify/pubsub';
-import { Hub } from 'aws-amplify';
+import {CONNECTION_STATE_CHANGE} from '@aws-amplify/pubsub';
+import {Hub} from 'aws-amplify';
 
 Amplify.configure(gen.config)
 
@@ -114,9 +113,9 @@ const MyCanvas = (props) => {
 
   const [user, loading, error] = useAuthState(auth);
 
-  console.log(user)
-  console.log(loading)
-  console.log(error)
+  // console.log(user)
+  // console.log(loading)
+  // console.log(error)
 
   function handle_receive_from_socket(data) {
     data = JSON.parse(data)
