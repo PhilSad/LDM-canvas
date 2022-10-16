@@ -12,13 +12,11 @@ from . import appsync_operations
 def imagen(action, params):
     # send to gpu
 
-    try:    
-        idinfo = users_operations.get_userinfo_for_credential(params['credential'])
-    except ValueError as e:
-        print("Some finicky shits")
-        print(e)
+
+    idinfo = users_operations.validate_access_token_and_get_user(params['credential'])
+    if idinfo == False:
         return -1
-        
+
     image_uuid = str(uuid.uuid4())
     params['uuid'] = image_uuid
 

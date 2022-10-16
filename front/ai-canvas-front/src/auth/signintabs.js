@@ -14,7 +14,44 @@ function SigninTabs() {
   const [passwordCreate, setPasswordCreate] = useState('');
   const [emailLogin, setEmailLogin] = useState('');
   const [passwordLogin, setPasswordLogin] = useState('');
+  const [pseudoCreate, setPseudoCreate] = useState('');
 
+  const BACK_BASE_URL = process.env.REACT_APP_BACK_URL;
+
+  function registerUserfromMail(email, password, pseudo){
+    createUserWithEmailAndPassword(email, password)
+    if(! error){
+        fetch(BACK_BASE_URL + "register_from_email/", {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(
+                {
+                    'email' : email,
+                    'pseudo': pseudo
+                }
+            ),
+        })
+    }
+  }
+
+  function registerUserfromGoogle(email){
+    signInWithGoogle().then
+    if(! error){
+        fetch(BACK_BASE_URL + "register_from_google/", {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(
+                {
+                    'email' : email,
+                }
+            ),
+        })
+    }
+  }
 
   return (
     <Tabs
@@ -24,7 +61,7 @@ function SigninTabs() {
       className="mb-3"
     >
       <Tab eventKey="login" title="Login">
-          <GoogleLoginButton onClick={() => signInWithGoogle()} />
+          <GoogleLoginButton onClick={() => registerUserfromGoogle(pseudoCreate)} />
           <TextField
             type="email"
             label="Email"
@@ -58,8 +95,13 @@ function SigninTabs() {
             placeholder="password"
         />
         <br/>
-
-        <button onClick={() => createUserWithEmailAndPassword(emailCreate, passwordCreate)}>
+        <TextField 
+            label="Pseudo"
+            value={pseudoCreate}
+            onChange={(e) => setPseudoCreate(e.target.value)}
+            placeholder="pseudo"
+        />
+        <button onClick={() => registerUserfromMail(emailCreate, passwordCreate, pseudoCreate)}>
         Register
       </button>
         

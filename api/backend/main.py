@@ -1,4 +1,5 @@
 from crypt import methods
+from random import random
 import dotenv
 dotenv.load_dotenv('.env')
 
@@ -6,6 +7,7 @@ from flask import Flask
 from flask_cors import CORS
 from flask import request
 from operations import *
+import random
 
 app = Flask(__name__)
 CORS(app)
@@ -36,6 +38,51 @@ def update_bdd_after_image_generation():
     params = request.get_json()
     db_operations.update_from_sql('images', params)
     return 'ok'
+
+@app.route("/register_from_google/")
+def register_from_google():
+    params = request.get_json()
+
+    print(params)
+    token = params['data']['credential']
+    pseudo = str(random.randint(10000000, 90000000))
+
+    idinfo = users_operations.validate_access_token_and_get_user(token)
+    if idinfo == False:
+        return ('invalid token', 502)
+    
+    if not db_operations.check_if_user_exist(idinfo['email']):
+        return 'user already exist', 200
+         
+
+    data_to_bdd = dict(email = idinfo['email'], name = idinfo['name'], pseudo = pseudo)
+
+    db_operations.insert_to_sql('users', data_to_bdd)
+
+    return ('OK', 200)
+
+@app.route("/register_from_email/")
+def register_from_email():
+    params = request.get_json()
+
+    print(params)
+    email = params['email']
+    pseudo = params['pass']
+    
+    if not db_operations.check_if_user_exist(email):
+        return 'user already exist', 200
+         
+
+    data_to_bdd = dict(email = email, pseudo = pseudo)
+
+    db_operations.insert_to_sql('users', data_to_bdd)
+
+    return ('OK', 200)
+ 
+
+
+
+
 
 @app.route("/hello/")
 def hello():

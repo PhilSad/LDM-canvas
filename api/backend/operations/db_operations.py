@@ -1,4 +1,5 @@
 import os
+from unittest import result
 import sqlalchemy
 import sqlalchemy as db
 import traceback
@@ -65,3 +66,11 @@ def get_images_from_room(room):
     result_as_dict = [dict(res) for res in result_as_dict]
     
     return result_as_dict
+
+
+def check_if_user_exist(email):
+    users = get_table('users')
+    stmt = db.select(users).where(users.columns.email == email)
+    result = engine.execute(stmt)
+    return len(list(result)) == 1
+    
