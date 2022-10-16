@@ -26,8 +26,6 @@ def connect_unix_socket() -> sqlalchemy.engine.base.Engine:
 
 engine = connect_unix_socket()
 
-
-
 def get_queue_size():
     table = 'images'
     if type(table) == str:
@@ -72,5 +70,14 @@ def check_if_user_exist(email):
     users = get_table('users')
     stmt = db.select(users).where(users.columns.email == email)
     result = engine.execute(stmt)
-    return len(list(result)) == 1
-    
+    res = list(result)
+    return len(res) == 1
+
+def get_user_pseudo(email):
+    users = get_table('users')
+    stmt = db.select(users.c.pseudo).where(users.columns.email == email)
+    result = engine.execute(stmt)
+    return result
+
+
+

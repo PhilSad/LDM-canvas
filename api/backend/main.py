@@ -39,20 +39,18 @@ def update_bdd_after_image_generation():
     db_operations.update_from_sql('images', params)
     return 'ok'
 
-@app.route("/register_from_google/")
+@app.route("/register_from_google/", methods=['POST'])
 def register_from_google():
     params = request.get_json()
 
-    print(params)
-    token = params['data']['credential']
+    token = params['credential']
     pseudo = str(random.randint(10000000, 90000000))
 
     idinfo = users_operations.validate_access_token_and_get_user(token)
     if idinfo == False:
         return ('invalid token', 502)
-    
-    if not db_operations.check_if_user_exist(idinfo['email']):
-        return 'user already exist', 200
+    if db_operations.check_if_user_exist(idinfo['email']):
+        return 'user already exist', 201
          
 
     data_to_bdd = dict(email = idinfo['email'], name = idinfo['name'], pseudo = pseudo)
