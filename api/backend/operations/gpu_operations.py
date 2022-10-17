@@ -14,6 +14,8 @@ def imagen(action, params):
 
 
     idinfo = users_operations.validate_access_token_and_get_user(params['credential'])
+    print('[DEBUG] user info')
+    print(idinfo)
     if idinfo == False:
         return -1
 

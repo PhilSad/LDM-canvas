@@ -11,7 +11,9 @@ def get_userinfo_for_credential(credential):
 def validate_access_token_and_get_user(credential):
     try:
         idinfo = get_userinfo_for_credential(credential)
-        return idinfo
+        if idinfo['email_verified'] == True:
+            return idinfo
+        return False
     except ValueError as e:
         print(e)
         return False
