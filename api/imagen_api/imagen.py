@@ -155,9 +155,8 @@ def callback(message: pubsub_v1.subscriber.message.Message) -> None:
         path=bucket_path,
         status = 'generated'
     )
-    json_request = dict(action='update_row', table = 'images', data = data_to_bdd)
 
-    requests.post('https://sql-actions-jujlepts2a-ew.a.run.app', json = json_request)
+    requests.post('https://sql-actions-jujlepts2a-ew.a.run.app', json = data_to_bdd)
 
 
 
