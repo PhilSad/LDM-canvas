@@ -29,8 +29,6 @@ const URL_BUCKET = "https://storage.googleapis.com/aicanvas-public-bucket/"
 
 const BACK_BASE_URL = process.env.REACT_APP_BACK_URL;
 
-
-
 const URL_GET_IMAGES = BACK_BASE_URL + '/get_images_for_room/'
 const URL_FUNCTION_IMAGEN = BACK_BASE_URL + "/imagen/"
 
@@ -543,6 +541,8 @@ const MyCanvas = (props) => {
     setImageDivList([]);
 
     var url_get_image_with_params = URL_GET_IMAGES + '?posX=0&posY=0&width=100&height=100&room=' + room;
+
+    console.log(url_get_image_with_params)
 
     fetch(url_get_image_with_params).then((data) => data.json())
       .then((json) => json.message)

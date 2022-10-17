@@ -34,7 +34,6 @@
     "eject": "react-scripts eject",
     "deploy-dev": "env-cmd -f .env.cloud.dev react-scripts build && gcloud app deploy --project kollai-front-dev",
     "deploy-prod": "env-cmd -f .env.cloud.prod react-scripts build && gcloud app deploy --project kollai-front-prod"
-
   },
   "eslintConfig": {
     "extends": [
