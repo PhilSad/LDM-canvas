@@ -3,10 +3,11 @@ import {
     createUserWithEmailAndPassword,
     getAuth,
     GoogleAuthProvider,
+    sendEmailVerification,
     sendPasswordResetEmail,
     signInWithEmailAndPassword,
     signInWithPopup,
-    signOut,
+    signOut
 } from "firebase/auth";
 
 export const firebaseConfig = {
@@ -57,6 +58,16 @@ const logInWithEmailAndPassword = async (email, password) => {
         alert(err.message);
     }
 };
+
+const sendVerificationMail = async () => {
+    try {
+        await sendEmailVerification(auth.currentUser);
+    } catch (err) {
+        console.error(err);
+        alert(err.message);
+    }
+};
+
 const registerWithEmailAndPassword = async (pseudo, email, password) => {
     try {
         const res = await createUserWithEmailAndPassword(auth, email, password);
@@ -74,6 +85,10 @@ const registerWithEmailAndPassword = async (pseudo, email, password) => {
                 }
             ),
         })
+        const res_email = await sendVerificationMail();
+        console.log("email_send")
+        console.log(res_email)
+
 
     } catch (err) {
         console.error(err);

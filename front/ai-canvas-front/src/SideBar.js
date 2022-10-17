@@ -1,13 +1,8 @@
-import React, { useState } from "react";
+import React, {useState} from "react";
 import CoordsModal from './coordsModal'
-import { GoogleLogin, googleLogout } from '@react-oauth/google';
-import {useSignInWithGoogle} from 'react-firebase-hooks/auth'
-import { auth } from "./auth/Auth";
-import * as requests from './requests'
-import { logout } from "./auth/Auth";
+import {useAuthState} from 'react-firebase-hooks/auth'
+import {auth, logout} from "./auth/Auth";
 import SignInModalButton from "./auth/signinModal";
-import { useAuthState } from 'react-firebase-hooks/auth';
-import { signOut } from 'firebase/auth';
 
 const SideBar = props => {
     const sidebarClass = props.isOpen ? "sidebar open" : "sidebar";
@@ -79,7 +74,7 @@ const SideBar = props => {
             </div>
 
             <h4>Parameters</h4>
-            <button onClick={() => console.log(error)}>check user</button>
+            <button onClick={() => console.log(user)}>check user</button>
             {/* <button onClick={() => signInWithGoogle()}>signinwithgoogle</button>
             <button onClick={() => logout()}>logout</button> */}
             

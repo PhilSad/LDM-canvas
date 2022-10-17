@@ -113,10 +113,6 @@ const MyCanvas = (props) => {
 
   const [user, loading, error] = useAuthState(auth);
 
-  // console.log(user)
-  // console.log(loading)
-  // console.log(error)
-
   function handle_receive_from_socket(data) {
     data = JSON.parse(data)
 
@@ -210,7 +206,7 @@ const MyCanvas = (props) => {
     switchState(IDLE);
     switch (mode) {
       case EDIT:
-        if (!props.isLogged) {
+        if (!user) {
           toast.error('You must be connected to use edit mode', {
             position: "bottom-center",
             autoClose: 5000,
@@ -607,7 +603,7 @@ const MyCanvas = (props) => {
     hideSelectionRect();
 
     var imageParamsDict = {
-      'credential': props.credential,
+      'credential': user.accessToken,
       'prompt': btoa(prompt),
       'room': room,
       'posX': x,
