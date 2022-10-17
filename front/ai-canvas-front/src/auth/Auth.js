@@ -7,7 +7,7 @@ import {
     sendPasswordResetEmail,
     signInWithEmailAndPassword,
     signInWithPopup,
-    signOut
+    signOut,
 } from "firebase/auth";
 
 export const firebaseConfig = {
@@ -87,7 +87,6 @@ const registerWithEmailAndPassword = async (pseudo, email, password) => {
         })
         const res_email = await sendVerificationMail();
         console.log("email_send")
-        console.log(res_email)
 
 
     } catch (err) {

@@ -2,7 +2,13 @@ import React, {useState} from 'react';
 import Tab from 'react-bootstrap/Tab';
 import Tabs from 'react-bootstrap/Tabs';
 import {useCreateUserWithEmailAndPassword} from 'react-firebase-hooks/auth';
-import {auth, logInWithEmailAndPassword, registerWithEmailAndPassword, signInWithGoogle} from './Auth';
+import {
+    auth,
+    logInWithEmailAndPassword,
+    registerWithEmailAndPassword,
+    sendPasswordReset,
+    signInWithGoogle
+} from './Auth';
 import {GoogleLoginButton} from "react-social-login-buttons";
 import TextField from '@mui/joy/TextField';
 import {Box, Button} from "@mui/joy";
@@ -16,6 +22,7 @@ function SigninTabs({user}) {
     const [emailLogin, setEmailLogin] = useState('');
     const [passwordLogin, setPasswordLogin] = useState('');
     const [pseudoCreate, setPseudoCreate] = useState('');
+    const [emailReset, setEmailReset] = useState('');
 
 
 return (
@@ -81,6 +88,25 @@ return (
             </Box>
 
         </Tab>
+
+        <Tab eventKey="resetPasswork" title="Password Reset">
+            <TextField
+                type="email"
+                label="Email"
+                value={emailReset}
+                onChange={(e) => setEmailReset(e.target.value)}
+                placeholder="user@domain.com"
+            />
+            <br/>
+
+            <Box textAlign={"center"}>
+                <Button onClick={() => sendPasswordReset(emailReset)}>
+                    Send reset mail
+                </Button>
+            </Box>
+
+        </Tab>
+
     </Tabs>
 );
 }
