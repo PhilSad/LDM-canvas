@@ -73,6 +73,13 @@ const SideBar = props => {
 
             <h4>Parameters</h4>
 
+            <div class="checkboxes">
+                <label>
+                    <input type="checkbox" onClick={() => props.setIsMobile(prevState => !prevState)} />
+                    <span>Mobile controls</span>
+                </label>
+            </div>
+
             {!logged ? (
                 <GoogleLogin //TODO login login
                     onSuccess={credentialResponse => {

@@ -56,7 +56,6 @@ const MyCanvas = (props) => {
   const imageLayerRef = useRef(null);
   const imageSaveRef = useRef(null);
 
-  const [oneClickControls, setOneClickControls] = useState(false);
   const [imageSave, setImageSave] = useState(null);
 
   const [currentMode, setCurrentMode] = useState(VIEW);
@@ -88,11 +87,10 @@ const MyCanvas = (props) => {
     h: window.innerHeight
   })
 
-  //room
-  const [room, setRoom] = useState(searchParams.get("room") !== null ? searchParams.get("room") : "default");
-
   //camera
   let camera = props.camera;
+  let room = props.room;
+  let oneClickControls = props.isMobile;
 
   const [camInitX, setCamInitX] = useState(0);
   const [camInitY, setCamInitY] = useState(0);
@@ -156,8 +154,6 @@ const MyCanvas = (props) => {
   //on page load
   useEffect(() => {
     const onPageLoad = () => {
-      setOneClickControls(window.innerWidth <= 768);
-
       const onPageResize = () => {
         setCanvasMeta({
           w: window.innerWidth,
@@ -641,14 +637,11 @@ const MyCanvas = (props) => {
   return (
     <div style={{ cursor: cursor }}>
       <div className="top_button_bar">
-        {oneClickControls ? (
+        {oneClickControls &&
           <>
             <button onClick={() => switchMode(VIEW)}> View </button>
             <button onClick={() => switchMode(EDIT)}> Edit </button>
           </>
-        ) : (
-          <button onClick={() => setOneClickControls(true)}> Mobile controls </button>
-        )
         }
 
         <button onClick={() => handleClickRefresh()}> Refresh </button>
