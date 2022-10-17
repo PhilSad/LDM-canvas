@@ -99,8 +99,8 @@ def callback(message: pubsub_v1.subscriber.message.Message) -> None:
     prompt = base64.b64decode(b64prompt)
     prompt = prompt.decode("utf-8")
 
-    width = int(params['width'])
-    height = int(params['height'])
+    width = abs(int(params['width']))
+    height = abs(int(params['height']))
 
     # todo send ws with cur image uuid
 
