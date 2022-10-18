@@ -653,8 +653,8 @@ const MyCanvas = (props) => {
           </>
         }
 
-        <button onClick={() => handleClickRefresh()}> Refresh </button>
-        <HelpModalButton />
+        <button onClick={() => handleClickRefresh()}> Refresh</button>
+        <HelpModalButton show={user !== undefined}/>
       </div>
 
       <Stage
