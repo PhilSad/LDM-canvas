@@ -12,7 +12,7 @@ const SideBar = props => {
 
     const [logged, setLogged] = useState(false);
     const [user, loading, error] = useAuthState(auth);
-    
+
 
     return (
         <div className={sidebarClass}>
@@ -74,13 +74,18 @@ const SideBar = props => {
             </div>
 
             <h4>Parameters</h4>
-            <button onClick={() => console.log(user)}>check user</button>
-            {/* <button onClick={() => signInWithGoogle()}>signinwithgoogle</button>
-            <button onClick={() => logout()}>logout</button> */}
-            
+
+            <div class="checkboxes">
+                <label>
+                    <input type="checkbox" onClick={() => props.setIsMobile(prevState => !prevState)} />
+                    <span>Mobile controls</span>
+                </label>
+            </div>
+
+
             {!user ? (
                     <SignInModalButton user={user}/>
-                
+
             ) : (
                 <button onClick={() => {
                     logout()

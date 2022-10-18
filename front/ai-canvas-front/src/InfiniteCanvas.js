@@ -1,6 +1,7 @@
 import MyCanvas from './MyCanvas';
 import React, { useEffect, useState } from "react";
 import SideBar from "./SideBar";
+import RoomTabPanel from "./RoomTabPanel"
 
 const InfiniteCanvas = (props) => {
 
@@ -13,7 +14,10 @@ const InfiniteCanvas = (props) => {
     const [history, setHistory] = useState([])
 
     const [isLogged, setIsLogged] = useState(false);
+    const [isMobile, setIsMobile] = useState(false);
     const [credential, setCredential] = useState('');
+
+    const [room, setRoom] = useState('default');
 
     const [camera, setCamera] = useState({
         x: 0,
@@ -37,6 +41,10 @@ const InfiniteCanvas = (props) => {
     })
 
     useEffect(() => {
+        const onPageLoad = () => {
+            setIsMobile(window.innerWidth <= 768);
+        }
+
         const onPageResize = () => {
             setCanvasMeta({
                 w: window.innerWidth,
@@ -44,16 +52,21 @@ const InfiniteCanvas = (props) => {
             });
         }
         window.addEventListener("resize", onPageResize);
+        window.addEventListener("load", onPageLoad);
     })
 
     return (
         <>
+            <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
             <MyCanvas
                 camera={camera}
                 modifiers={modifiers}
                 setHistory={setHistory}
                 isLogged={isLogged}
                 credential={credential}
+                isMobile={isMobile}
+                room={room}
             />
 
             <SideBar
@@ -65,6 +78,12 @@ const InfiniteCanvas = (props) => {
                 history={history}
                 setIsLogged={setIsLogged}
                 setCredential={setCredential}
+                setIsMobile={setIsMobile}
+            />
+
+            <RoomTabPanel
+                room={room}
+                setRoom={setRoom}
             />
         </>
     );
