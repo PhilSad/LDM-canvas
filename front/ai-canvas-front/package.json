@@ -36,7 +36,7 @@
     "start-local": "env-cmd -f .env.loc react-scripts start",
     "start-cloud-dev": "env-cmd -f .env.cloud.dev react-scripts start",
     "start-cloud-prod": "env-cmd -f .env.cloud.prod react-scripts start",
-    "build": "env-cmd -f .env.cloud react-scripts build",
+    "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "deploy-dev": "env-cmd -f .env.cloud.dev react-scripts build && gcloud app deploy --project kollai-front-dev",
