@@ -13,3 +13,6 @@ steps:
   - name: gcr.io/cloud-builders/gcloud
     args: [ app, deploy, --project=kollai-front-dev ]
     dir: 'front/ai-canvas-front'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
