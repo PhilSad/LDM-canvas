@@ -15,4 +15,4 @@ steps:
     dir: 'front/ai-canvas-front'
 
 options:
-  logging: CLOUD_LOGGING_ONLY
+  logging: NONE
