@@ -1,0 +1,12 @@
+steps:
+
+  - name: gcr.io/cloud-builders/npm
+    args: [ install ]
+
+  - name: gcr.io/cloud-builders/npm
+    args: [ run, build, --prod ]
+    env:
+      - 'REACT_APP_BACK_URL=https://kollai-back-dev.ew.r.appspot.com'
+
+  - name: gcr.io/cloud-builders/gcloud
+    args: [ app, deploy, --project=kollai-front-prod ]
