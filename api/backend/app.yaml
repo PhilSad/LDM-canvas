@@ -5,4 +5,11 @@ automatic_scaling:
   min_instances: 0
   max_instances: 1
 
+env_variables:
+  DB_USER:"root"
+  DB_PASS:"sql&kollaidu31"
+  DB_NAME:"kollai_data"
+  INSTANCE_UNIX_SOCKET:"/cloudsql/ai-canvas:europe-west1:sql-server"
+
 entrypoint: gunicorn main:app -b :8080 --error-logfile=- --access-logfile=-
+
