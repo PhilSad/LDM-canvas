@@ -1,4 +1,6 @@
 steps:
+  - name: git
+    args: [ checkout, developpement ]
 
   - name: gcr.io/cloud-builders/npm
     args: [ install ]
