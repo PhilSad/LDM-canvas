@@ -91,6 +91,7 @@ def generate_image(prompt, w, h, init_image=None, mask=None):
             steps=50
             )[0]
 
+    # add transparency
     if(mask is not None):
         ga = np.array(generated.convert('RGBA'))
         ga[:, :, -1] = np.array(mask)[:, :, -1]

@@ -5,7 +5,10 @@ from google.cloud import storage
 import json
 import requests
 import datetime
+
 import imagen_lib as imagen
+# imagen.MAX_SIZE = 704
+
 import base64
 import os
 from dotenv import load_dotenv
