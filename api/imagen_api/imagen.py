@@ -102,8 +102,8 @@ def callback(message: pubsub_v1.subscriber.message.Message) -> None:
     prompt = base64.b64decode(b64prompt)
     prompt = prompt.decode("utf-8")
 
-    width = int(params['width'])
-    height = int(params['height'])
+    width = abs(int(params['width']))
+    height = abs(int(params['height']))
 
     # todo send ws with cur image uuid
 
@@ -158,9 +158,8 @@ def callback(message: pubsub_v1.subscriber.message.Message) -> None:
         path=bucket_path,
         status = 'generated'
     )
-    json_request = dict(action='update_row', table = 'images', data = data_to_bdd)
 
-    requests.post('https://sql-actions-jujlepts2a-ew.a.run.app', json = json_request)
+    requests.post('https://sql-actions-jujlepts2a-ew.a.run.app', json = data_to_bdd)
 
 
 

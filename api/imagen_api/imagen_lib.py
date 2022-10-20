@@ -6,7 +6,7 @@ import numpy as np
 from diffusionui import StableDiffusionPipeline
 from torch import autocast
 import scipy
-
+from scipy.spatial import cKDTree
 # pipe initialization
 device = "cuda"
 model_path = "CompVis/stable-diffusion-v1-4"

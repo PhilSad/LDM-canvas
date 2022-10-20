@@ -4,7 +4,8 @@ import { Image, Group, Rect } from 'react-konva';
 class URLImage extends React.Component {
     state = {
         image: null,
-        infoVisible: false
+        infoVisible: false,
+        cursor: 'pointer',
     };
 
     componentDidMount() {
@@ -57,30 +58,28 @@ class URLImage extends React.Component {
     render() {
         return (
             <Group
-                x={this.props.x}
-                y={this.props.y}
+                x={this.props.x - (this.state.infoVisible ? 0 : 0)}
+                y={this.props.y - (this.state.infoVisible ? 0 : 0)}
                 onMouseEnter={this.handleEnter}
                 onMouseLeave={this.handleLeave}
                 onClick={this.handleClick}
             >
-                <Rect
-                    width={this.props.width}
-                    height={this.props.height}
-                    fill={this.props.avg_color}
-                />
+                {this.state.image === null &&
+
+                    <Rect
+                        width={this.props.width}
+                        height={this.props.height}
+                        fill={this.props.avg_color}
+                    />
+
+                }
 
                 <Image
-                    width={this.props.width}
-                    height={this.props.height}
+                    width={this.props.width + (this.state.infoVisible ? 0 : 0)}
+                    height={this.props.height + (this.state.infoVisible ? 0 : 0)}
                     image={this.state.image}
                     ref={(node) => { this.imageNode = node; }}
                     onClick={this.handleClick}
-                />
-
-                <Rect
-                    width={this.props.width}
-                    height={this.props.height}
-                    fill={this.state.infoVisible ? "rgba(240,240,240,0.5)" : null}
                 />
             </Group>
         );

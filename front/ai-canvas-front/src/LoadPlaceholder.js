@@ -19,7 +19,8 @@ class LoadPlaceholder extends React.Component {
             marginRight: "auto",
             width: this.props.width,
             height: this.props.height,
-            position: "relative"
+            position: "relative",
+            zIndex: "0"
         }
 
         const inner = {

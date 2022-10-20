@@ -1,37 +1,37 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Stage, Layer, Rect } from 'react-konva';
-import { createSearchParams, useSearchParams } from "react-router-dom";
+import React, {useEffect, useRef, useState} from 'react';
+import {Layer, Rect, Stage} from 'react-konva';
+import {createSearchParams, useSearchParams} from "react-router-dom";
 import URLImage from './URLImage';
 import PromptRect from './promptRect';
 import LoadPlaceholder from './LoadPlaceholder';
-import { GoogleLogin, googleLogout } from '@react-oauth/google';
 import ImageSaverLayer from './imageSaveLayer';
 import Amplify from '@aws-amplify/core'
 import * as gen from './generated'
 import HelpModalButton from './helpModal'
 
-import { ToastContainer, toast } from 'react-toastify';
+import {toast, ToastContainer} from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
+import {useAuthState} from 'react-firebase-hooks/auth';
+import {auth} from './auth/Auth';
 // import ImageSaver from './ImageSaver';
 // import * as env from './env.js';
-import * as requests from './requests'
-
-import { CONNECTION_STATE_CHANGE, ConnectionState } from '@aws-amplify/pubsub';
-import { Hub } from 'aws-amplify';
+import {CONNECTION_STATE_CHANGE} from '@aws-amplify/pubsub';
+import {Hub} from 'aws-amplify';
 
 Amplify.configure(gen.config)
 
+
 const URL_BUCKET = "https://storage.googleapis.com/aicanvas-public-bucket/"
 
-const URL_START_VM = "https://function-start-vm-jujlepts2a-ew.a.run.app"
-const URL_STOP_VM = "https://function-stop-jujlepts2a-ew.a.run.app"
-const URL_STATUS_VM = "https://function-get-status-gpu-jujlepts2a-ew.a.run.app"
+// const URL_START_VM = "https://function-start-vm-jujlepts2a-ew.a.run.app"
+// const URL_STOP_VM = "https://function-stop-jujlepts2a-ew.a.run.app"
+// const URL_STATUS_VM = "https://function-get-status-gpu-jujlepts2a-ew.a.run.app"
 
-const URL_GET_IMAGES = 'https://europe-west1-ai-canvas.cloudfunctions.net/function-get_images_for_pos'
+const BACK_BASE_URL = process.env.REACT_APP_BACK_URL;
 
-const URL_FUNCTION_IMAGEN = "https://imagen-pubsub-jujlepts2a-ew.a.run.app/"
-
+const URL_GET_IMAGES = BACK_BASE_URL + '/get_images_for_room/'
+const URL_FUNCTION_IMAGEN = BACK_BASE_URL + "/imagen/"
 
 //modes
 const EDIT = "EDIT";
@@ -53,6 +53,7 @@ let generation_type;
 let cursor_pos = [0, 0];
 
 const MyCanvas = (props) => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const stageRef = useRef(null);
   const imageLayerRef = useRef(null);
   const imageSaveRef = useRef(null);
@@ -62,24 +63,42 @@ const MyCanvas = (props) => {
   const [currentMode, setCurrentMode] = useState(VIEW);
   const [currentState, setCurrentState] = useState(IDLE);
 
+  const [selectRect, setSelectRect] = useState({
+    x: 0,
+    y: 0,
+    w: 0,
+    h: 0
+  })
+
   const [posX, setPosX] = useState(0);
   const [posY, setPosY] = useState(0);
-
   const [width, setWidth] = useState(0);
   const [height, setHeight] = useState(0);
+
+  const [selectionRect, setSelectionRect] = useState({
+    x: 0,
+    y: 0,
+    width: 0,
+    height: 0
+  })
+
   const [cursor, setCursor] = useState('default');
 
-  const [canvasW, setCanvasW] = useState(window.innerWidth);
-  const [canvasH, setCanvasH] = useState(window.innerHeight);
+  const [canvasMeta, setCanvasMeta] = useState({
+    w: window.innerWidth,
+    h: window.innerHeight
+  })
 
   //camera
+  let camera = props.camera;
+  let room = props.room;
+  let oneClickControls = props.isMobile;
+
   const [camInitX, setCamInitX] = useState(0);
   const [camInitY, setCamInitY] = useState(0);
   const [cameraX, setCameraX] = useState(0);
   const [cameraY, setCameraY] = useState(0);
   const [cameraZoom, setCameraZoom] = useState(1);
-
-  const [searchParams, setSearchParams] = useSearchParams();
 
   const [imageDivList, setImageDivList] = useState([]);
   const [placeholderList, setPlaceholderList] = useState(new Map());
@@ -88,23 +107,22 @@ const MyCanvas = (props) => {
   const [touchesDist, setTouchesDist] = React.useState(Infinity);
   const [cameraZoomStart, setCameraZoomStart] = React.useState(1);
 
-  const [isLogged, setIsLogged] = useState(false);
-
-  const [room, setRoom] = useState(searchParams.get("room") !== null ? searchParams.get("room") : "default");
-
-  const [credential, setCredential] = useState('');
+  const [user, loading, error] = useAuthState(auth);
 
   function handle_receive_from_socket(data) {
     data = JSON.parse(data)
 
-    var z = Math.min(canvasW / +data.width, canvasH / +data.height) * 0.5;
-    var x = +data.posX - (canvasW / 2) / z + +data.width / 2
-    var y = +data.posY - (canvasH / 2) / z + +data.height / 2
+    var z = Math.min(canvasMeta.w / +data.width, canvasMeta.h / +data.height) * 0.5;
+    var x = +data.posX - (canvasMeta.w / 2) / z + +data.width / 2
+    var y = +data.posY - (canvasMeta.h / 2) / z + +data.height / 2
 
     if (data.action === "new_image") {
       removePlaceholder(data.posX, data.posY)
       addNewImage(URL_BUCKET + data.path, data.posX, data.posY, data.width, data.height, data.prompt)
-      toast(<div onClick={() => { moveCamera(x, y, z) }}>
+      props.setHistory(prevState => [...prevState, data])
+
+      toast(<div onClick={() => { camera.move(x, y, z) }}>
+
         New image: {data.prompt} at ({data.posX}, {data.posY})
       </div >, {
         position: "top-right",
@@ -126,41 +144,43 @@ const MyCanvas = (props) => {
   //socket
   useEffect(() => {
     const subscription = gen.subscribe(room, ({ data }) => handle_receive_from_socket(data),
-                                              (error) => console.warn(error))
+      (error) => console.warn(error))
     return () => subscription.unsubscribe()
   }, [room])
 
 
-Hub.listen('api', (data) => {
-  const { payload } = data;
-  if (payload.event === CONNECTION_STATE_CHANGE) {
-    const connectionState = payload.data.connectionState;
-    console.log(connectionState);
-  }
-});
+  Hub.listen('api', (data) => {
+    const { payload } = data;
+    if (payload.event === CONNECTION_STATE_CHANGE) {
+      const connectionState = payload.data.connectionState;
+      console.log(connectionState);
+    }
+  });
 
 
   //on page load
   useEffect(() => {
     const onPageLoad = () => {
-      // setIsMobile(window.innerWidth <= 768);
+      const onPageResize = () => {
+        setCanvasMeta({
+          w: window.innerWidth,
+          h: window.innerHeight,
+        });
+      }
+
+      window.addEventListener("resize", onPageResize);
 
       var x = searchParams.get("x") !== null ? +searchParams.get("x") : 0;
       var y = searchParams.get("y") !== null ? +searchParams.get("y") : 0;
-      var zoom = searchParams.get("zoom") !== null ? + searchParams.get("zoom")/100 : 1;
+      var zoom = searchParams.get("zoom") !== null ? +searchParams.get("zoom") / 100 : 1;
 
+      // var room = searchParams.get("room") !== null ? searchParams.get("room") : "default";
+      // setRoom(room);
 
       handleClickRefresh();
 
-      moveCamera(x, y, zoom);
+      camera.move(x, y, zoom);
     };
-
-    const onPageResize = () => {
-      setCanvasW(window.innerWidth);
-      setCanvasH(window.innerHeight);
-    }
-
-    window.addEventListener("resize", onPageResize);
 
     window.addEventListener('contextmenu', event => event.preventDefault());
 
@@ -180,7 +200,7 @@ Hub.listen('api', (data) => {
     switchState(IDLE);
     switch (mode) {
       case EDIT:
-        if (!isLogged) {
+        if (!user) {
           toast.error('You must be connected to use edit mode', {
             position: "bottom-center",
             autoClose: 5000,
@@ -243,30 +263,23 @@ Hub.listen('api', (data) => {
     setCurrentState(state);
   }
 
-  //smove camera and set zoom
-  function moveCamera(x, y, zoom) {
-    setCameraX(x);
-    setCameraY(y);
-    setCameraZoom(zoom);
-  }
-
   function setSearchParam() {
     setSearchParams(
-      createSearchParams({ room:room, x: Math.round(cameraX), y: Math.round(cameraY), zoom: Math.round(cameraZoom * 100) })
+      createSearchParams({ room: room, x: Math.round(camera.x), y: Math.round(camera.y), zoom: Math.round(camera.zoom * 100) })
     );
   }
 
   // convert coordinates system
   function toGlobalSpace(x, y) {
-    x = +cameraX + +x / cameraZoom;
-    y = +cameraY + +y / cameraZoom;
+    x = +camera.x + +x / camera.zoom;
+    y = +camera.y + +y / camera.zoom;
 
     return [x, y]
   }
 
   function toRelativeSpace(x, y) {
-    x = (x - cameraX) * cameraZoom;
-    y = (y - cameraY) * cameraZoom;
+    x = (x - camera.x) * camera.zoom;
+    y = (y - camera.y) * camera.zoom;
     return [x, y]
   }
 
@@ -333,7 +346,13 @@ Hub.listen('api', (data) => {
       prompt: prompt
     };
 
+    //add last
     setImageDivList(prevState => [...prevState, img]);
+
+    //add first
+    // setImageDivList(prevState => [img, ...prevState]);
+    // setImageDivList([img])
+
   }
 
   function handleDown() {
@@ -364,14 +383,14 @@ Hub.listen('api', (data) => {
           setCamInitX(cursor_pos[0]);
           setCamInitY(cursor_pos[1]);
 
-          moveCamera((cameraX - movX / cameraZoom), (cameraY - movY / cameraZoom), cameraZoom);
+          camera.move((camera.x - movX / camera.zoom), (camera.y - movY / camera.zoom), camera.zoom);
         }
         break;
 
       case EDIT:
         if (currentState === SELECT) {
-          var w = (cursor_pos[0] / cameraZoom + cameraX - posX);
-          var h = (cursor_pos[1] / cameraZoom + cameraY - posY);
+          var w = (cursor_pos[0] / camera.zoom + camera.x - posX);
+          var h = (cursor_pos[1] / camera.zoom + camera.y - posY);
           setWidth(w);
           setHeight(h);
         }
@@ -384,7 +403,7 @@ Hub.listen('api', (data) => {
   function handleUp() {
     switch (currentMode) {
       case VIEW:
-        setSearchParam();
+        // setSearchParam();
         switchState(IDLE);
         break;
 
@@ -407,7 +426,7 @@ Hub.listen('api', (data) => {
       var dist = Math.sqrt(Math.pow(touch1.clientX - touch2.clientX, 2) + Math.pow(touch1.clientY - touch2.clientY, 2))
 
       setTouchesDist(dist);
-      setCameraZoomStart(cameraZoom);
+      setCameraZoomStart(camera.zoom);
       return;
     }
 
@@ -419,9 +438,20 @@ Hub.listen('api', (data) => {
 
   const handleMouseDown = (e) => {
     cursor_pos = [e.evt.clientX, e.evt.clientY];
+    if (oneClickControls) {
+      handleDown();
+      return;
+    }
 
     if (e.evt.which === 1) {
-      handleDown();
+      defineSelection(cursor_pos[0], cursor_pos[1]);
+      switchMode(EDIT);
+      switchState(SELECT);
+    } else if (e.evt.which === 3) {
+      setCamInitX(cursor_pos[0]);
+      setCamInitY(cursor_pos[1]);
+      switchMode(VIEW);
+      switchState(MOVE);
     }
   }
 
@@ -437,21 +467,17 @@ Hub.listen('api', (data) => {
       var dist = Math.sqrt(Math.pow(touch1.clientX - touch2.clientX, 2) + Math.pow(touch1.clientY - touch2.clientY, 2))
 
       var newZoom = cameraZoomStart * (dist / touchesDist)
-      
-      newZoom = Math.min(newZoom, MAX_ZOOM);
-      newZoom = Math.max(newZoom, MIN_ZOOM);
 
       var zoomCenterX = (touch1.clientX + touch2.clientX) / 2;
       var zoomCenterY = (touch1.clientY + touch2.clientY) / 2;
       var [ax, ay] = toGlobalSpace(zoomCenterX, zoomCenterY);
 
-      moveCamera((ax - zoomCenterX / newZoom), (ay - zoomCenterY / newZoom), newZoom);
+      camera.move((ax - zoomCenterX / newZoom), (ay - zoomCenterY / newZoom), newZoom);
     }
   }
 
   const handleMouseMove = (e) => {
     cursor_pos = [e.evt.clientX, e.evt.clientY];
-
     handleMove();
   }
 
@@ -461,35 +487,42 @@ Hub.listen('api', (data) => {
 
     var newZoom;
     if (e.evt.wheelDelta > 0) {
-      newZoom = cameraZoom * CAMERA_ZOOM_SPEED;
+      newZoom = camera.zoom * CAMERA_ZOOM_SPEED;
     } else {
-      newZoom = cameraZoom / CAMERA_ZOOM_SPEED;
+      newZoom = camera.zoom / CAMERA_ZOOM_SPEED;
     }
 
     newZoom = Math.min(newZoom, MAX_ZOOM);
-    newZoom = Math.max(newZoom, MIN_ZOOM);
+    // newZoom = Math.max(newZoom, MIN_ZOOM);
 
     var [ax, ay] = toGlobalSpace(cursor_pos[0], cursor_pos[1]);
 
-    moveCamera((ax - cursor_pos[0] / newZoom), (ay - cursor_pos[1] / newZoom), newZoom);
+    camera.move((ax - cursor_pos[0] / newZoom), (ay - cursor_pos[1] / newZoom), newZoom);
   }
 
   const handleTouchUp = (e) => {
-    setCameraZoomStart(cameraZoom);
+    setCameraZoomStart(camera.zoom);
     handleUp();
   }
 
   const handleMouseUp = (e) => {
-    if (e.evt.which === 1) {
+    if (oneClickControls) {
       handleUp();
+      return;
     }
-  };
+
+    if (e.evt.which === 1) {
+      switchState(CHOOSE_TYPE);
+    } else if (e.evt.which === 3) {
+      switchState(IDLE);
+    }
+  }
 
   const cropImageToSelection = () => {
     let image = new window.Image();
 
     var [x, y] = toRelativeSpace(posX, posY);
-    var [w, h] = [width * cameraZoom, height * cameraZoom];
+    var [w, h] = [width * camera.zoom, height * camera.zoom];
 
     // the biggest side must be 512px
     var pixelRatio = 512 / Math.max(w, h);
@@ -510,7 +543,9 @@ Hub.listen('api', (data) => {
   const handleClickRefresh = () => {
     setImageDivList([]);
 
-    var url_get_image_with_params = URL_GET_IMAGES + '?posX=0&posY=0&width=100&height=100&room='+room;
+    var url_get_image_with_params = URL_GET_IMAGES + '?posX=0&posY=0&width=100&height=100&room=' + room;
+
+    console.log(url_get_image_with_params)
 
     fetch(url_get_image_with_params).then((data) => data.json())
       .then((json) => json.message)
@@ -519,13 +554,13 @@ Hub.listen('api', (data) => {
       }));
   };
 
-  const handleStartVm = () => {
-    fetch(URL_START_VM).then((data) => alert('VM SARTED'));
-  };
+  // const handleStartVm = () => {
+  //   fetch(URL_START_VM).then((data) => alert('VM SARTED'));
+  // };
 
-  const handleStopVm = () => {
-    fetch(URL_STOP_VM).then((data) => alert('VM STOPPED'));
-  };
+  // const handleStopVm = () => {
+  //   fetch(URL_STOP_VM).then((data) => alert('VM STOPPED'));
+  // };
 
   const handleStatusVm = () => {
     // fetch(URL_STATUS_VM).then(data => data.json()).
@@ -558,13 +593,13 @@ Hub.listen('api', (data) => {
     var w = Math.floor(width)
     var h = Math.floor(height)
 
-    var prompt = document.getElementById('prompt_input').value
+    var prompt = document.getElementById('prompt_input').value + ' ' + props.modifiers
     document.getElementById('prompt_input').value = ''
 
     hideSelectionRect();
 
     var imageParamsDict = {
-      'credential': credential,
+      'credential': user.accessToken,
       'prompt': btoa(prompt),
       'room': room,
       'posX': x,
@@ -593,7 +628,7 @@ Hub.listen('api', (data) => {
 
   function handleFetchErrors(response) {
     if (!response.ok) {
-      toast.error('Error ! You need to sign in with Google at the top left of the page', {
+      toast.error('Error ! Did you login and confirm your mail adresse ?', {
         position: "bottom-center",
         autoClose: 5000,
         hideProgressBar: false,
@@ -611,48 +646,24 @@ Hub.listen('api', (data) => {
   return (
     <div style={{ cursor: cursor }}>
       <div className="top_button_bar">
-        {isLogged === false ? (
+        {oneClickControls &&
+          <>
+            <button onClick={() => switchMode(VIEW)}> View </button>
+            <button onClick={() => switchMode(EDIT)}> Edit </button>
+          </>
+        }
 
-          <GoogleLogin //TODO login login
-            onSuccess={credentialResponse => {
-              console.log(credentialResponse);
-              setIsLogged(true);
-              setCredential(credentialResponse.credential)
-              requests.send_connexion_request(credentialResponse.credential)
-
-            }}
-            onError={() => {
-              console.log('Login Failed');
-            }}
-            useOneTap
-            auto_select
-          //todo add auto login
-
-          />
-        ) : (
-          <button onClick={() => {
-            googleLogout();
-            setIsLogged(false);
-            setCredential('');
-            // todo add logout=1 dans l'url et enlever le automatic login s'il est present
-          }}> Logout </button>
-        )}
-
-        <button onClick={() => handleClickRefresh()}> Refresh </button>
-        <button onClick={() => switchMode(VIEW)}> View </button>
-        <button onClick={() => switchMode(EDIT)}> Edit </button>
-        <HelpModalButton />
+        <button onClick={() => handleClickRefresh()}> Refresh</button>
+        <HelpModalButton show={user !== undefined}/>
       </div>
-
-      <div className="coords"> {Math.floor(cameraX)}, {Math.floor(cameraY)}, {Math.floor(cameraZoom * 100)} </div>
 
       <Stage
         ref={stageRef}
 
         className={"canvas"}
 
-        width={canvasW}
-        height={canvasH}
+        width={canvasMeta.w}
+        height={canvasMeta.h}
 
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
@@ -666,17 +677,17 @@ Hub.listen('api', (data) => {
 
         <Layer ref={imageLayerRef}>
           <Rect
-            width={canvasW}
-            height={canvasH}
+            width={canvasMeta.w}
+            height={canvasMeta.h}
           />
 
           {
             imageDivList.map((img, i) => {
               var cameraBox = {
-                x: cameraX - (window.innerWidth / cameraZoom) * 0.125,
-                y: cameraY - (window.innerHeight / cameraZoom) * 0.125,
-                w: (window.innerWidth / cameraZoom) * 1.25,
-                h: (window.innerHeight / cameraZoom) * 1.25
+                x: camera.x - (window.innerWidth / camera.zoom) * 0.125,
+                y: camera.y - (window.innerHeight / camera.zoom) * 0.125,
+                w: (window.innerWidth / camera.zoom) * 1.25,
+                h: (window.innerHeight / camera.zoom) * 1.25
               }
               if (
                 overlap(cameraBox, img)
@@ -684,7 +695,7 @@ Hub.listen('api', (data) => {
                 var [x, y] = toRelativeSpace(img.x, img.y);
 
                 // display image only if the area is > 25px
-                if (img.w * cameraZoom * img.h * cameraZoom > 25) {
+                if (img.w * camera.zoom * img.h * camera.zoom > 25) {
                   return (
                     <URLImage
                       key={i}
@@ -692,8 +703,8 @@ Hub.listen('api', (data) => {
                       x={x}
                       y={y}
                       avg_color={"#FFFADA"}
-                      width={img.w * cameraZoom}
-                      height={img.h * cameraZoom}
+                      width={img.w * camera.zoom}
+                      height={img.h * camera.zoom}
                       prompt={img.prompt}
                       mode={currentMode}
                     />)
@@ -717,18 +728,18 @@ Hub.listen('api', (data) => {
                   key={i}
                   x={x}
                   y={y}
-                  width={pl.w * cameraZoom}
-                  height={pl.h * cameraZoom}
+                  width={pl.w * camera.zoom}
+                  height={pl.h * camera.zoom}
                 />)
             })
           }
 
-          {Math.abs(width * cameraZoom * height * cameraZoom) > 100 &&
+          {Math.abs(width * camera.zoom * height * camera.zoom) > 100 &&
             <PromptRect
-              x={(posX - cameraX) * cameraZoom}
-              y={(posY - cameraY) * cameraZoom}
-              width={width * cameraZoom}
-              height={height * cameraZoom}
+              x={(posX - camera.x) * camera.zoom}
+              y={(posY - camera.y) * camera.zoom}
+              width={width * camera.zoom}
+              height={height * camera.zoom}
               handlePromptButtons={handlePromptButtons}
               handleSend={handleSend}
               handleSave={handleSave}

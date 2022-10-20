@@ -1,19 +1,18 @@
 import Modal from 'react-bootstrap/Modal';
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 
 
-
-export default function HelpModalButton() {
-  const [showHelpModal, setShowHelpModal] = useState(true);
+export default function HelpModalButton({show}) {
+  const [showHelpModal, setShowHelpModal] = useState(show);
 
   const handleClose = () => setShowHelpModal(false);
   const handleShow = () => setShowHelpModal(true);
 
   return (
-    <>
-      <button onClick={handleShow}>
-        Help
-      </button>
+      <>
+        <button onClick={handleShow}>
+          Help
+        </button>
 
       <Modal show={showHelpModal} onHide={handleClose}>
         <Modal.Header closeButton>
