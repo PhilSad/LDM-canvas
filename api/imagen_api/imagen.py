@@ -151,7 +151,7 @@ def callback(message: pubsub_v1.subscriber.message.Message) -> None:
     save_to_bucket(save_path, generated, bucket_path)
 
     data_to_add['action'] = 'new_image'
-    push_to_clients(room, data_to_add)    
+    push_to_clients(room, data_to_add)
 
     data_to_bdd = dict(
         uuid = params['uuid'],
@@ -159,7 +159,7 @@ def callback(message: pubsub_v1.subscriber.message.Message) -> None:
         status = 'generated'
     )
 
-    requests.post('https://sql-actions-jujlepts2a-ew.a.run.app', json = data_to_bdd)
+    requests.post('https://sql-actions-jujlepts2a-ew.a.run.app', json = dict(action="update_row", table="images",  data=data_to_bdd))
 
 
 
