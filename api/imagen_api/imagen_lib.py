@@ -6,15 +6,15 @@ import numpy as np
 from diffusionui import StableDiffusionPipeline
 from torch import autocast
 import scipy
-
+from scipy.spatial import cKDTree
 # pipe initialization
 device = "cuda"
-model_path = "CompVis/stable-diffusion-v1-4"
+model_path = "./models_bindings/models/stable-diffusion-v1-4"
 pipe = StableDiffusionPipeline.from_pretrained(
     model_path,
     revision="fp16", 
     torch_dtype=torch.float16,
-    use_auth_token=True
+#    use_auth_token=True
 ).to(device)
 
 pipe.disable_nsfw_filter()
@@ -91,6 +91,7 @@ def generate_image(prompt, w, h, init_image=None, mask=None):
             steps=50
             )[0]
 
+    # add transparency
     if(mask is not None):
         ga = np.array(generated.convert('RGBA'))
         ga[:, :, -1] = np.array(mask)[:, :, -1]
