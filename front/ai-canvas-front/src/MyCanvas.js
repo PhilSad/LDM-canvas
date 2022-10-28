@@ -23,6 +23,7 @@ import Box from "@mui/material/Box";
 import PanToolIcon from '@mui/icons-material/PanTool';
 import HighlightAltIcon from '@mui/icons-material/HighlightAlt';
 import MyDrawer from "./headerAppBar/MyDrawer";
+import CoordsModal from "./coordsModal";
 
 Amplify.configure(gen.config)
 
@@ -652,6 +653,8 @@ const MyCanvas = (props) => {
   return (
     <div style={{ cursor: cursor }}>
       <div className="top_button_bar">
+
+
         {oneClickControls &&
             <>
               {/*<button onClick={() => switchMode(VIEW)}> View </button>*/}
@@ -663,8 +666,19 @@ const MyCanvas = (props) => {
         {/*<button onClick={() => handleClickRefresh()}> Refresh</button>*/}
       </div>
 
+      <Box style={{position: "absolute", bottom: 1, left: 1, zIndex: 99}}>
+        <CoordsModal
+            x={Math.round(camera.x)}
+            y={Math.round(camera.y)}
+            zoom={Math.round(camera.zoom * 100)}
+            room={room}
+        />
+      </Box>
+
+
       <Box style={{position: "absolute", bottom: 1, right: 1}}>
-        <Fab color="primary" aria-label="help">
+
+      <Fab color="primary" aria-label="help">
           <HelpModalButton show={user !== undefined}/>
         </Fab>
         <Fab color="secondary" aria-label="refresh">
@@ -672,8 +686,8 @@ const MyCanvas = (props) => {
         </Fab>
       </Box>
 
-      <Box style={{position: 'absolute', bottom: 1, left: 1}}>
-        <Fab aria-label="help">
+      <Box style={{position: 'absolute', bottom: 1, left: "50%", transform: "translateX(-50%)", zIndex: 99}}>
+        <Fab aria-label="help" style={{margin: 5}}>
           <PanToolIcon onClick={() => switchMode(VIEW)} color={currentMode === VIEW ? "disabled" : "primary"}/>
         </Fab>
         <Fab aria-label="refresh">
@@ -800,6 +814,7 @@ const MyCanvas = (props) => {
         draggable
         pauseOnHover
       />
+
     </div>
   );
 

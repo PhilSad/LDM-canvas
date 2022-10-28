@@ -7,10 +7,11 @@ import {AppBar, Tab, TextField} from "@mui/material";
 import SignInModalButton from "../auth/signinModal";
 import TabList from '@mui/lab/TabList';
 import {TabContext} from "@mui/lab";
-import {auth, logout} from "../auth/Auth";
+import {auth} from "../auth/Auth";
 import {useAuthState} from "react-firebase-hooks/auth";
 import AddIcon from '@mui/icons-material/Add';
 import Modal from "react-bootstrap/Modal";
+import ProfileMenu from "./ProfileMenu";
 
 
 export default function HeaderAppBar(props) {
@@ -18,13 +19,14 @@ export default function HeaderAppBar(props) {
     const [user, loading, error] = useAuthState(auth);
     const [rooms, setRooms] = useState(["default", "demo", "test"])
 
-    const [showModal, setShowModal] = useState(false);
-    const handleClose = () => setShowModal(false);
-    const handleShow = () => setShowModal(true);
+    const [showModalTabs, setShowModalTabs] = useState(false);
+    const handleCloseTabs = () => setShowModalTabs(false);
+    const handleShowTabs = () => setShowModalTabs(true);
     const [newRoomName, setNewRoomName] = useState("");
 
+
     function handleClickAccessRoom(roomName) {
-        handleClose()
+        handleCloseTabs()
         props.setRoom(roomName)
         setRooms(prevState => {
             return [...prevState, roomName]
@@ -33,16 +35,17 @@ export default function HeaderAppBar(props) {
 
     function handleTabsOnChange(roomName) {
         if (roomName == "+") {
-            handleShow()
+            handleShowTabs()
         } else {
             props.setRoom(roomName)
         }
 
     }
 
+
     return (
         <>
-            <Modal show={showModal} onHide={handleClose}>
+            <Modal show={showModalTabs} onHide={handleCloseTabs}>
                 <Modal.Header closeButton>
                     <Modal.Title>Enter new room name below</Modal.Title>
                 </Modal.Header>
@@ -51,13 +54,14 @@ export default function HeaderAppBar(props) {
                                onChange={e => setNewRoomName(e.target.value)}/>
                     <br/>
                     <br/>
-                    <Button variant={"outlined"} onClick={() => handleClickAccessRoom(newRoomName)}>Access Room</Button>
+                    <Button variant={"outlined"} onClick={() => handleClickAccessRoom()}>Access Room</Button>
                 </Modal.Body>
             </Modal>
 
+
             <Box sx={{flexGrow: 1}}>
                 <AppBar position="static">
-                    <Toolbar>
+                    <Toolbar style={{justifyContent: 'space-between'}}>
                         {/*<IconButton*/}
                         {/*    size="large"*/}
                         {/*    edge="start"*/}
@@ -74,12 +78,12 @@ export default function HeaderAppBar(props) {
                              style={{maxWidth: 'auto', maxHeight: '50px', marginRight: '10px'}}/>
 
                         {/*TAB LIST*/}
-                        <TabContext value={props.room} color={'inherit'} style={{margin: 'auto'}}>
+                        <TabContext value={props.room} color={'inherit'} style={{}}>
                             <TabList variant="scrollable"
                                      onChange={(e, value) => handleTabsOnChange(value)}
                                      textColor={"inherit"}
                                      TabIndicatorProps={{style: {background: 'pink'}}}
-                                     style={{marginLeft: 'auto'}}>
+                                     style={{}}>
 
                                 {
                                     rooms.map((curRoom, i) => {
@@ -95,15 +99,14 @@ export default function HeaderAppBar(props) {
 
 
                         {/* LOGIN / LOGOUT Button */}
-                        <Box style={{marginLeft: 'auto'}}>
+                        <Box style={{}}>
                             {!user ? (
                                 <SignInModalButton/>
 
                             ) : (
-                                <Button color={'inherit'} variant='outlined' onClick={() => {
-                                    logout()
-                                }}> Logout </Button>
+                                <ProfileMenu/>
                             )}
+
                         </Box>
 
                     </Toolbar>
