@@ -61,6 +61,18 @@ def register_user():
 
     return ('OK', 200)
 
+@app.route("/update_user_pseudo/", methods=['POST'])
+def update_user_pseudo():
+    params = request.get_json()
+    token = params['credential']
+    pseudo = params['pseudo']
+    idinfo = users_operations.validate_access_token_and_get_user(token)
+    if idinfo == False:
+        return ('invalid token', 502)
+    data_to_bdd = dict(email = idinfo['email'], pseudo = pseudo)
+    db_operations.update_pseudo(idinfo['email'], pseudo)
+    return('OK', 200)
+
 
 
 @app.route("/hello/")

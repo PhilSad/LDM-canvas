@@ -49,6 +49,11 @@ def update_from_sql(table, row_to_update):
     query = db.update(table).where(table.c.uuid==row_to_update['uuid']).values(**row_to_update)
     engine.execute(query)
 
+def update_pseudo(email, pseudo):
+    users = get_table('users')
+    query = db.update(users).where(users.c.email==email).values(dict(pseudo=pseudo))
+    engine.execute(query)
+
 
 def get_table(name):
     return db.Table(name, db.MetaData(), autoload=True, autoload_with=engine)

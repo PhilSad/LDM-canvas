@@ -38,6 +38,7 @@ const BACK_BASE_URL = process.env.REACT_APP_BACK_URL;
 
 const URL_GET_IMAGES = BACK_BASE_URL + '/get_images_for_room/'
 const URL_FUNCTION_IMAGEN = BACK_BASE_URL + "/imagen/"
+const URL_FUNCTION_UPDATE_PSEUDO = BACK_BASE_URL + "/update_user_pseudo/"
 
 //modes
 const EDIT = "EDIT";

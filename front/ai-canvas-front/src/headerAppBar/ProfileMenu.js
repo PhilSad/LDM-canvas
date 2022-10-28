@@ -8,6 +8,8 @@ import {useAuthState} from "react-firebase-hooks/auth";
 import Button from "@mui/material/Button";
 
 export default function ProfileMenu(props) {
+    const BACK_BASE_URL = process.env.REACT_APP_BACK_URL;
+    const URL_FUNCTION_UPDATE_PSEUDO = BACK_BASE_URL + "/update_user_pseudo/"
 
     const [showModaleProfile, setShowModalProfile] = React.useState(false);
     const [anchorEl, setAnchorEl] = React.useState(null);
@@ -38,7 +40,16 @@ export default function ProfileMenu(props) {
 
     function handleClicUpdateProfile() {
         setShowModalProfile(false)
-        //todo:requests
+        fetch(URL_FUNCTION_UPDATE_PSEUDO, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                credential: user.accessToken,
+                pseudo: displayedName
+            }),
+        })
     }
 
     return (
