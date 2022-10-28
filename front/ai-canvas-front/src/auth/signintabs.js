@@ -10,8 +10,9 @@ import {
     signInWithGoogle
 } from './Auth';
 import {GoogleLoginButton} from "react-social-login-buttons";
-import TextField from '@mui/joy/TextField';
-import {Box, Button} from "@mui/joy";
+import {TextField} from "@mui/material";
+import Button from "@mui/material/Button";
+import Box from "@mui/material/Box";
 
 
 function SigninTabs({user}) {

@@ -84,7 +84,7 @@ const SideBar = props => {
 
 
             {!user ? (
-                    <SignInModalButton user={user}/>
+                    <SignInModalButton/>
 
             ) : (
                 <button onClick={() => {
