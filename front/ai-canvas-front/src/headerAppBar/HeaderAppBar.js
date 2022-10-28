@@ -12,6 +12,7 @@ import {useAuthState} from "react-firebase-hooks/auth";
 import AddIcon from '@mui/icons-material/Add';
 import Modal from "react-bootstrap/Modal";
 
+
 export default function HeaderAppBar(props) {
     console.log(props.room);
     const [user, loading, error] = useAuthState(auth);
@@ -104,8 +105,10 @@ export default function HeaderAppBar(props) {
                                 }}> Logout </Button>
                             )}
                         </Box>
+
                     </Toolbar>
                 </AppBar>
+
             </Box>
         </>
     );

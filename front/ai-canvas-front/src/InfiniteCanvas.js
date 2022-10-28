@@ -10,7 +10,7 @@ const InfiniteCanvas = (props) => {
         setSideBarOpen(!sidebarOpen);
     };
 
-    const [modifiers, setModifiers] = useState('')
+    const [modifiers, setModifiers] = useState("")
     const [history, setHistory] = useState([])
 
     const [isLogged, setIsLogged] = useState(false);
@@ -66,10 +66,13 @@ const InfiniteCanvas = (props) => {
                 camera={camera}
                 modifiers={modifiers}
                 setHistory={setHistory}
+                history={history}
                 isLogged={isLogged}
                 credential={credential}
                 isMobile={isMobile}
                 room={room}
+                canvasMeta={canvasMeta}
+
             />
 
             <SideBar
@@ -83,6 +86,7 @@ const InfiniteCanvas = (props) => {
                 setCredential={setCredential}
                 setIsMobile={setIsMobile}
             />
+
 
             {/*<RoomTabPanel*/}
             {/*    room={room}*/}
