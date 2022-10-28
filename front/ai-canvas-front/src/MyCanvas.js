@@ -677,7 +677,8 @@ const MyCanvas = (props) => {
 
 
       <Box style={{position: "absolute", bottom: 1, right: 1}}>
-        <Fab color="primary" aria-label="help">
+
+      <Fab color="primary" aria-label="help">
           <HelpModalButton show={user !== undefined}/>
         </Fab>
         <Fab color="secondary" aria-label="refresh">
