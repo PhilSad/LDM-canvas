@@ -57,7 +57,7 @@ export default function HeaderAppBar(props) {
 
             <Box sx={{flexGrow: 1}}>
                 <AppBar position="static">
-                    <Toolbar>
+                    <Toolbar style={{justifyContent: 'space-between'}}>
                         {/*<IconButton*/}
                         {/*    size="large"*/}
                         {/*    edge="start"*/}
@@ -74,12 +74,12 @@ export default function HeaderAppBar(props) {
                              style={{maxWidth: 'auto', maxHeight: '50px', marginRight: '10px'}}/>
 
                         {/*TAB LIST*/}
-                        <TabContext value={props.room} color={'inherit'} style={{margin: 'auto'}}>
+                        <TabContext value={props.room} color={'inherit'} style={{}}>
                             <TabList variant="scrollable"
                                      onChange={(e, value) => handleTabsOnChange(value)}
                                      textColor={"inherit"}
                                      TabIndicatorProps={{style: {background: 'pink'}}}
-                                     style={{marginLeft: 'auto'}}>
+                                     style={{}}>
 
                                 {
                                     rooms.map((curRoom, i) => {
@@ -95,7 +95,7 @@ export default function HeaderAppBar(props) {
 
 
                         {/* LOGIN / LOGOUT Button */}
-                        <Box style={{marginLeft: 'auto'}}>
+                        <Box style={{}}>
                             {!user ? (
                                 <SignInModalButton/>
 
