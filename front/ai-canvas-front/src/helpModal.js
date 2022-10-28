@@ -1,5 +1,7 @@
 import Modal from 'react-bootstrap/Modal';
 import React, {useState} from 'react';
+import HelpIcon from "@mui/icons-material/Help";
+import Button from "@mui/material/Button";
 
 
 export default function HelpModalButton({show}) {
@@ -10,18 +12,17 @@ export default function HelpModalButton({show}) {
 
   return (
       <>
-        <button onClick={handleShow}>
-          Help
-        </button>
+        <HelpIcon onClick={() => handleShow()}/>
 
-      <Modal show={showHelpModal} onHide={handleClose}>
-        <Modal.Header closeButton>
-          <Modal.Title>How to use Kollai infinite canvas</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <b>View Mode</b> : move the camera, explore the canvas
-          <br/><br/>
-          <b>Edit mode</b> : make a selection and select one of the modes
+
+        <Modal show={showHelpModal} onHide={handleClose}>
+          <Modal.Header closeButton>
+            <Modal.Title>How to use Kollai infinite canvas</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <b>View Mode</b> : move the camera, explore the canvas
+            <br/><br/>
+            <b>Edit mode</b> : make a selection and select one of the modes
           <ul>
             <li><b>New Image</b>: Generate a new image from scratch </li>
             <li><b>Inpaint Transparent</b>: Only generate empty parts in the selection for seamless effect </li>
@@ -31,9 +32,9 @@ export default function HelpModalButton({show}) {
         </Modal.Body>
 
         <Modal.Footer>
-          <button onClick={handleClose}>
+          <Button color={"primary"} variant={"outlined"} onClick={handleClose}>
             Got it !
-          </button>
+          </Button>
         </Modal.Footer>
       </Modal>
     </>

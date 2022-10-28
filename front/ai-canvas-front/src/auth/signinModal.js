@@ -11,7 +11,7 @@ export default function SignInModalButton(props) {
 
   return (
     <>
-        <Button onClick={handleShow} color={'inherit'}>
+        <Button onClick={handleShow} color={'inherit'} variant={"outlined"}>
             Log In
         </Button>
 

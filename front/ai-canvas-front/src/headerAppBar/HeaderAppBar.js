@@ -2,11 +2,8 @@ import * as React from 'react';
 import {useState} from 'react';
 import Box from '@mui/material/Box';
 import Toolbar from '@mui/material/Toolbar';
-import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
-import IconButton from '@mui/material/IconButton';
 import {AppBar, Tab, TextField} from "@mui/material";
-import MenuIcon from '@mui/icons-material/Menu';
 import SignInModalButton from "../auth/signinModal";
 import TabList from '@mui/lab/TabList';
 import {TabContext} from "@mui/lab";
@@ -48,35 +45,40 @@ export default function HeaderAppBar(props) {
                 <Modal.Header closeButton>
                     <Modal.Title>Enter new room name below</Modal.Title>
                 </Modal.Header>
-                <Modal.Body>
-                    <TextField type="textbox" onChange={e => setNewRoomName(e.target.value)}/>
-                    <Button onClick={() => handleClickAccessRoom(newRoomName)}>Access Room</Button>
+                <Modal.Body style={{margin: 'auto'}}>
+                    <TextField autofocus label="Room Name" type="textbox"
+                               onChange={e => setNewRoomName(e.target.value)}/>
+                    <br/>
+                    <br/>
+                    <Button variant={"outlined"} onClick={() => handleClickAccessRoom(newRoomName)}>Access Room</Button>
                 </Modal.Body>
             </Modal>
 
             <Box sx={{flexGrow: 1}}>
                 <AppBar position="static">
                     <Toolbar>
-                        <IconButton
-                            size="large"
-                            edge="start"
-                            color="inherit"
-                            aria-label="menu"
-                            sx={{mr: 2}}
-                        >
-                            <MenuIcon/>
-                        </IconButton>
-                        <Typography variant="h6" component="div" style={{marginRight: 'auto'}}>
-                            Koll AI
-                        </Typography>
-
+                        {/*<IconButton*/}
+                        {/*    size="large"*/}
+                        {/*    edge="start"*/}
+                        {/*    color="inherit"*/}
+                        {/*    aria-label="menu"*/}
+                        {/*    sx={{mr: 2}}*/}
+                        {/*>*/}
+                        {/*    <MenuIcon/>*/}
+                        {/*</IconButton>*/}
+                        {/*<Typography variant="h6" component="div" style={{marginRight: 'auto'}}>*/}
+                        {/*    Koll AI*/}
+                        {/*</Typography>*/}
+                        <img src="./android-chrome-192x192.png" sx={{mr: 2}}
+                             style={{maxWidth: 'auto', maxHeight: '50px', marginRight: '10px'}}/>
 
                         {/*TAB LIST*/}
-                        <TabContext value={props.room} color={'inherit'} sx={{flexGrow: 1}}>
+                        <TabContext value={props.room} color={'inherit'} style={{margin: 'auto'}}>
                             <TabList variant="scrollable"
                                      onChange={(e, value) => handleTabsOnChange(value)}
                                      textColor={"inherit"}
-                                     TabIndicatorProps={{style: {background: 'pink'}}}>
+                                     TabIndicatorProps={{style: {background: 'pink'}}}
+                                     style={{marginLeft: 'auto'}}>
 
                                 {
                                     rooms.map((curRoom, i) => {
@@ -97,7 +99,7 @@ export default function HeaderAppBar(props) {
                                 <SignInModalButton/>
 
                             ) : (
-                                <Button color={'inherit'} onClick={() => {
+                                <Button color={'inherit'} variant='outlined' onClick={() => {
                                     logout()
                                 }}> Logout </Button>
                             )}
