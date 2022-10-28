@@ -1,7 +1,7 @@
 import Modal from 'react-bootstrap/Modal';
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import SigninTabs from './signintabs';
-
+import Button from "@mui/material/Button";
 
 
 export default function SignInModalButton(props) {
@@ -11,9 +11,9 @@ export default function SignInModalButton(props) {
 
   return (
     <>
-      <button onClick={handleShow}>
-        Log In
-      </button>
+        <Button onClick={handleShow} color={'inherit'} variant={"outlined"}>
+            Log In
+        </Button>
 
       <Modal show={showModal} onHide={handleClose}>
         <Modal.Header closeButton>

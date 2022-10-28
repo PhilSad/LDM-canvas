@@ -8,7 +8,6 @@ import ImageSaverLayer from './imageSaveLayer';
 import Amplify from '@aws-amplify/core'
 import * as gen from './generated'
 import HelpModalButton from './helpModal'
-
 import {toast, ToastContainer} from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -18,6 +17,12 @@ import {auth} from './auth/Auth';
 // import * as env from './env.js';
 import {CONNECTION_STATE_CHANGE} from '@aws-amplify/pubsub';
 import {Hub} from 'aws-amplify';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import {Fab} from "@mui/material";
+import Box from "@mui/material/Box";
+import PanToolIcon from '@mui/icons-material/PanTool';
+import HighlightAltIcon from '@mui/icons-material/HighlightAlt';
+import MyDrawer from "./headerAppBar/MyDrawer";
 
 Amplify.configure(gen.config)
 
@@ -92,7 +97,8 @@ const MyCanvas = (props) => {
   //camera
   let camera = props.camera;
   let room = props.room;
-  let oneClickControls = props.isMobile;
+  // let oneClickControls = props.isMobile;
+  let oneClickControls = true;
 
   const [camInitX, setCamInitX] = useState(0);
   const [camInitY, setCamInitY] = useState(0);
@@ -647,25 +653,51 @@ const MyCanvas = (props) => {
     <div style={{ cursor: cursor }}>
       <div className="top_button_bar">
         {oneClickControls &&
-          <>
-            <button onClick={() => switchMode(VIEW)}> View </button>
-            <button onClick={() => switchMode(EDIT)}> Edit </button>
-          </>
+            <>
+              {/*<button onClick={() => switchMode(VIEW)}> View </button>*/}
+              {/*<button onClick={() => switchMode(EDIT)}> Edit </button>*/}
+            </>
         }
 
-        <button onClick={() => handleClickRefresh()}> Refresh</button>
-        <HelpModalButton show={user !== undefined}/>
+
+        {/*<button onClick={() => handleClickRefresh()}> Refresh</button>*/}
       </div>
 
+      <Box style={{position: "absolute", bottom: 1, right: 1}}>
+        <Fab color="primary" aria-label="help">
+          <HelpModalButton show={user !== undefined}/>
+        </Fab>
+        <Fab color="secondary" aria-label="refresh">
+          <RefreshIcon onClick={() => handleClickRefresh()}/>
+        </Fab>
+      </Box>
+
+      <Box style={{position: 'absolute', bottom: 1, left: 1}}>
+        <Fab aria-label="help">
+          <PanToolIcon onClick={() => switchMode(VIEW)} color={currentMode === VIEW ? "disabled" : "primary"}/>
+        </Fab>
+        <Fab aria-label="refresh">
+          <HighlightAltIcon onClick={() => switchMode(EDIT)} color={currentMode === EDIT ? "disabled" : "primary"}/>
+        </Fab>
+      </Box>
+
+      <MyDrawer
+          camera={props.camera}
+          setModifiers={props.setModifiers}
+          history={props.history}
+          canvasMeta={props.canvasMeta}
+
+      />
+
       <Stage
-        ref={stageRef}
+          ref={stageRef}
 
-        className={"canvas"}
+          className={"canvas"}
 
-        width={canvasMeta.w}
-        height={canvasMeta.h}
+          width={canvasMeta.w}
+          height={canvasMeta.h}
 
-        onMouseDown={handleMouseDown}
+          onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onWheel={handleMouseScroll}
@@ -755,6 +787,7 @@ const MyCanvas = (props) => {
         imageSave !== null &&
         <ImageSaverLayer ref={imageSaveRef} imageSave={imageSave} />
       }
+
 
       <ToastContainer
         position="bottom-center"
