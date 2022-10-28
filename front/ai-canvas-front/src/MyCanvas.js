@@ -22,6 +22,7 @@ import {Fab} from "@mui/material";
 import Box from "@mui/material/Box";
 import PanToolIcon from '@mui/icons-material/PanTool';
 import HighlightAltIcon from '@mui/icons-material/HighlightAlt';
+import MyDrawer from "./headerAppBar/MyDrawer";
 
 Amplify.configure(gen.config)
 
@@ -662,7 +663,7 @@ const MyCanvas = (props) => {
         {/*<button onClick={() => handleClickRefresh()}> Refresh</button>*/}
       </div>
 
-      <Box style={{position: "absolute", bottom: 1, left: 1}}>
+      <Box style={{position: "absolute", bottom: 1, right: 1}}>
         <Fab color="primary" aria-label="help">
           <HelpModalButton show={user !== undefined}/>
         </Fab>
@@ -671,7 +672,7 @@ const MyCanvas = (props) => {
         </Fab>
       </Box>
 
-      <Box style={{position: 'absolute', bottom: 1, right: 1}}>
+      <Box style={{position: 'absolute', bottom: 1, left: 1}}>
         <Fab aria-label="help">
           <PanToolIcon onClick={() => switchMode(VIEW)} color={currentMode === VIEW ? "disabled" : "primary"}/>
         </Fab>
@@ -679,6 +680,14 @@ const MyCanvas = (props) => {
           <HighlightAltIcon onClick={() => switchMode(EDIT)} color={currentMode === EDIT ? "disabled" : "primary"}/>
         </Fab>
       </Box>
+
+      <MyDrawer
+          camera={props.camera}
+          setModifiers={props.setModifiers}
+          history={props.history}
+          canvasMeta={props.canvasMeta}
+
+      />
 
       <Stage
           ref={stageRef}
