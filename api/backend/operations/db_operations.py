@@ -62,12 +62,20 @@ def get_table(name):
 def get_images_from_room(room):
 
     images = get_table('images')
-    stmt = db.select(images).where(images.columns.room == room )
+    users = get_table('users')
+    stmt = db.select(users.c.pseudo,
+                     images.c.prompt,
+                     images.c.height,
+                     images.c.width,
+                     images.c.posX,
+                     images.c.posY,
+                     images.c.timestamp,
+                     images.c.status,
+                     images.c.path).where(db.or_(users.c.email == images.c.email, images.c.email is None ,images.c.email is None)).where(images.c.room == room)
     result = engine.execute(stmt)
-
     result_as_dict = result.mappings().all()
     result_as_dict = [dict(res) for res in result_as_dict]
-    
+
     return result_as_dict
 
 

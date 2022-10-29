@@ -553,7 +553,6 @@ const MyCanvas = (props) => {
 
     var url_get_image_with_params = URL_GET_IMAGES + '?posX=0&posY=0&width=100&height=100&room=' + room;
 
-    console.log(url_get_image_with_params)
 
     fetch(url_get_image_with_params).then((data) => data.json())
       .then((json) => json.message)
@@ -745,15 +744,17 @@ const MyCanvas = (props) => {
                 if (img.w * camera.zoom * img.h * camera.zoom > 25) {
                   return (
                     <URLImage
-                      key={i}
-                      src={img.src}
-                      x={x}
-                      y={y}
-                      avg_color={"#FFFADA"}
-                      width={img.w * camera.zoom}
-                      height={img.h * camera.zoom}
-                      prompt={img.prompt}
-                      mode={currentMode}
+                        key={i}
+                        src={img.src}
+                        x={x}
+                        y={y}
+                        avg_color={"#FFFADA"}
+                        width={img.w * camera.zoom}
+                        height={img.h * camera.zoom}
+                        prompt={img.prompt}
+                        mode={currentMode}
+                        pseudo={img.pseudo}
+                        timestamp={img.timestamp}
                     />)
                 }
               }
