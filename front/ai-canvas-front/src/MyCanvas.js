@@ -22,7 +22,6 @@ import {Fab} from "@mui/material";
 import Box from "@mui/material/Box";
 import PanToolIcon from '@mui/icons-material/PanTool';
 import HighlightAltIcon from '@mui/icons-material/HighlightAlt';
-import MyDrawer from "./headerAppBar/MyDrawer";
 import CoordsModal from "./coordsModal";
 
 Amplify.configure(gen.config)
@@ -695,13 +694,13 @@ const MyCanvas = (props) => {
         </Fab>
       </Box>
 
-      <MyDrawer
-          camera={props.camera}
-          setModifiers={props.setModifiers}
-          history={props.history}
-          canvasMeta={props.canvasMeta}
+      {/*<MyDrawer*/}
+      {/*    camera={props.camera}*/}
+      {/*    setModifiers={props.setModifiers}*/}
+      {/*    history={props.history}*/}
+      {/*    canvasMeta={props.canvasMeta}*/}
 
-      />
+      {/*/>*/}
 
       <Stage
           ref={stageRef}

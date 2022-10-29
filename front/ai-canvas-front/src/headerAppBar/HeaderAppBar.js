@@ -54,7 +54,7 @@ export default function HeaderAppBar(props) {
 
     return (
         <>
-            <Modal show={showModalTabs} onHide={handleCloseTabs}>
+            <Modal show={showModalTabs} onHide={handleCloseTabs} style={{marginTop: "50px"}}>
                 <Modal.Header closeButton>
                     <Modal.Title>Enter new room name below</Modal.Title>
                 </Modal.Header>

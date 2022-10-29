@@ -75,7 +75,7 @@ export default function ProfileMenu(props) {
     return (
         <div>
 
-            <Modal show={showModaleProfile} onHide={() => setShowModalProfile(false)}>
+            <Modal show={showModaleProfile} onHide={() => setShowModalProfile(false)} style={{marginTop: "50px"}}>
                 <Modal.Header closeButton>
                     <Modal.Title>Enter new room name below</Modal.Title>
                 </Modal.Header>
