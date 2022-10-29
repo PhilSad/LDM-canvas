@@ -21,14 +21,14 @@ export default function CoordsModal(props) {
                 {props.x}, {props.y}, {props.zoom}
             </div>
 
-            <Modal show={showCoordModal} onHide={handleClose}>
+            <Modal show={showCoordModal} onHide={handleClose} style={{marginTop: "50px"}}>
                 <Modal.Header closeButton>
                     <Modal.Title>Link to your current position</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <p> Use this link to share your current position</p>
                     <div className="shareLink">
-                        <input type="textbox" value={linkurl} readOnly={"readonly"} />
+                        <input type="textbox" value={linkurl} readOnly={"readonly"}/>
                         <button onClick={copyLink}>Copy text</button>
                     </div>
                 </Modal.Body>
