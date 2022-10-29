@@ -676,21 +676,20 @@ const MyCanvas = (props) => {
 
 
       <Box style={{position: "absolute", bottom: 1, right: 1}}>
-
-      <Fab color="primary" aria-label="help">
-          <HelpModalButton show={user !== undefined}/>
+        <Fab color="primary" aria-label="help">
+          <HelpModalButton show={false}/>
         </Fab>
-        <Fab color="secondary" aria-label="refresh">
-          <RefreshIcon onClick={() => handleClickRefresh()}/>
+        <Fab color="secondary" onClick={() => handleClickRefresh()} aria-label="refresh">
+          <RefreshIcon/>
         </Fab>
       </Box>
 
       <Box style={{position: 'absolute', bottom: 1, left: "50%", transform: "translateX(-50%)", zIndex: 99}}>
-        <Fab aria-label="help" style={{margin: 5}}>
-          <PanToolIcon onClick={() => switchMode(VIEW)} color={currentMode === VIEW ? "disabled" : "primary"}/>
+        <Fab aria-label="help" style={{margin: 5}} onClick={() => switchMode(VIEW)}>
+          <PanToolIcon color={currentMode === VIEW ? "primary" : "disabled"}/>
         </Fab>
-        <Fab aria-label="refresh">
-          <HighlightAltIcon onClick={() => switchMode(EDIT)} color={currentMode === EDIT ? "disabled" : "primary"}/>
+        <Fab aria-label="refresh" onClick={() => switchMode(EDIT)}>
+          <HighlightAltIcon color={currentMode === EDIT ? "primary" : "disabled"}/>
         </Fab>
       </Box>
 

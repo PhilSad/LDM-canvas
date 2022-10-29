@@ -15,17 +15,17 @@ export default function HelpModalButton({show}) {
         <HelpIcon onClick={() => handleShow()}/>
 
 
-        <Modal show={showHelpModal} onHide={handleClose}>
-          <Modal.Header closeButton>
-            <Modal.Title>How to use Kollai infinite canvas</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-            <b>View Mode</b> : move the camera, explore the canvas
-            <br/><br/>
-            <b>Edit mode</b> : make a selection and select one of the modes
-          <ul>
-            <li><b>New Image</b>: Generate a new image from scratch </li>
-            <li><b>Inpaint Transparent</b>: Only generate empty parts in the selection for seamless effect </li>
+        <Modal show={showHelpModal} onHide={handleClose} style={{marginTop: "50px"}}>
+            <Modal.Header closeButton>
+                <Modal.Title>How to use Kollai infinite canvas</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+                <b>View Mode</b> : move the camera, explore the canvas
+                <br/><br/>
+                <b>Edit mode</b> : make a selection and select one of the modes
+                <ul>
+                    <li><b>New Image</b>: Generate a new image from scratch</li>
+                    <li><b>Inpaint Transparent</b>: Only generate empty parts in the selection for seamless effect</li>
             <li><b>Image to Image</b>: Start the generation with the selection as init. image </li>
             <li><b>Save</b>: Download the selection as jpeg</li>
           </ul>
