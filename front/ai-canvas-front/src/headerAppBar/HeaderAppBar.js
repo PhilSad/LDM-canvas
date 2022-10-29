@@ -21,7 +21,6 @@ function useForceUpdate() {
 }
 
 export default function HeaderAppBar(props) {
-    console.log(props.room);
     const [user, loading, error] = useAuthState(auth);
     const [rooms, setRooms] = useState(["default", "demo", "test"])
 
