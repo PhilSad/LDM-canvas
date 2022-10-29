@@ -1,5 +1,5 @@
 import React from 'react';
-import { Image, Group, Rect } from 'react-konva';
+import {Group, Image, Rect} from 'react-konva';
 
 class URLImage extends React.Component {
     state = {
@@ -39,6 +39,8 @@ class URLImage extends React.Component {
     }
     handleClick = () => {
         console.log(this.props.prompt);
+        console.log(this.props.pseudo);
+        console.log(this.props.timestamp)
     }
 
     handleLoad = () => {

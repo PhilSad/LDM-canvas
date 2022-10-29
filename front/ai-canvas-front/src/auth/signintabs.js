@@ -7,14 +7,16 @@ import {
     logInWithEmailAndPassword,
     registerWithEmailAndPassword,
     sendPasswordReset,
-    signInWithGoogle
+    signInWithGoogle,
+    updatePseudo
 } from './Auth';
 import {GoogleLoginButton} from "react-social-login-buttons";
-import TextField from '@mui/joy/TextField';
-import {Box, Button} from "@mui/joy";
+import {TextField} from "@mui/material";
+import Button from "@mui/material/Button";
+import Box from "@mui/material/Box";
 
 
-function SigninTabs({user}) {
+function SigninTabs(props) {
     const [key, setKey] = useState('login');
     const [createUserWithEmailAndPassword, userMail, loadingMail, errorMail] = useCreateUserWithEmailAndPassword(auth);
     const [emailCreate, setEmailCreate] = useState('');
@@ -33,7 +35,11 @@ return (
         className="mb-3"
     >
         <Tab eventKey="login" title="Login">
-            <GoogleLoginButton onClick={() => signInWithGoogle()}/>
+            <GoogleLoginButton onClick={() => {
+                signInWithGoogle((pseudo) => {
+                    updatePseudo(pseudo).then(props.onUserChange)
+                })
+            }}/>
             <br/>
             <TextField
                 type="email"

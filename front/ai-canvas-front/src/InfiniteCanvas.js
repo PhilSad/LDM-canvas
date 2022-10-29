@@ -1,7 +1,7 @@
 import MyCanvas from './MyCanvas';
-import React, { useEffect, useState } from "react";
+import React, {useEffect, useState} from "react";
 import SideBar from "./SideBar";
-import RoomTabPanel from "./RoomTabPanel"
+import HeaderAppBar from "./headerAppBar/HeaderAppBar";
 
 const InfiniteCanvas = (props) => {
 
@@ -10,7 +10,7 @@ const InfiniteCanvas = (props) => {
         setSideBarOpen(!sidebarOpen);
     };
 
-    const [modifiers, setModifiers] = useState('')
+    const [modifiers, setModifiers] = useState("")
     const [history, setHistory] = useState([])
 
     const [isLogged, setIsLogged] = useState(false);
@@ -57,16 +57,22 @@ const InfiniteCanvas = (props) => {
 
     return (
         <>
-            <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-
+            <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+            <HeaderAppBar
+                room={room}
+                setRoom={setRoom}
+            />
             <MyCanvas
                 camera={camera}
                 modifiers={modifiers}
                 setHistory={setHistory}
+                history={history}
                 isLogged={isLogged}
                 credential={credential}
                 isMobile={isMobile}
                 room={room}
+                canvasMeta={canvasMeta}
+
             />
 
             <SideBar
@@ -81,10 +87,11 @@ const InfiniteCanvas = (props) => {
                 setIsMobile={setIsMobile}
             />
 
-            <RoomTabPanel
-                room={room}
-                setRoom={setRoom}
-            />
+
+            {/*<RoomTabPanel*/}
+            {/*    room={room}*/}
+            {/*    setRoom={setRoom}*/}
+            {/*/>*/}
         </>
     );
 }

@@ -1,0 +1,8 @@
+steps:
+
+  - name: gcr.io/cloud-builders/gcloud
+    args: [ app, deploy, --project=kollai-back-dev ]
+    dir: 'api/backend'
+
+options:
+  logging: CLOUD_LOGGING_ONLY

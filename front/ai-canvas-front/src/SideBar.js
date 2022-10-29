@@ -6,7 +6,6 @@ import SignInModalButton from "./auth/signinModal";
 
 const SideBar = props => {
     const sidebarClass = props.isOpen ? "sidebar open" : "sidebar";
-    console.log('test')
     let camera = props.camera;
     let room = "default";
 
@@ -84,7 +83,7 @@ const SideBar = props => {
 
 
             {!user ? (
-                    <SignInModalButton user={user}/>
+                    <SignInModalButton/>
 
             ) : (
                 <button onClick={() => {

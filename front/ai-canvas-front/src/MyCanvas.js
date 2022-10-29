@@ -8,7 +8,6 @@ import ImageSaverLayer from './imageSaveLayer';
 import Amplify from '@aws-amplify/core'
 import * as gen from './generated'
 import HelpModalButton from './helpModal'
-
 import {toast, ToastContainer} from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -18,6 +17,12 @@ import {auth} from './auth/Auth';
 // import * as env from './env.js';
 import {CONNECTION_STATE_CHANGE} from '@aws-amplify/pubsub';
 import {Hub} from 'aws-amplify';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import {Fab} from "@mui/material";
+import Box from "@mui/material/Box";
+import PanToolIcon from '@mui/icons-material/PanTool';
+import HighlightAltIcon from '@mui/icons-material/HighlightAlt';
+import CoordsModal from "./coordsModal";
 
 Amplify.configure(gen.config)
 
@@ -32,6 +37,7 @@ const BACK_BASE_URL = process.env.REACT_APP_BACK_URL;
 
 const URL_GET_IMAGES = BACK_BASE_URL + '/get_images_for_room/'
 const URL_FUNCTION_IMAGEN = BACK_BASE_URL + "/imagen/"
+const URL_FUNCTION_UPDATE_PSEUDO = BACK_BASE_URL + "/update_user_pseudo/"
 
 //modes
 const EDIT = "EDIT";
@@ -92,7 +98,8 @@ const MyCanvas = (props) => {
   //camera
   let camera = props.camera;
   let room = props.room;
-  let oneClickControls = props.isMobile;
+  // let oneClickControls = props.isMobile;
+  let oneClickControls = true;
 
   const [camInitX, setCamInitX] = useState(0);
   const [camInitY, setCamInitY] = useState(0);
@@ -545,7 +552,6 @@ const MyCanvas = (props) => {
 
     var url_get_image_with_params = URL_GET_IMAGES + '?posX=0&posY=0&width=100&height=100&room=' + room;
 
-    console.log(url_get_image_with_params)
 
     fetch(url_get_image_with_params).then((data) => data.json())
       .then((json) => json.message)
@@ -646,26 +652,64 @@ const MyCanvas = (props) => {
   return (
     <div style={{ cursor: cursor }}>
       <div className="top_button_bar">
+
+
         {oneClickControls &&
-          <>
-            <button onClick={() => switchMode(VIEW)}> View </button>
-            <button onClick={() => switchMode(EDIT)}> Edit </button>
-          </>
+            <>
+              {/*<button onClick={() => switchMode(VIEW)}> View </button>*/}
+              {/*<button onClick={() => switchMode(EDIT)}> Edit </button>*/}
+            </>
         }
 
-        <button onClick={() => handleClickRefresh()}> Refresh</button>
-        <HelpModalButton show={user !== undefined}/>
+
+        {/*<button onClick={() => handleClickRefresh()}> Refresh</button>*/}
       </div>
 
+      <Box style={{position: "absolute", bottom: 1, left: 1, zIndex: 99}}>
+        <CoordsModal
+            x={Math.round(camera.x)}
+            y={Math.round(camera.y)}
+            zoom={Math.round(camera.zoom * 100)}
+            room={room}
+        />
+      </Box>
+
+
+      <Box style={{position: "absolute", bottom: 1, right: 1}}>
+        <Fab color="primary" aria-label="help">
+          <HelpModalButton show={false}/>
+        </Fab>
+        <Fab color="secondary" onClick={() => handleClickRefresh()} aria-label="refresh">
+          <RefreshIcon/>
+        </Fab>
+      </Box>
+
+      <Box style={{position: 'absolute', bottom: 1, left: "50%", transform: "translateX(-50%)", zIndex: 99}}>
+        <Fab aria-label="help" style={{margin: 5}} onClick={() => switchMode(VIEW)}>
+          <PanToolIcon color={currentMode === VIEW ? "primary" : "disabled"}/>
+        </Fab>
+        <Fab aria-label="refresh" onClick={() => switchMode(EDIT)}>
+          <HighlightAltIcon color={currentMode === EDIT ? "primary" : "disabled"}/>
+        </Fab>
+      </Box>
+
+      {/*<MyDrawer*/}
+      {/*    camera={props.camera}*/}
+      {/*    setModifiers={props.setModifiers}*/}
+      {/*    history={props.history}*/}
+      {/*    canvasMeta={props.canvasMeta}*/}
+
+      {/*/>*/}
+
       <Stage
-        ref={stageRef}
+          ref={stageRef}
 
-        className={"canvas"}
+          className={"canvas"}
 
-        width={canvasMeta.w}
-        height={canvasMeta.h}
+          width={canvasMeta.w}
+          height={canvasMeta.h}
 
-        onMouseDown={handleMouseDown}
+          onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onWheel={handleMouseScroll}
@@ -698,15 +742,17 @@ const MyCanvas = (props) => {
                 if (img.w * camera.zoom * img.h * camera.zoom > 25) {
                   return (
                     <URLImage
-                      key={i}
-                      src={img.src}
-                      x={x}
-                      y={y}
-                      avg_color={"#FFFADA"}
-                      width={img.w * camera.zoom}
-                      height={img.h * camera.zoom}
-                      prompt={img.prompt}
-                      mode={currentMode}
+                        key={i}
+                        src={img.src}
+                        x={x}
+                        y={y}
+                        avg_color={"#FFFADA"}
+                        width={img.w * camera.zoom}
+                        height={img.h * camera.zoom}
+                        prompt={img.prompt}
+                        mode={currentMode}
+                        pseudo={img.pseudo}
+                        timestamp={img.timestamp}
                     />)
                 }
               }
@@ -756,6 +802,7 @@ const MyCanvas = (props) => {
         <ImageSaverLayer ref={imageSaveRef} imageSave={imageSave} />
       }
 
+
       <ToastContainer
         position="bottom-center"
         autoClose={5000}
@@ -767,6 +814,7 @@ const MyCanvas = (props) => {
         draggable
         pauseOnHover
       />
+
     </div>
   );
 

@@ -49,6 +49,11 @@ def update_from_sql(table, row_to_update):
     query = db.update(table).where(table.c.uuid==row_to_update['uuid']).values(**row_to_update)
     engine.execute(query)
 
+def update_pseudo(email, pseudo):
+    users = get_table('users')
+    query = db.update(users).where(users.c.email==email).values(dict(pseudo=pseudo))
+    engine.execute(query)
+
 
 def get_table(name):
     return db.Table(name, db.MetaData(), autoload=True, autoload_with=engine)
@@ -57,12 +62,20 @@ def get_table(name):
 def get_images_from_room(room):
 
     images = get_table('images')
-    stmt = db.select(images).where(images.columns.room == room )
+    users = get_table('users')
+    stmt = db.select(users.c.pseudo,
+                     images.c.prompt,
+                     images.c.height,
+                     images.c.width,
+                     images.c.posX,
+                     images.c.posY,
+                     images.c.timestamp,
+                     images.c.status,
+                     images.c.path).where(db.or_(users.c.email == images.c.email, images.c.email is None ,images.c.email is None)).where(images.c.room == room)
     result = engine.execute(stmt)
-
     result_as_dict = result.mappings().all()
     result_as_dict = [dict(res) for res in result_as_dict]
-    
+
     return result_as_dict
 
 
@@ -77,7 +90,9 @@ def get_user_pseudo(email):
     users = get_table('users')
     stmt = db.select(users.c.pseudo).where(users.columns.email == email)
     result = engine.execute(stmt)
-    return result
+    res = list(result)[0][0]
+    print(res)
+    return res
 
 
 
