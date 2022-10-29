@@ -1,6 +1,5 @@
 import Modal from 'react-bootstrap/Modal';
-import React, { useState } from 'react';
-
+import React, {useState} from 'react';
 
 
 export default function CoordsModal(props) {
@@ -18,7 +17,7 @@ export default function CoordsModal(props) {
 
     return (
         <>
-            <div className="coords" onClick={handleShow}>
+            <div onClick={handleShow} style={{zIndex: 99, backgroundColor: 'white'}}>
                 {props.x}, {props.y}, {props.zoom}
             </div>
 
