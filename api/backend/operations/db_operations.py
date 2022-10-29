@@ -82,7 +82,9 @@ def get_user_pseudo(email):
     users = get_table('users')
     stmt = db.select(users.c.pseudo).where(users.columns.email == email)
     result = engine.execute(stmt)
-    return result
+    res = list(result)[0][0]
+    print(res)
+    return res
 
 
 

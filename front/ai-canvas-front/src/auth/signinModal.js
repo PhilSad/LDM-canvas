@@ -21,7 +21,7 @@ export default function SignInModalButton(props) {
         </Modal.Header>
       <Modal.Body>
 
-        <SigninTabs />
+        <SigninTabs onUserChange={props.onUserChange}/>
 
         </Modal.Body>
 

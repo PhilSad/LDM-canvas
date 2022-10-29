@@ -46,20 +46,22 @@ def register_user():
     token = params['credential']
     pseudo = params.get('pseudo')
     if pseudo is None:
-        pseudo = str(random.randint(10000000, 90000000))
+        pseudo = f"user_{str(random.randint(1000000000, 9000000000))}"
 
     idinfo = users_operations.validate_access_token_and_get_user(token)
     if idinfo == False:
-        return ('invalid token', 502)
+        return ('invalid token' , 502)
     if db_operations.check_if_user_exist(idinfo['email']):
-        return 'user already exist', 201
-         
+        print("user exist")
+        pseudo = db_operations.get_user_pseudo(idinfo['email'])
+        return dict(pseudo=pseudo), 201
+    print("user dont exist")
     print(idinfo)
     data_to_bdd = dict(email = idinfo['email'], name = idinfo.get('name'), pseudo = pseudo)
 
     db_operations.insert_to_sql('users', data_to_bdd)
 
-    return ('OK', 200)
+    return (dict(pseudo=pseudo), 202)
 
 @app.route("/update_user_pseudo/", methods=['POST'])
 def update_user_pseudo():

@@ -1,11 +1,19 @@
 import React, {useState} from "react";
-import {IconButton, Menu, MenuItem, TextField} from "@mui/material";
+import {IconButton, Menu, MenuItem, TextField, Typography} from "@mui/material";
 import Modal from "react-bootstrap/Modal";
 
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
-import {auth, logout} from "../auth/Auth";
+import {auth, logout, updatePseudo} from "../auth/Auth";
 import {useAuthState} from "react-firebase-hooks/auth";
 import Button from "@mui/material/Button";
+
+
+function useForceUpdate() {
+    const [value, setValue] = useState(0); // integer state
+    return () => setValue(value => value + 1); // update state to force render
+    // An function that increment 👆🏻 the previous state like here
+    // is better than directly setting `value + 1`
+}
 
 export default function ProfileMenu(props) {
     const BACK_BASE_URL = process.env.REACT_APP_BACK_URL;
@@ -15,7 +23,9 @@ export default function ProfileMenu(props) {
     const [anchorEl, setAnchorEl] = React.useState(null);
     const [open, setOpen] = React.useState(false);
     const [user, loading, error] = useAuthState(auth);
-    const [displayedName, setDisplayedName] = useState("[CURRENT DISPLAYED NAME]")
+
+    const [displayedName, setDisplayedName] = React.useState(props.displayedName)
+
 
     const handleClickProfile = (event) => {
         setAnchorEl(event.currentTarget);
@@ -49,7 +59,17 @@ export default function ProfileMenu(props) {
                 credential: user.accessToken,
                 pseudo: displayedName
             }),
-        })
+        }).then(() => setDisplayedName(displayedName))
+        updatePseudo(displayedName).then(props.onUserChange)
+        //     .then(() => {
+        //     console.log("i am after update")
+        //     console.log(user)
+        //     user.reload().then(() => {
+        //         console.log("i am after reload")
+        //         console.log(user)
+        //     })
+        //
+        // })
     }
 
     return (
@@ -61,14 +81,18 @@ export default function ProfileMenu(props) {
                 </Modal.Header>
                 <Modal.Body style={{margin: 'auto'}}>
                     <TextField label="Displayed Name" type="textbox"
-                               onChange={e => setDisplayedName(e.target.value)}/>
+                               onChange={e => setDisplayedName(e.target.value)}
+                               value={displayedName}
+
+                    />
                     <br/>
                     <br/>
                     <Button variant={"outlined"} onClick={() => handleClicUpdateProfile()}>Update Profile</Button>
                 </Modal.Body>
             </Modal>
 
-            <IconButton onClick={handleClickProfile}>
+            <IconButton onClick={handleClickProfile} style={{color: 'inherit'}}>
+                <Typography sx={{marginRight: "5px"}} variant={'h5'}>{user.displayName}</Typography>
                 <AccountCircleIcon/>
             </IconButton>
             <Menu

@@ -8,6 +8,7 @@ import {
     signInWithEmailAndPassword,
     signInWithPopup,
     signOut,
+    updateProfile
 } from "firebase/auth";
 
 export const firebaseConfig = {
@@ -25,14 +26,15 @@ console.log('hello from auth')
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const googleProvider = new GoogleAuthProvider();
-const signInWithGoogle = async () => {
+
+const signInWithGoogle = async (onSuccess) => {
     try {
         console.log('coucou')
         const res = await signInWithPopup(auth, googleProvider);
         const user = res.user;
         console.log(res)
         console.log(user)
-        fetch(BACK_BASE_URL + "/register_user/", {
+        await fetch(BACK_BASE_URL + "/register_user/", {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -42,7 +44,11 @@ const signInWithGoogle = async () => {
                     'credential': res._tokenResponse.idToken
                 }
             ),
-        })
+        }).then((resp) => resp.json())
+            .then((json) => {
+                onSuccess(json.pseudo)
+                console.log('setted pseudo as' + json.pseudo)
+            })
         console.log(res)
     } catch (err) {
         console.error(err);
@@ -53,6 +59,16 @@ const signInWithGoogle = async () => {
 const logInWithEmailAndPassword = async (email, password) => {
     try {
         await signInWithEmailAndPassword(auth, email, password);
+    } catch (err) {
+        console.error(err);
+        alert(err.message);
+    }
+};
+
+
+const updatePseudo = async (newPseudo) => {
+    try {
+        await updateProfile(auth.currentUser, {displayName: newPseudo});
     } catch (err) {
         console.error(err);
         alert(err.message);
@@ -71,6 +87,8 @@ const sendVerificationMail = async () => {
 const registerWithEmailAndPassword = async (pseudo, email, password) => {
     try {
         const res = await createUserWithEmailAndPassword(auth, email, password);
+        updatePseudo(pseudo)
+
         const user = res.user;
         console.log(res)
         fetch(BACK_BASE_URL + "/register_user/", {
@@ -113,4 +131,5 @@ export {
     registerWithEmailAndPassword,
     sendPasswordReset,
     logout,
+    updatePseudo
 };

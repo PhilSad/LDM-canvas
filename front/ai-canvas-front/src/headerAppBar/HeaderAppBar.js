@@ -13,6 +13,12 @@ import AddIcon from '@mui/icons-material/Add';
 import Modal from "react-bootstrap/Modal";
 import ProfileMenu from "./ProfileMenu";
 
+function useForceUpdate() {
+    const [value, setValue] = useState(0); // integer state
+    return () => setValue(value => value + 1); // update state to force render
+    // An function that increment 👆🏻 the previous state like here
+    // is better than directly setting `value + 1`
+}
 
 export default function HeaderAppBar(props) {
     console.log(props.room);
@@ -23,6 +29,10 @@ export default function HeaderAppBar(props) {
     const handleCloseTabs = () => setShowModalTabs(false);
     const handleShowTabs = () => setShowModalTabs(true);
     const [newRoomName, setNewRoomName] = useState("");
+
+    const [displayedName, setDisplayedName] = React.useState("")
+
+    const forceUpdate = useForceUpdate();
 
 
     function handleClickAccessRoom(roomName) {
@@ -54,7 +64,7 @@ export default function HeaderAppBar(props) {
                                onChange={e => setNewRoomName(e.target.value)}/>
                     <br/>
                     <br/>
-                    <Button variant={"outlined"} onClick={() => handleClickAccessRoom()}>Access Room</Button>
+                    <Button variant={"outlined"} onClick={() => handleClickAccessRoom(newRoomName)}>Access Room</Button>
                 </Modal.Body>
             </Modal>
 
@@ -101,10 +111,12 @@ export default function HeaderAppBar(props) {
                         {/* LOGIN / LOGOUT Button */}
                         <Box style={{}}>
                             {!user ? (
-                                <SignInModalButton/>
+                                <SignInModalButton onSuccess={(pseudo) => setDisplayedName(pseudo)}
+                                                   onUserChange={forceUpdate}/>
 
                             ) : (
-                                <ProfileMenu/>
+                                <ProfileMenu displayedName={displayedName}
+                                             onUserChange={forceUpdate}/>
                             )}
 
                         </Box>
