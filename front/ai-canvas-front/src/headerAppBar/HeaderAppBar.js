@@ -69,7 +69,7 @@ export default function HeaderAppBar(props) {
 
 
             <Box sx={{flexGrow: 1}}>
-                <AppBar position="static">
+                <AppBar position="absolute">
                     <Toolbar style={{justifyContent: 'space-between'}}>
                         {/*<IconButton*/}
                         {/*    size="large"*/}
