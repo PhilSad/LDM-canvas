@@ -3,21 +3,20 @@ import base64
 import torch
 import PIL
 import numpy as np
-from diffusionui import StableDiffusionPipeline
 from torch import autocast
 import scipy
 from scipy.spatial import cKDTree
 # pipe initialization
-device = "cuda"
-model_path = "./models_bindings/models/stable-diffusion-v1-4"
-pipe = StableDiffusionPipeline.from_pretrained(
-    model_path,
-    revision="fp16", 
-    torch_dtype=torch.float16,
-#    use_auth_token=True
-).to(device)
+from diffusers import StableDiffusionPipeline
 
-pipe.disable_nsfw_filter()
+device = "cuda"
+
+pipe = StableDiffusionPipeline.from_pretrained(
+    "runwayml/stable-diffusion-v1-5",
+    revision="fp16",
+    torch_dtype=torch.float16,
+).to(device)
+pipe.enable_attention_slicing(1)
 
 MAX_SIZE = 512
 STEPS = 50
