@@ -20,3 +20,4 @@ models_bindings/models/dalle-mini-mega/vqgan/detoker.pt
 api/tests/cloud_sql_proxy
 api/tests/tests.ipynb
 front/demo-firebase-auth/*
+node_modules

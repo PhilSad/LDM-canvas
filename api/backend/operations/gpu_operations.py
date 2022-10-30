@@ -19,6 +19,9 @@ def imagen(action, params):
     if idinfo == False:
         return -1
 
+    if not db_operations.user_can_generate(idinfo['email']):
+        return -1
+
     image_uuid = str(uuid.uuid4())
     params['uuid'] = image_uuid
 

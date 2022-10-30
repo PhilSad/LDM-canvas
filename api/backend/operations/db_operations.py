@@ -4,7 +4,9 @@ import sqlalchemy
 import sqlalchemy as db
 import traceback
 import logging
+import datetime
 
+LOCAL_TIMEZONE = datetime.datetime.now(datetime.timezone.utc).astimezone().tzinfo
 
 
 def connect_unix_socket() -> sqlalchemy.engine.base.Engine:
@@ -93,6 +95,22 @@ def get_user_pseudo(email):
     res = list(result)[0][0]
     print(res)
     return res
+
+def user_can_generate(email, sec_interval=2):
+    images = get_table('images')
+    stmt = db.select(images.c.timestamp).where(images.columns.email == email).order_by(db.desc(images.c.imageID)).limit(1)
+    result = engine.execute(stmt)
+    res = list(result)
+    last_generation = res[0][0]
+    print(last_generation)
+    current_time_utc = datetime.datetime.now().replace(tzinfo=LOCAL_TIMEZONE).astimezone(tz=datetime.timezone.utc).replace(tzinfo=None)
+    print(current_time_utc)
+    if last_generation + datetime.timedelta(seconds=sec_interval) < current_time_utc:
+        return True
+    else:
+        return False
+
+
 
 
 
