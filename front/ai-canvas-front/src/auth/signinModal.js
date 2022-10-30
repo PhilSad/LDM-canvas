@@ -15,17 +15,17 @@ export default function SignInModalButton(props) {
             Log In
         </Button>
 
-      <Modal show={showModal} onHide={handleClose}>
-        <Modal.Header closeButton>
-          <Modal.Title>Login or Register with your favorite provider</Modal.Title>
-        </Modal.Header>
-      <Modal.Body>
+      <Modal show={showModal} onHide={handleClose} style={{marginTop: "50px"}}>
+          <Modal.Header closeButton>
+              <Modal.Title>Login or Register with your favorite provider</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
 
-        <SigninTabs onUserChange={props.onUserChange}/>
+              <SigninTabs onUserChange={props.onUserChange}/>
 
-        </Modal.Body>
+          </Modal.Body>
 
-        <Modal.Footer>
+          <Modal.Footer>
           <button onClick={handleClose}>
             Close
           </button>
