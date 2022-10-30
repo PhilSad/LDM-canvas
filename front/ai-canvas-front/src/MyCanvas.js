@@ -820,7 +820,7 @@ const MyCanvas = (props) => {
                   currentState={currentState}
                   currentMode={currentMode}
                   onHelpClick={() => {
-                    setCurrentStep(6)
+                    setCurrentStep(7)
                     setIsOpen(true)
                   }}
               />
