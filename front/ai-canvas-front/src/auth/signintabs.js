@@ -41,53 +41,58 @@ return (
                 })
             }}/>
             <br/>
-            <TextField
-                type="email"
-                label="Email"
-                value={emailLogin}
-                onChange={(e) => setEmailLogin(e.target.value)}
-                placeholder="user@domain.com"
-            />
-            <br/>
-            <TextField
-                type="password"
-                label="Password"
-                value={passwordLogin}
-                onChange={(e) => setPasswordLogin(e.target.value)}
-                placeholder="password"
-            />
-            <br/>
-            <Box textAlign={'center'}>
-                <Button onClick={() => logInWithEmailAndPassword(emailLogin, passwordLogin)}>
-                    Login
-                </Button>
-            </Box>
+            <div>
+                <Box textAlign={'center'}>
+
+                    <TextField
+                        type="email"
+                        label="Email"
+                        value={emailLogin}
+                        onChange={(e) => setEmailLogin(e.target.value)}
+                        placeholder="user@domain.com"
+                    />
+                    <br/>
+                    <TextField
+                        type="password"
+                        label="Password"
+                        value={passwordLogin}
+                        onChange={(e) => setPasswordLogin(e.target.value)}
+                        placeholder="password"
+                    />
+                    <br/>
+                    <Button onClick={() => logInWithEmailAndPassword(emailLogin, passwordLogin)}>
+                        Login with password
+                    </Button>
+                </Box>
+            </div>
         </Tab>
         <Tab eventKey="createAccount" title="Create Account">
-            <TextField
-                type="email"
-                label="Email"
-                value={emailCreate}
-                onChange={(e) => setEmailCreate(e.target.value)}
-                placeholder="user@domain.com"
-            />
-            <br/>
-            <TextField
-                type="password"
-                label="Password"
-                value={passwordCreate}
-                onChange={(e) => setPasswordCreate(e.target.value)}
-                placeholder="password"
-            />
-            <br/>
-            <TextField
-                label="Pseudo"
-                value={pseudoCreate}
-                onChange={(e) => setPseudoCreate(e.target.value)}
-                placeholder="pseudo"
-            />
-            <br/>
-            <Box textAlign={"center"}>
+            <Box textAlign={"center"} sx={{alignItems: "center"}}>
+                <TextField
+                    type="email"
+                    label="Email"
+                    value={emailCreate}
+                    onChange={(e) => setEmailCreate(e.target.value)}
+                    placeholder="user@domain.com"
+                />
+                <br/>
+                <TextField
+                    type="password"
+                    label="Password"
+                    value={passwordCreate}
+                    onChange={(e) => setPasswordCreate(e.target.value)}
+                    placeholder="password"
+                />
+                <br/>
+                <TextField
+                    label="Pseudo"
+                    value={pseudoCreate}
+                    onChange={(e) => setPseudoCreate(e.target.value)}
+                    placeholder="pseudo"
+                />
+                <br/>
+                You'll need to verify your email (check your spam folder)
+
                 <Button onClick={() => registerWithEmailAndPassword(pseudoCreate, emailCreate, passwordCreate)}>
                     Register
                 </Button>
@@ -96,16 +101,17 @@ return (
         </Tab>
 
         <Tab eventKey="resetPasswork" title="Password Reset">
-            <TextField
-                type="email"
-                label="Email"
-                value={emailReset}
-                onChange={(e) => setEmailReset(e.target.value)}
-                placeholder="user@domain.com"
-            />
-            <br/>
-
             <Box textAlign={"center"}>
+
+                <TextField
+                    type="email"
+                    label="Email"
+                    value={emailReset}
+                    onChange={(e) => setEmailReset(e.target.value)}
+                    placeholder="user@domain.com"
+                />
+                <br/>
+
                 <Button onClick={() => sendPasswordReset(emailReset)}>
                     Send reset mail
                 </Button>
