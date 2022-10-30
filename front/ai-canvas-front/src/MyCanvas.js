@@ -69,7 +69,6 @@ const MyCanvas = (props) => {
 
   const [currentMode, setCurrentMode] = useState(VIEW);
   const [currentState, setCurrentState] = useState(IDLE);
-  const {setIsOpen} = useTour()
 
   const [selectRect, setSelectRect] = useState({
     x: 0,
@@ -118,6 +117,14 @@ const MyCanvas = (props) => {
 
   const [user, loading, error] = useAuthState(auth);
 
+  const {setIsOpen, currentStep, isOpen, setCurrentStep} = useTour()
+
+
+  // useEffect(()=>{
+  //   if(currentStep === 6 && isOpen){
+  //     setIsOpen(false);
+  //   }
+  // }, [currentStep])
 
   useEffect(() => {
     let initial_tour_done = localStorage.getItem("initial_tour_done")
@@ -428,6 +435,13 @@ const MyCanvas = (props) => {
       case EDIT:
         if (currentState === SELECT) {
           switchState(CHOOSE_TYPE);
+          // Display automaticaly the tour helper
+          let initial_tour_done = localStorage.getItem("generation_tour_done")
+          if (initial_tour_done === null) {
+            setCurrentStep(6);
+            setIsOpen(true);
+            localStorage.setItem("generation_tour_done", true)
+          }
         }
         break;
 
@@ -687,14 +701,13 @@ const MyCanvas = (props) => {
       </Box>
 
 
-      <Box style={{position: "absolute", bottom: 1, right: 1}}>
-        <Fab color="primary" aria-label="help">
+        <Box style={{position: "absolute", bottom: 1, right: 1}}>
           <HelpModalButton show={false}/>
-        </Fab>
-        <Fab color="secondary" onClick={() => handleClickRefresh()} aria-label="refresh">
-          <RefreshIcon/>
-        </Fab>
-      </Box>
+
+          <Fab color="secondary" onClick={() => handleClickRefresh()} aria-label="refresh">
+            <RefreshIcon/>
+          </Fab>
+        </Box>
 
         <Box className={"ModeSelectionButtons"}
              style={{position: 'absolute', bottom: 1, left: "50%", transform: "translateX(-50%)", zIndex: 99}}>
@@ -796,17 +809,21 @@ const MyCanvas = (props) => {
           }
 
           {Math.abs(width * camera.zoom * height * camera.zoom) > 100 &&
-            <PromptRect
-              x={(posX - camera.x) * camera.zoom}
-              y={(posY - camera.y) * camera.zoom}
-              width={width * camera.zoom}
-              height={height * camera.zoom}
-              handlePromptButtons={handlePromptButtons}
-              handleSend={handleSend}
-              handleSave={handleSave}
-              currentState={currentState}
-              currentMode={currentMode}
-            />
+              <PromptRect
+                  x={(posX - camera.x) * camera.zoom}
+                  y={(posY - camera.y) * camera.zoom}
+                  width={width * camera.zoom}
+                  height={height * camera.zoom}
+                  handlePromptButtons={handlePromptButtons}
+                  handleSend={handleSend}
+                  handleSave={handleSave}
+                  currentState={currentState}
+                  currentMode={currentMode}
+                  onHelpClick={() => {
+                    setCurrentStep(6)
+                    setIsOpen(true)
+                  }}
+              />
           }
         </Layer>
 

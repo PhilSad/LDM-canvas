@@ -2,7 +2,7 @@ import MyCanvas from './MyCanvas';
 import React, {useEffect, useState} from "react";
 import SideBar from "./SideBar";
 import HeaderAppBar from "./headerAppBar/HeaderAppBar";
-import {TourProvider, useTour} from "@reactour/tour";
+import {TourProvider} from "@reactour/tour";
 
 const InfiniteCanvas = (props) => {
 
@@ -36,12 +36,12 @@ const InfiniteCanvas = (props) => {
         }
     })
 
-    const {setIsOpen} = useTour()
+
 
 
     const tourSteps = [
         {
-            selector: ".ImageCanvas",
+            selector: ".HelpButton",
             content: "Welcome to Koll.ai Infinite Canvas! Take a tour or click the cross to exit (you can show me later by click the ? button)"
         },
         {
@@ -63,8 +63,31 @@ const InfiniteCanvas = (props) => {
         {
             selector: ".ProfilButton",
             content: "Start generating now by singing-in in one click!"
+        },
+        {
+            selector: ".ChoiceButtons",
+            content: "You can choose between multiple actions"
+        },
+        {
+            selector: ".NewImageButton",
+            content: "**New Image** Generate a new image from scratch"
+        },
+        {
+            selector: ".OutpaintingButton",
+            content: "**Outpainting** Only generate empty parts in the selection for seamless effect"
+        },
+        {
+            selector: ".Img2imgButton",
+            content: "**Image To Image** Start the generation with the selection as init image"
+        },
+        {
+            selector: ".SaveButton",
+            content: "**Save** Download the selection as jpeg"
+        },
+        {
+            selector: ".GenerationHelpButton",
+            content: "**Help** Display this help"
         }
-
     ]
 
 
@@ -91,7 +114,42 @@ const InfiniteCanvas = (props) => {
     return (
         <>
             <TourProvider steps={tourSteps}
+                          nextButton={({
+                                           Button: TourButton,
+                                           currentStep,
+                                           stepsLength,
+                                           setIsOpen,
+                                           setCurrentStep,
+                                           steps,
+                                       }) => {
+                              const initialTour_last = 5
+                              const last_initial = currentStep === 5
+                              const last_generation = currentStep === stepsLength - 1
+                              const last = last_initial || last_generation
+                              return (
+                                  <TourButton
+                                      onClick={() => {
+                                          if (last) {
+                                              setIsOpen(false)
+                                          } else {
+                                              setCurrentStep((s) => (s === steps?.length - 1 ? 0 : s + 1))
+                                          }
+                                      }}
+                                  >
+                                      {last ? 'Close!' : null}
+                                  </TourButton>
+                              )
+                          }}
+                          onClickMask={({setCurrentStep, currentStep, steps, setIsOpen}) => {
+                              const last_initial = currentStep === 5
+                              const last_generation = currentStep === steps.length - 1
+                              const last = last_initial || last_generation
 
+                              if (last) {
+                                  setIsOpen(false)
+                              }
+                              setCurrentStep((s) => (s === steps.length - 1 ? 0 : s + 1))
+                          }}
             >
                 <meta name="viewport"
                       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
