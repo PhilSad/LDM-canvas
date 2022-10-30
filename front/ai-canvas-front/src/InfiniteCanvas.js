@@ -3,6 +3,7 @@ import React, {useEffect, useState} from "react";
 import SideBar from "./SideBar";
 import HeaderAppBar from "./headerAppBar/HeaderAppBar";
 import {TourProvider} from "@reactour/tour";
+import {useSearchParams} from "react-router-dom";
 
 const InfiniteCanvas = (props) => {
 
@@ -18,7 +19,8 @@ const InfiniteCanvas = (props) => {
     const [isMobile, setIsMobile] = useState(false);
     const [credential, setCredential] = useState('');
 
-    const [room, setRoom] = useState('default');
+    const [searchParams, setSearchParams] = useSearchParams();
+    const [room, setRoom] = useState(searchParams.get("room") !== null ? searchParams.get("room") : "default");
 
     const [camera, setCamera] = useState({
         x: 0,
@@ -55,6 +57,10 @@ const InfiniteCanvas = (props) => {
         {
             selector: ".RoomTabs",
             content: "Here you can switch between rooms or access a private room"
+        },
+        {
+            selector: ".ButtonCoordModal",
+            content: "Clic the current position to get a shareble link to you current room and position"
         },
         {
             selector: ".sidebar-toggle",
@@ -122,8 +128,7 @@ const InfiniteCanvas = (props) => {
                                            setCurrentStep,
                                            steps,
                                        }) => {
-                              const initialTour_last = 5
-                              const last_initial = currentStep === 5
+                              const last_initial = currentStep === 6
                               const last_generation = currentStep === stepsLength - 1
                               const last = last_initial || last_generation
                               return (
@@ -141,7 +146,7 @@ const InfiniteCanvas = (props) => {
                               )
                           }}
                           onClickMask={({setCurrentStep, currentStep, steps, setIsOpen}) => {
-                              const last_initial = currentStep === 5
+                              const last_initial = currentStep === 6
                               const last_generation = currentStep === steps.length - 1
                               const last = last_initial || last_generation
 

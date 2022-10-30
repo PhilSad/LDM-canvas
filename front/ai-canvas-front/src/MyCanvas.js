@@ -692,11 +692,11 @@ const MyCanvas = (props) => {
       </div>
 
       <Box style={{position: "absolute", bottom: 1, left: 1, zIndex: 99}}>
-        <CoordsModal
-            x={Math.round(camera.x)}
-            y={Math.round(camera.y)}
-            zoom={Math.round(camera.zoom * 100)}
-            room={room}
+        <CoordsModal className={"ButtonCoordModal"}
+                     x={Math.round(camera.x)}
+                     y={Math.round(camera.y)}
+                     zoom={Math.round(camera.zoom * 100)}
+                     room={room}
         />
       </Box>
 
