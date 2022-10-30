@@ -438,7 +438,7 @@ const MyCanvas = (props) => {
           // Display automaticaly the tour helper
           let initial_tour_done = localStorage.getItem("generation_tour_done")
           if (initial_tour_done === null) {
-            setCurrentStep(6);
+            setCurrentStep(7);
             setIsOpen(true);
             localStorage.setItem("generation_tour_done", true)
           }
@@ -688,17 +688,17 @@ const MyCanvas = (props) => {
           }
 
 
-        {/*<button onClick={() => handleClickRefresh()}> Refresh</button>*/}
-      </div>
+          {/*<button onClick={() => handleClickRefresh()}> Refresh</button>*/}
+        </div>
 
-      <Box style={{position: "absolute", bottom: 1, left: 1, zIndex: 99}}>
-        <CoordsModal className={"ButtonCoordModal"}
-                     x={Math.round(camera.x)}
-                     y={Math.round(camera.y)}
-                     zoom={Math.round(camera.zoom * 100)}
-                     room={room}
-        />
-      </Box>
+        <Box className={"ButtonCoordModal"} style={{position: "absolute", bottom: 1, left: 1, zIndex: 99}}>
+          <CoordsModal
+              x={Math.round(camera.x)}
+              y={Math.round(camera.y)}
+              zoom={Math.round(camera.zoom * 100)}
+              room={room}
+          />
+        </Box>
 
 
         <Box style={{position: "absolute", bottom: 1, right: 1}}>

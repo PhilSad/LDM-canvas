@@ -44,7 +44,7 @@ const InfiniteCanvas = (props) => {
     const tourSteps = [
         {
             selector: ".HelpButton",
-            content: "Welcome to Koll.ai Infinite Canvas! Take a tour or click the cross to exit (you can show me later by click the ? button)"
+            content: "Welcome to Koll.ai Infinite Canvas! Take a tour or click the cross to exit (you can show me later by click this button)"
         },
         {
             selector: ".ImageCanvas",
@@ -52,7 +52,7 @@ const InfiniteCanvas = (props) => {
         },
         {
             selector: ".ModeSelectionButtons",
-            content: "There you can switch to selection mode to generate an image (Require login)"
+            content: "Here you can switch to selection mode to generate an image (Require login)"
         },
         {
             selector: ".RoomTabs",
@@ -60,7 +60,7 @@ const InfiniteCanvas = (props) => {
         },
         {
             selector: ".ButtonCoordModal",
-            content: "Clic the current position to get a shareble link to you current room and position"
+            content: "Click the current position to get a shareable link to you current room and position"
         },
         {
             selector: ".sidebar-toggle",
