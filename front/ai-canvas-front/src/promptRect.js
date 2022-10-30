@@ -1,6 +1,7 @@
 import React from 'react';
-import { Rect, Group } from 'react-konva';
-import { Html } from 'react-konva-utils';
+import {Group, Rect} from 'react-konva';
+import {Html} from 'react-konva-utils';
+import {useTour} from "@reactour/tour";
 
 function PromptRect(props) {
     var width = props.width;
@@ -16,6 +17,9 @@ function PromptRect(props) {
             }
         });
     }
+
+    const {setIsOpen, isOpen, setCurrentStep} = useTour()
+
 
     return (
         <Group
@@ -45,11 +49,21 @@ function PromptRect(props) {
                         <div className='choiceButtonCont'>
 
                             {props.currentState === "CHOOSE_TYPE" &&
-                                <div>
-                                    <img className='choiceButton blue' src="images/new_image.png" alt="new image" title='New Image' onClick={() => props.handlePromptButtons("new_image")} />
-                                    <img className='choiceButton yellow' src="images/inpaint.png" alt="outpainting" title='Outpainting' onClick={() => props.handlePromptButtons("outpainting")} />
-                                    <img className='choiceButton red' src="images/img2img.png" alt="img2img" title='Image to Image' onClick={() => props.handlePromptButtons("img_to_img")} />
-                                    <img className='choiceButton green' src="images/save.png" alt="save" title='Save Selection' onClick={() => props.handleSave("save")} />
+                                <div className={"ChoiceButtons"}>
+                                    <img className='choiceButton blue NewImageButton' src="images/new_image.png"
+                                         alt="new image" title='New Image'
+                                         onClick={() => props.handlePromptButtons("new_image")}/>
+                                    <img className='choiceButton yellow OutpaintingButton' src="images/inpaint.png"
+                                         alt="outpainting" title='Outpainting'
+                                         onClick={() => props.handlePromptButtons("outpainting")}/>
+                                    <img className='choiceButton red Img2imgButton' src="images/img2img.png"
+                                         alt="img2img" title='Image to Image'
+                                         onClick={() => props.handlePromptButtons("img_to_img")}/>
+                                    <img className='choiceButton green SaveButton' src="images/save.png" alt="save"
+                                         title='Save Selection' onClick={() => props.handleSave("save")}/>
+                                    <img className='choiceButton green GenerationHelpButton' src="images/help.png"
+                                         alt="help" title='Help'
+                                         onClick={props.onHelpClick}/>
 
                                 </div>
                             }

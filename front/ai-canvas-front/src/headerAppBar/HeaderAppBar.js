@@ -92,7 +92,9 @@ export default function HeaderAppBar(props) {
                                      onChange={(e, value) => handleTabsOnChange(value)}
                                      textColor={"inherit"}
                                      TabIndicatorProps={{style: {background: 'pink'}}}
-                                     style={{}}>
+                                     style={{}}
+                                     className={"RoomTabs"}
+                            >
 
                                 {
                                     rooms.map((curRoom, i) => {
@@ -108,7 +110,7 @@ export default function HeaderAppBar(props) {
 
 
                         {/* LOGIN / LOGOUT Button */}
-                        <Box style={{}}>
+                        <Box className={"ProfilButton"}>
                             {!user ? (
                                 <SignInModalButton onSuccess={(pseudo) => setDisplayedName(pseudo)}
                                                    onUserChange={forceUpdate}/>

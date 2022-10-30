@@ -11,6 +11,7 @@
     "@mui/lab": "^5.0.0-alpha.105",
     "@mui/material": "^5.10.11",
     "@react-oauth/google": "^0.2.8",
+    "@reactour/tour": "^3.1.6",
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.3.0",
     "aws-amplify": "^4.3.37",
