@@ -1,4 +1,6 @@
-FROM nvidia/cuda:11.0.3-base-ubuntu20.04 
+
+
+FROM nvidia/cuda:11.0.3-base-ubuntu20.04
 
 WORKDIR /app
 COPY requirements.txt requirements.txt
