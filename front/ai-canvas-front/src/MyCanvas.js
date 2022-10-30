@@ -23,6 +23,7 @@ import Box from "@mui/material/Box";
 import PanToolIcon from '@mui/icons-material/PanTool';
 import HighlightAltIcon from '@mui/icons-material/HighlightAlt';
 import CoordsModal from "./coordsModal";
+import {useTour} from "@reactour/tour";
 
 Amplify.configure(gen.config)
 
@@ -53,7 +54,7 @@ const CHOOSE_TYPE = "CHOOSE_TYPE";
 //camera speed
 const CAMERA_ZOOM_SPEED = 1.1;
 const MIN_ZOOM = 0.01;
-const MAX_ZOOM = 1;
+const MAX_ZOOM = 10;
 
 let generation_type;
 let cursor_pos = [0, 0];
@@ -68,6 +69,7 @@ const MyCanvas = (props) => {
 
   const [currentMode, setCurrentMode] = useState(VIEW);
   const [currentState, setCurrentState] = useState(IDLE);
+  const {setIsOpen} = useTour()
 
   const [selectRect, setSelectRect] = useState({
     x: 0,
@@ -115,6 +117,15 @@ const MyCanvas = (props) => {
   const [cameraZoomStart, setCameraZoomStart] = React.useState(1);
 
   const [user, loading, error] = useAuthState(auth);
+
+
+  useEffect(() => {
+    let initial_tour_done = localStorage.getItem("initial_tour_done")
+    if (initial_tour_done === null) {
+      setIsOpen(true);
+      localStorage.setItem("initial_tour_done", true)
+    }
+  }, []);
 
   function handle_receive_from_socket(data) {
     data = JSON.parse(data)
@@ -650,16 +661,17 @@ const MyCanvas = (props) => {
   }
 
   return (
-    <div style={{ cursor: cursor }}>
-      <div className="top_button_bar">
+      <div style={{cursor: cursor}} className={"ImageCanvas"}
+      >
+        <div className="top_button_bar">
 
 
-        {oneClickControls &&
-            <>
-              {/*<button onClick={() => switchMode(VIEW)}> View </button>*/}
-              {/*<button onClick={() => switchMode(EDIT)}> Edit </button>*/}
-            </>
-        }
+          {oneClickControls &&
+              <>
+                {/*<button onClick={() => switchMode(VIEW)}> View </button>*/}
+                {/*<button onClick={() => switchMode(EDIT)}> Edit </button>*/}
+              </>
+          }
 
 
         {/*<button onClick={() => handleClickRefresh()}> Refresh</button>*/}
@@ -684,14 +696,15 @@ const MyCanvas = (props) => {
         </Fab>
       </Box>
 
-      <Box style={{position: 'absolute', bottom: 1, left: "50%", transform: "translateX(-50%)", zIndex: 99}}>
-        <Fab aria-label="help" style={{margin: 5}} onClick={() => switchMode(VIEW)}>
-          <PanToolIcon color={currentMode === VIEW ? "primary" : "disabled"}/>
-        </Fab>
-        <Fab aria-label="refresh" onClick={() => switchMode(EDIT)}>
-          <HighlightAltIcon color={currentMode === EDIT ? "primary" : "disabled"}/>
-        </Fab>
-      </Box>
+        <Box className={"ModeSelectionButtons"}
+             style={{position: 'absolute', bottom: 1, left: "50%", transform: "translateX(-50%)", zIndex: 99}}>
+          <Fab aria-label="help" style={{margin: 5}} onClick={() => switchMode(VIEW)}>
+            <PanToolIcon color={currentMode === VIEW ? "primary" : "disabled"}/>
+          </Fab>
+          <Fab aria-label="refresh" onClick={() => switchMode(EDIT)}>
+            <HighlightAltIcon color={currentMode === EDIT ? "primary" : "disabled"}/>
+          </Fab>
+        </Box>
 
       {/*<MyDrawer*/}
       {/*    camera={props.camera}*/}
@@ -702,6 +715,7 @@ const MyCanvas = (props) => {
       {/*/>*/}
 
       <Stage
+
           ref={stageRef}
 
           className={"canvas"}
@@ -710,19 +724,20 @@ const MyCanvas = (props) => {
           height={canvasMeta.h}
 
           onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onWheel={handleMouseScroll}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onWheel={handleMouseScroll}
 
-        onTouchStart={handleTouchDown}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchUp}
+          onTouchStart={handleTouchDown}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchUp}
       >
 
-        <Layer ref={imageLayerRef}>
+        <Layer ref={imageLayerRef}
+        >
           <Rect
-            width={canvasMeta.w}
-            height={canvasMeta.h}
+              width={canvasMeta.w}
+              height={canvasMeta.h}
           />
 
           {

@@ -93,7 +93,7 @@ export default function ProfileMenu(props) {
 
             <IconButton onClick={handleClickProfile} style={{color: 'inherit'}}>
                 <Typography sx={{marginRight: "5px"}} variant={'h5'}>{user.displayName}</Typography>
-                <AccountCircleIcon/>
+                <AccountCircleIcon fontSize={'large'}/>
             </IconButton>
             <Menu
                 id="basic-menu"

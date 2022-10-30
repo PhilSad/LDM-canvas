@@ -2,25 +2,27 @@ import Modal from 'react-bootstrap/Modal';
 import React, {useState} from 'react';
 import HelpIcon from "@mui/icons-material/Help";
 import Button from "@mui/material/Button";
+import {useTour} from "@reactour/tour";
 
 
 export default function HelpModalButton({show}) {
   const [showHelpModal, setShowHelpModal] = useState(show);
 
   const handleClose = () => setShowHelpModal(false);
-  const handleShow = () => setShowHelpModal(true);
+    const handleShow = () => setShowHelpModal(true);
+    const {setIsOpen} = useTour()
 
-  return (
-      <>
-        <HelpIcon onClick={() => handleShow()}/>
+    return (
+        <>
+            <HelpIcon onClick={() => setIsOpen(true)}/>
 
 
-        <Modal show={showHelpModal} onHide={handleClose} style={{marginTop: "50px"}}>
-            <Modal.Header closeButton>
-                <Modal.Title>How to use Kollai infinite canvas</Modal.Title>
-            </Modal.Header>
-            <Modal.Body>
-                <b>View Mode</b> : move the camera, explore the canvas
+            <Modal show={showHelpModal} onHide={handleClose} style={{marginTop: "50px"}}>
+                <Modal.Header closeButton>
+                    <Modal.Title>How to use Kollai infinite canvas</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <b>View Mode</b> : move the camera, explore the canvas
                 <br/><br/>
                 <b>Edit mode</b> : make a selection and select one of the modes
                 <ul>

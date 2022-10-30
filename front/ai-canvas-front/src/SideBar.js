@@ -24,17 +24,20 @@ const SideBar = props => {
                 room={room}
             />
 
-            <button onClick={props.toggleSidebar} className="sidebar-toggle">
+            <button
+                onClick={props.toggleSidebar}
+                className="sidebar-toggle"
+            >
                 {props.isOpen ? ">" : "<"}
             </button>
 
             {false &&
                 <>
                     <h4> Steps </h4>
-                    <input type="range" name="vol" min="0" max="50" />
+                    <input type="range" name="vol" min="0" max="50"/>
 
                     <h4> Guidance scale </h4>
-                    <input type="range" name="vol" min="0" max="50" />
+                    <input type="range" name="vol" min="0" max="50"/>
 
                     <h4> Seed </h4>
                     <input type="text" />
