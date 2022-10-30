@@ -83,7 +83,7 @@ export default function HeaderAppBar(props) {
                         {/*<Typography variant="h6" component="div" style={{marginRight: 'auto'}}>*/}
                         {/*    Koll AI*/}
                         {/*</Typography>*/}
-                        <img src="./android-chrome-192x192.png" sx={{mr: 2}}
+                        <img src="./android-chrome-384x384.png" sx={{mr: 2}}
                              style={{maxWidth: 'auto', maxHeight: '50px', marginRight: '10px'}}/>
 
                         {/*TAB LIST*/}
