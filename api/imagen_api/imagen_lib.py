@@ -102,7 +102,7 @@ def generate_image(prompt, w, h, init_image=None, mask=None):
     return generated
 
 def new_image(prompt, width, height):
-    gen = pipe.text2img("An astronaut riding a horse")
+    gen = pipe.text2img(prompt)
     image = gen.images[0]
     return image
 
