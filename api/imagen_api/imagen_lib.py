@@ -108,7 +108,7 @@ def new_image(prompt, width, height):
 
 def image_to_image(prompt, width, height, init_image):
     im = PIL.Image.open(BytesIO(base64.b64decode(init_image)))
-    gen = pipe.img2img(prompt=prompt, init_image=im, strength=0.75, guidance_scale=7.5).images
+    gen = pipe.img2img(prompt=prompt, init_image=im, strength=0.75, guidance_scale=7.5)
     image = gen.images[0]
     return image
 
