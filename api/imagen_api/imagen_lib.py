@@ -12,7 +12,7 @@ from diffusers import StableDiffusionPipeline
 device = "cuda"
 
 pipe = StableDiffusionPipeline.from_pretrained(
-    "runwayml/stable-diffusion-v1-5",
+    "./models_bindings/models/stable-diffusion-v1-5",
     revision="fp16",
     torch_dtype=torch.float16,
 ).to(device)
