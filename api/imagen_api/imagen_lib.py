@@ -15,8 +15,9 @@ pipe = StableDiffusionPipeline.from_pretrained(
     "./models_bindings/models/stable-diffusion-v1-5",
     revision="fp16",
     torch_dtype=torch.float16,
+    custom_pipeline="stable_diffusion_mega"
 ).to(device)
-pipe.enable_attention_slicing(1)
+pipe.enable_attention_slicing()
 
 MAX_SIZE = 512
 STEPS = 50
@@ -101,24 +102,26 @@ def generate_image(prompt, w, h, init_image=None, mask=None):
     return generated
 
 def new_image(prompt, width, height):
-    return generate_image(prompt, width, height)
+    gen = pipe.text2img("An astronaut riding a horse")
+    image = gen.images[0]
+    return image
 
 def image_to_image(prompt, width, height, init_image):
     im = PIL.Image.open(BytesIO(base64.b64decode(init_image)))
-
-    return generate_image(prompt, width, height, im)
+    gen = pipe.img2img(prompt=prompt, init_image=im, strength=0.75, guidance_scale=7.5).images
+    image = gen.images[0]
+    return image
 
 def outpainting(prompt, width, height, init_image, strength=0.2):
     im = PIL.Image.open(BytesIO(base64.b64decode(init_image)))
 
-    img, mask = get_img_mask(im)
-    i = edge_pad(img,mask)
-    i = add_perlin(i,mask, strength=strength)
-
-    noise = PIL.Image.fromarray(i)
+    _, mask = get_img_mask(im)
     mask = PIL.Image.fromarray(mask)
 
-    return generate_image(prompt, width, height, noise, mask)
+    gen = pipe.inpaint(prompt=prompt, init_image=im, mask_image=mask_image, strength=0.75)
+    image = gen.images[0]
+
+    return image
 
 def inpaint_mask(prompt, width, height, init_image, mask):
     im = PIL.Image.open(BytesIO(base64.b64decode(init_image)))
