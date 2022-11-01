@@ -102,7 +102,7 @@ def generate_image(prompt, w, h, init_image=None, mask=None):
     return generated
 
 def new_image(prompt, width, height):
-    gen = pipe.text2img(prompt)
+    gen = pipe.text2img(prompt, )
     image = gen.images[0]
     return image
 
@@ -118,7 +118,7 @@ def outpainting(prompt, width, height, init_image, strength=0.2):
     _, mask = get_img_mask(im)
     mask = PIL.Image.fromarray(mask)
 
-    gen = pipe.inpaint(prompt=prompt, init_image=im, mask_image=mask_image, strength=0.75)
+    gen = pipe.inpaint(prompt=prompt, init_image=im, mask_image=mask, strength=0.75)
     image = gen.images[0]
 
     return image
