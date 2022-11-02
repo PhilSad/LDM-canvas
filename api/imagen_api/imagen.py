@@ -14,6 +14,20 @@ import os
 from dotenv import load_dotenv
 import sqlalchemy as db
 import datetime
+from diffusers.pipelines.stable_diffusion.safety_checker import StableDiffusionSafetyChecker
+from transformers import AutoFeatureExtractor
+import numpy as np
+
+
+# load safety model
+safety_model_id = "CompVis/stable-diffusion-safety-checker"
+safety_feature_extractor = AutoFeatureExtractor.from_pretrained(safety_model_id)
+safety_checker = StableDiffusionSafetyChecker.from_pretrained(safety_model_id)
+
+def check_not_safe(pil_image):
+  safety_checker_input = safety_feature_extractor(pil_image, return_tensors="pt")
+  _, has_nsfw_concept = safety_checker(images=np.array(pil_image), clip_input=safety_checker_input.pixel_values)
+  return has_nsfw_concept[0]
 
 
 project_id = "732264051436"
@@ -126,39 +140,41 @@ def callback(message: pubsub_v1.subscriber.message.Message) -> None:
     else:
         return
 
+    is_safe = not check_not_safe(generated)
+
+    # Get params
     posX = int(params['posX'])
     posY = int(params['posY'])
     room = params['room']
-
     b64prompt = params['prompt']
     prompt = base64.b64decode(b64prompt)
     prompt = prompt.decode("utf-8")
     
+    # Save to Bucket
     ts = str(datetime.datetime.now().strftime("%Y%m%d%H%M%S%f"))
     bucket_path = f'{room}/{ts}-{prompt}.webp'
+    save_path = f'/tmp/{ts}.webp'
 
+    save_to_bucket(save_path, generated, bucket_path)
+
+    # Send websocket to client
     data_to_add = dict(
-        path=bucket_path,
+        path=bucket_path if is_safe else None,
         posX=posX,
         posY=posY,
         width = width,
         height = height,
         prompt = prompt
     )
-
-
-    save_path = f'/tmp/{ts}.webp'
-    save_to_bucket(save_path, generated, bucket_path)
-
-    data_to_add['action'] = 'new_image'
+    data_to_add['action'] = 'new_image' if is_safe else 'unsafe_image'
     push_to_clients(room, data_to_add)
 
+    # Save to BDD
     data_to_bdd = dict(
         uuid = params['uuid'],
         path=bucket_path,
-        status = 'generated'
+        status = 'generated' if is_safe else 'unsafe'
     )
-
     requests.post('https://sql-actions-jujlepts2a-ew.a.run.app', json = dict(action="update_row", table="images",  data=data_to_bdd))
 
 
