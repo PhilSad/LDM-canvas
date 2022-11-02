@@ -164,6 +164,26 @@ const MyCanvas = (props) => {
       console.log(data.queue_size)
       addNewPlaceholder(data.posX, data.posY, data.width, data.height)
     }
+
+    if (data.action === "unsafe_image") {
+      removePlaceholder(data.posX, data.posY)
+
+      toast(<div onClick={() => {
+        camera.move(x, y, z)
+      }}>
+
+        Unsafe Image : {data.prompt} at ({data.posX}, {data.posY})
+      </div>, {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+
+    }
   }
 
   //socket
