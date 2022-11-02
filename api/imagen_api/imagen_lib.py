@@ -15,11 +15,15 @@ pipe = StableDiffusionPipeline.from_pretrained(
     "./models_bindings/models/stable-diffusion-v1-5",
     revision="fp16",
     torch_dtype=torch.float16,
+    safety_checker=None
+
 ).to(device)
-pipe.enable_attention_slicing(1)
+pipe.enable_attention_slicing()
 
 MAX_SIZE = 512
 STEPS = 50
+
+
 
 def get_img_mask(im):
     im = im.convert('RGBA')
@@ -89,6 +93,8 @@ def generate_image(prompt, w, h, init_image=None, mask=None):
             mask_image=mask,
             steps=50
             )[0]
+
+    
 
     # add transparency
     if(mask is not None):
