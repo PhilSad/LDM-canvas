@@ -77,7 +77,7 @@ def save_to_sql(data_to_add):
 
 
 def save_to_bucket(save_path, generated, bucket_path):
-    generated.save(save_path, quality=100)
+    generated.save(save_path, quality=80)
     blob_path_save_image = bucket.blob(bucket_path)
     blob_path_save_image.upload_from_filename(save_path)
 
@@ -110,7 +110,7 @@ def callback(message: pubsub_v1.subscriber.message.Message) -> None:
     action = data['action']
     params = data['params']
 
-    print(params)
+    # print(params)
 
     b64prompt = params['prompt']
     prompt = base64.b64decode(b64prompt)
@@ -123,24 +123,25 @@ def callback(message: pubsub_v1.subscriber.message.Message) -> None:
 
     if   action == 'new_image':
         generated = imagen.new_image(prompt, width, height)
+        is_safe = not check_not_safe(generated)
     
     elif action == 'img_to_img':
         init_image = params['init_image']
         generated = imagen.image_to_image(prompt, width, height, init_image)
+        is_safe = not check_not_safe(generated)
+
 
     elif action == 'outpainting':
         init_image = params['init_image']
-        generated = imagen.outpainting(prompt, width, height, init_image, strength=0.2)
+        generated, full_image  = imagen.outpainting(prompt, width, height, init_image, strength=0.2)
+        is_safe = not check_not_safe(full_image)
     
     elif action == 'inpaint_mask':
         init_image = params['init_image']
         mask = params['mask']
-        generated = imagen.inpaint_mask(prompt, width, height, init_image, mask)
-    
-    else:
-        return
+        generated, full_image = imagen.inpaint_mask(prompt, width, height, init_image, mask)
+        is_safe = not check_not_safe(full_image)
 
-    is_safe = not check_not_safe(generated)
 
     # Get params
     posX = int(params['posX'])
