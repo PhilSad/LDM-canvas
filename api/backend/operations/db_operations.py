@@ -73,7 +73,7 @@ def get_images_from_room(room):
                      images.c.posY,
                      images.c.timestamp,
                      images.c.status,
-                     images.c.path).where(db.or_(users.c.email == images.c.email, images.c.email is None ,images.c.email is None)).where(images.c.room == room)
+                     images.c.path).where(db.or_(users.c.email == images.c.email, images.c.email is None ,images.c.email is None)).where(images.c.room == room).where(images.c.status == 'generated')
     result = engine.execute(stmt)
     result_as_dict = result.mappings().all()
     result_as_dict = [dict(res) for res in result_as_dict]
