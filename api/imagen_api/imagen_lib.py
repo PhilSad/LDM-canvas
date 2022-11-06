@@ -7,14 +7,15 @@ from torch import autocast
 import scipy
 from scipy.spatial import cKDTree
 # pipe initialization
-from diffusers import StableDiffusionPipeline
+from diffusers import DiffusionPipeline
 
 device = "cuda"
 
-pipe = StableDiffusionPipeline.from_pretrained(
+pipe = DiffusionPipeline.from_pretrained(
     "./models_bindings/models/stable-diffusion-v1-5",
     revision="fp16",
     torch_dtype=torch.float16,
+    custom_pipeline="stable_diffusion_mega",
     safety_checker=None
 
 ).to(device)
@@ -52,8 +53,12 @@ def adjust_size(width,height):
     return width, height, round_width, round_height,
 
 def diffuse(prompt, n_images=1, width=512, height=512, steps=50, init_image=None, mask_image=None, guidance_scale=7.5, strength=0.8, generator=None):
+    if init_image is not None:
+        init_image.save('init_image.png')
+        mask_image.save('mask.png')
+
     with autocast("cuda"):
-        generated = pipe(
+        generated = pipe.text2img(
             prompt=[prompt]*n_images,
             height=height,
             width=width,
@@ -100,19 +105,26 @@ def generate_image(prompt, w, h, init_image=None, mask=None):
     if(mask is not None):
         ga = np.array(generated.convert('RGBA'))
         ga[:, :, -1] = np.array(mask)[:, :, -1]
-        generated = PIL.Image.fromarray(ga)
+        generated_with_transparency = PIL.Image.fromarray(ga)
+        generated_with_transparency = generated_with_transparency.resize((width, height), PIL.Image.ANTIALIAS)
+        return generated_with_transparency, generated 
+
 
     generated = generated.resize((width, height), PIL.Image.ANTIALIAS)
     
     return generated
 
 def new_image(prompt, width, height):
-    return generate_image(prompt, width, height)
+    gen = pipe.text2img(prompt, )
+    image = gen.images[0]
+    return image
 
 def image_to_image(prompt, width, height, init_image):
-    im = PIL.Image.open(BytesIO(base64.b64decode(init_image)))
-
-    return generate_image(prompt, width, height, im)
+    im = PIL.Image.open(BytesIO(base64.b64decode(init_image))).convert('RGB')
+    im.save('im.png')
+    gen = pipe.img2img(prompt=prompt, init_image=im, strength=0.75, guidance_scale=7.5)
+    image = gen.images[0]
+    return image
 
 def outpainting(prompt, width, height, init_image, strength=0.2):
     im = PIL.Image.open(BytesIO(base64.b64decode(init_image)))
@@ -121,10 +133,23 @@ def outpainting(prompt, width, height, init_image, strength=0.2):
     i = edge_pad(img,mask)
     i = add_perlin(i,mask, strength=strength)
 
-    noise = PIL.Image.fromarray(i)
+    noise = PIL.Image.fromarray(i).convert('RGB')
     mask = PIL.Image.fromarray(mask)
 
-    return generate_image(prompt, width, height, noise, mask)
+    gen = pipe.inpaint(prompt=prompt, init_image=noise, mask_image=mask, strength=0.75)
+    generated = gen.images[0]
+
+    ga = np.array(generated.convert('RGBA'))
+    print(ga.shape)
+    print(np.array(mask).shape)
+    ga[:, :, -1] = np.array(mask)[:, :]
+    generated_with_transparency = PIL.Image.fromarray(ga)
+    generated_with_transparency = generated_with_transparency.resize((width, height), PIL.Image.ANTIALIAS)
+
+    generated.save('generated.png')
+    generated_with_transparency.save('generated_with_transparency.png')
+
+    return generated_with_transparency, generated
 
 def inpaint_mask(prompt, width, height, init_image, mask):
     im = PIL.Image.open(BytesIO(base64.b64decode(init_image)))
@@ -133,7 +158,8 @@ def inpaint_mask(prompt, width, height, init_image, mask):
     return generate_image(prompt, width, height, im, mask)
 
 def add_perlin(img, mask, strength=0.1):
-    n = np.asarray(diffuse(prompt='', height=img.shape[0], width=img.shape[1], steps=1)[0])
+    n = pipe.text2img(prompt='', height=img.shape[0], width=img.shape[1], num_inference_steps=1).images[0]
+    n = np.asarray(n)
     n = n - 128
     
     n = np.int_(strength*n).astype(np.uint16) + img
