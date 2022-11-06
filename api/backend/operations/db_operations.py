@@ -101,6 +101,8 @@ def user_can_generate(email, sec_interval=2):
     stmt = db.select(images.c.timestamp).where(images.columns.email == email).order_by(db.desc(images.c.imageID)).limit(1)
     result = engine.execute(stmt)
     res = list(result)
+    if len(res) == 0:
+        return True
     last_generation = res[0][0]
     print(last_generation)
     current_time_utc = datetime.datetime.now().replace(tzinfo=LOCAL_TIMEZONE).astimezone(tz=datetime.timezone.utc).replace(tzinfo=None)
