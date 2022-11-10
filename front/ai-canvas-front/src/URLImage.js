@@ -1,5 +1,6 @@
 import React from 'react';
 import {Group, Image, Rect} from 'react-konva';
+import { toast } from 'react-toastify';
 
 class URLImage extends React.Component {
     state = {
@@ -40,7 +41,8 @@ class URLImage extends React.Component {
     handleClick = () => {
         console.log(this.props.prompt);
         console.log(this.props.pseudo);
-        console.log(this.props.timestamp)
+        console.log(this.props.timestamp);
+        toast.info()
     }
 
     handleLoad = () => {
@@ -64,7 +66,8 @@ class URLImage extends React.Component {
                 y={this.props.y - (this.state.infoVisible ? 0 : 0)}
                 onMouseEnter={this.handleEnter}
                 onMouseLeave={this.handleLeave}
-                onClick={this.handleClick}
+                onClick={() => this.props.onClickImage(this.props.prompt)}
+                // onClick={() => console.log(this.props.prompt)}
             >
                 {this.state.image === null &&
 
@@ -81,7 +84,7 @@ class URLImage extends React.Component {
                     height={this.props.height + (this.state.infoVisible ? 0 : 0)}
                     image={this.state.image}
                     ref={(node) => { this.imageNode = node; }}
-                    onClick={this.handleClick}
+                    // onClick={() => this.props.onClickImage(this.props.prompt)}
                 />
             </Group>
         );

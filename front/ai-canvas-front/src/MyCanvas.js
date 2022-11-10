@@ -134,6 +134,23 @@ const MyCanvas = (props) => {
     }
   }, []);
 
+
+  function onClickImage(prompt){
+      toast.info(<div>
+
+      Prompt: {prompt}
+    </div >, {
+      position: "bottom-center",
+      autoClose: 5000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+    });
+  }
+
+
   function handle_receive_from_socket(data) {
     data = JSON.parse(data)
 
@@ -801,6 +818,7 @@ const MyCanvas = (props) => {
                         mode={currentMode}
                         pseudo={img.pseudo}
                         timestamp={img.timestamp}
+                        onClickImage={onClickImage}
                     />)
                 }
               }
