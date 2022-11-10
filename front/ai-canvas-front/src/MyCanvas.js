@@ -54,7 +54,7 @@ const CHOOSE_TYPE = "CHOOSE_TYPE";
 //camera speed
 const CAMERA_ZOOM_SPEED = 1.1;
 const MIN_ZOOM = 0.01;
-const MAX_ZOOM = 10;
+const MAX_ZOOM = 1;
 
 let generation_type;
 let cursor_pos = [0, 0];

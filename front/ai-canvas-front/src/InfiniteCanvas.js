@@ -120,6 +120,7 @@ const InfiniteCanvas = (props) => {
     return (
         <>
             <TourProvider steps={tourSteps}
+                          showDots={false}
                           nextButton={({
                                            Button: TourButton,
                                            currentStep,
