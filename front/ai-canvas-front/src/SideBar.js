@@ -75,24 +75,6 @@ const SideBar = props => {
                 </table>
             </div>
 
-            <h4>Parameters</h4>
-
-            <div class="checkboxes">
-                <label>
-                    <input type="checkbox" onClick={() => props.setIsMobile(prevState => !prevState)} />
-                    <span>Mobile controls</span>
-                </label>
-            </div>
-
-
-            {!user ? (
-                    <SignInModalButton/>
-
-            ) : (
-                <button onClick={() => {
-                    logout()
-                }}> Logout </button>
-            )}
 
 
         </div>
