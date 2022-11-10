@@ -92,7 +92,7 @@ export default function ProfileMenu(props) {
             </Modal>
 
             <IconButton onClick={handleClickProfile} style={{color: 'inherit'}}>
-                <Typography sx={{marginRight: "5px"}} variant={'h5'}>{user.displayName}</Typography>
+                {/* <Typography sx={{marginRight: "5px"}} variant={'h5'}>{user.displayName}</Typography> */}
                 <AccountCircleIcon fontSize={'large'}/>
             </IconButton>
             <Menu
@@ -103,6 +103,7 @@ export default function ProfileMenu(props) {
                 MenuListProps={{'aria-labelledby': 'basic-button'}}>
 
                 <MenuItem onClick={handleClicMenuUpdateProfile}>Edit Profile</MenuItem>
+                <MenuItem>{user.displayName}</MenuItem>
                 <MenuItem onClick={handleMenuLogout}>Logout</MenuItem>
             </Menu>
 
