@@ -108,10 +108,10 @@ const InfiniteCanvas = (props) => {
         }
 
         const onPageResize = () => {
-            setCanvasMeta({
-                w: window.innerWidth,
-                h: window.innerHeight,
-            });
+            // setCanvasMeta({
+            //     w: window.innerWidth,
+            //     h: window.innerHeight,
+            // });
         }
         window.addEventListener("resize", onPageResize);
         window.addEventListener("load", onPageLoad);
