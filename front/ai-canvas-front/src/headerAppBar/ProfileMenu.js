@@ -102,8 +102,8 @@ export default function ProfileMenu(props) {
                 onClose={handleCloseMenuProfile}
                 MenuListProps={{'aria-labelledby': 'basic-button'}}>
 
-                <MenuItem onClick={handleClicMenuUpdateProfile}>Edit Profile</MenuItem>
                 <MenuItem>{user.displayName}</MenuItem>
+                <MenuItem onClick={handleClicMenuUpdateProfile}>Edit Profile</MenuItem>
                 <MenuItem onClick={handleMenuLogout}>Logout</MenuItem>
             </Menu>
 
