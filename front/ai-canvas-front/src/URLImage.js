@@ -67,7 +67,7 @@ class URLImage extends React.Component {
                 onMouseEnter={this.handleEnter}
                 onMouseLeave={this.handleLeave}
                 onDblTap={() => this.props.onClickImage(this.props.prompt)}
-                onClick={() => this.props.onClickImage(this.props.prompt)}
+                onDblClick={() => this.props.onClickImage(this.props.prompt)}
 
                 // onClick={() => console.log(this.props.prompt)}
             >
