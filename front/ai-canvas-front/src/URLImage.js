@@ -66,8 +66,9 @@ class URLImage extends React.Component {
                 y={this.props.y - (this.state.infoVisible ? 0 : 0)}
                 onMouseEnter={this.handleEnter}
                 onMouseLeave={this.handleLeave}
-                onTap={() => this.props.onClickImage(this.props.prompt)}
+                onDblTap={() => this.props.onClickImage(this.props.prompt)}
                 onClick={() => this.props.onClickImage(this.props.prompt)}
+
                 // onClick={() => console.log(this.props.prompt)}
             >
                 {this.state.image === null &&
