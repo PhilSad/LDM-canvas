@@ -136,7 +136,19 @@ const MyCanvas = (props) => {
 
 
   function onClickImage(prompt){
-      toast.info(<div>
+      toast.info(<div onClick={() => {
+        navigator.clipboard.writeText(prompt)
+        toast.success(<p>Prompt copied to clipboard</p>, {
+            position: "bottom-center",
+            autoClose: 2000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+      
+        })
+      }}>
 
       Prompt: {prompt}
     </div >, {
