@@ -12,7 +12,7 @@ const InfiniteCanvas = (props) => {
         setSideBarOpen(!sidebarOpen);
     };
 
-    const [modifiers, setModifiers] = useState({positive:"", negative:"lowres, bad_anatomy, error_body, error_hair, error_arm, error_hands, bad_hands, error_fingers, bad_fingers, missing_fingers, error_legs, bad_legs, multiple_legs, missing_legs, error_lighting, error_shadow, error_reflection, text, error, extra_digit, fewer_digits, cropped, worst_quality, low_quality, normal_quality, jpeg_artifacts, signature, watermark, username, blurry"})
+    const [modifiers, setModifiers] = useState({positive:"", negative:"lowres, blurry"})
     const [history, setHistory] = useState([])
 
     const [isLogged, setIsLogged] = useState(false);
