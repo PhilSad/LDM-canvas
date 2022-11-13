@@ -1,11 +1,15 @@
-import {Divider, Fab, IconButton, List, ListItemButton, SwipeableDrawer, TextField, Typography} from "@mui/material";
+import {Divider,Button, Fab, IconButton, List, ListItemButton, SwipeableDrawer, TextField, Typography, Collapse} from "@mui/material";
 import KeyboardDoubleArrowLeftIcon from '@mui/icons-material/KeyboardDoubleArrowLeft';
 import React from "react";
 import KeyboardDoubleArrowRightIcon from '@mui/icons-material/KeyboardDoubleArrowRight';
 
+
 export default function MyDrawer(props) {
 
     const [isOpen, setIsopen] = React.useState(false)
+    const [expandModifier, setExpandModifier] = React.useState(true)
+    const [expandHistory, setExpandHistory] = React.useState(true)
+
 
 
     return (
@@ -21,47 +25,88 @@ export default function MyDrawer(props) {
                 open={isOpen}
                 onClose={() => setIsopen(false)}
                 variant={"persistent"}
+                PaperProps={{
+                    sx: {
+                      backgroundColor: "rgb(231, 244, 254)",
+                      maxWidth:"300px"
+                    //   color: "lightblue",
+                    }
+                  }}
             >
-                <IconButton
+                <Button
+                    variant="outlined"
                     onClick={() => setIsopen(false)}
+                    style={{margin: "5px"}}
                 >
                     {/* <KeyboardDoubleArrowRightIcon/> */}
                     Close
-                </IconButton>
+                </Button>
 
-                <h3></h3>
+                <Typography variant={('h5')}
+                            sx={{marginTop: '10px', marginRight: 'auto', marginLeft: 'auto'}}
+                            onClick={() => setExpandModifier(!expandModifier)}>
+                                Modifiers
 
-                <TextField
-                    id="outlined-multiline-flexible"
-                    label="Modifiers"
-                    multiline
-                    maxRows={4}
-                    onChange={(e) => props.setModifiers(e.target.value)}
-                />
+                </Typography>
+                
+                <Collapse in={expandModifier}>
+                    <TextField
+                        label="Positive Modifiers"
+                        multiline
+                        maxRows={4}
+                        value={props.modifiers.positive}
+                        onChange={(e) => props.setModifiers({positive: e.target.value})}
+                        style={{background:"white", margin:'5px', width:"100%"}}
+                    />
+                    <br/>
+                    {/* <br/>
+                    <br/>
+                    <br/> */}
+                    <TextField
+                        label="Negative Modifiers"
+                        multiline
+                        maxRows={4}
+                        value={props.modifiers.negative}
+                        onChange={(e) => props.setModifiers({negative : e.target.value})}
+                        style={{background:"white", margin:'5px', width:"100%"}}
 
+                    />
+                    <br/>
+                </Collapse>
 
-                <Typography variant={('h4')}
-                            sx={{marginTop: '10px', marginRight: 'auto', marginLeft: 'auto'}}>History</Typography>
-                <List>
-                    {props.history.map((data) => {
-                        var z = Math.min(props.canvasMeta.w / +data.width, props.canvasMeta.h / +data.height) * 0.5;
-                        var x = +data.posX - (props.canvasMeta.w / 2) / z + +data.width / 2
-                        var y = +data.posY - (props.canvasMeta.h / 2) / z + +data.height / 2
+                <Typography variant={('h5')}
+                            sx={{marginTop: '10px', marginRight: 'auto', marginLeft: 'auto'}}
+                            onClick={() => setExpandHistory(!expandHistory)}>History</Typography>
+                <br/>
+                
+                <div>
+                    <Collapse in={expandHistory}>
+                    <List style={{ maxHeight:"150px", overflow:"auto", background:"white", margin:"5px"}}>
+                        {props.history.map((data) => {
+                            var posX = data.x;
+                            var posY = data.y;
+                            var height = data.h;
+                            var width  = data.w;
 
-                        return (<>
-                                <Divider sx={{borderBottomColor: 'black'}}/>
+                            var z = Math.min(props.canvasMeta.w / + width, props.canvasMeta.h / + height) * 0.5;
+                            var x = + posX - (props.canvasMeta.w / 2) / z + +width / 2
+                            var y = + posY - (props.canvasMeta.h / 2) / z + +height / 2
+                            return (<>
+                                    <Divider sx={{borderBottomColor: 'black'}}/>
 
-                                <ListItemButton onClick={() => {
-                                    props.camera.move(x, y, z)
-                                }}>{data.prompt}</ListItemButton>
-                            </>
-                        )
-                    })
+                                    <ListItemButton onClick={() => {
+                                        props.camera.move(x, y, z)
+                                    }}>{data.prompt}</ListItemButton>
+                                </>
+                            )
+                        })
 
-                    }
-                    <Divider sx={{borderBottomColor: 'black'}}/>
+                        }
+                        <Divider sx={{borderBottomColor: 'black'}}/>
 
-                </List>
+                    </List>
+                    </Collapse>
+                </div>
 
             </SwipeableDrawer>
         </>

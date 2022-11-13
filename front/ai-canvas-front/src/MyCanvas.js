@@ -119,6 +119,8 @@ const MyCanvas = (props) => {
   const [user, loading, error] = useAuthState(auth);
   const {setIsOpen, currentStep, isOpen, setCurrentStep} = useTour()
 
+
+
 //   Refresh client token
   useEffect(()=>{
       const interval = setInterval(() => {
@@ -436,6 +438,9 @@ const MyCanvas = (props) => {
     // setImageDivList(prevState => [img, ...prevState]);
     // setImageDivList([img])
 
+    //add to history
+    props.setHistory(prevState => [ img, ...prevState,])
+
   }
 
   function handleDown() {
@@ -682,7 +687,7 @@ const MyCanvas = (props) => {
     var w = Math.floor(width)
     var h = Math.floor(height)
 
-    var prompt = document.getElementById('prompt_input').value + ' ' + props.modifiers
+    var prompt = document.getElementById('prompt_input').value + ' ' + props.modifiers.positive
     document.getElementById('prompt_input').value = ''
 
     hideSelectionRect();
@@ -694,7 +699,8 @@ const MyCanvas = (props) => {
       'posX': x,
       'posY': y,
       'width': w,
-      'height': h
+      'height': h,
+      'negative_prompt': props.modifiers.negative
     }
 
     if (generation_type === "outpainting" || generation_type === "img_to_img") {
@@ -777,13 +783,14 @@ const MyCanvas = (props) => {
           </Fab>
         </Box>
 
-      {/* <MyDrawer
+      <MyDrawer
           camera={props.camera}
+          modifiers={props.modifiers}
           setModifiers={props.setModifiers}
           history={props.history}
           canvasMeta={props.canvasMeta}
 
-      /> */}
+      />
 
       <Stage
 
