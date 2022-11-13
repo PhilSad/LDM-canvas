@@ -179,7 +179,7 @@ const InfiniteCanvas = (props) => {
 
                 />
 
-                <SideBar
+                {/* <SideBar
                     className={"Sidebar"}
                     camera={camera}
                     isOpen={sidebarOpen}
@@ -190,7 +190,7 @@ const InfiniteCanvas = (props) => {
                     setIsLogged={setIsLogged}
                     setCredential={setCredential}
                     setIsMobile={setIsMobile}
-                />
+                /> */}
 
             </TourProvider>
 
