@@ -12,7 +12,7 @@ const InfiniteCanvas = (props) => {
         setSideBarOpen(!sidebarOpen);
     };
 
-    const [modifiers, setModifiers] = useState("")
+    const [modifiers, setModifiers] = useState({positive:"", negative:"lowres, blurry"})
     const [history, setHistory] = useState([])
 
     const [isLogged, setIsLogged] = useState(false);
@@ -173,10 +173,13 @@ const InfiniteCanvas = (props) => {
                     isMobile={isMobile}
                     room={room}
                     canvasMeta={canvasMeta}
+                    
+                    setModifiers={setModifiers}
+                    history={history}
 
                 />
 
-                <SideBar
+                {/* <SideBar
                     className={"Sidebar"}
                     camera={camera}
                     isOpen={sidebarOpen}
@@ -187,7 +190,7 @@ const InfiniteCanvas = (props) => {
                     setIsLogged={setIsLogged}
                     setCredential={setCredential}
                     setIsMobile={setIsMobile}
-                />
+                /> */}
 
             </TourProvider>
 
