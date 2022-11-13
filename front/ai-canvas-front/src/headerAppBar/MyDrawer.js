@@ -10,7 +10,7 @@ export default function MyDrawer(props) {
 
     return (
         <>
-            <Fab style={{position: 'absolute', right: 0}}
+            <Fab style={{position: 'absolute', right: 0, top: '50px'}}
                  onClick={() => setIsopen(true)}
             >
                 <KeyboardDoubleArrowLeftIcon/>
@@ -25,7 +25,7 @@ export default function MyDrawer(props) {
                 <IconButton
                     onClick={() => setIsopen(false)}
                 >
-                    <KeyboardDoubleArrowRightIcon/>
+                    {/* <KeyboardDoubleArrowRightIcon/> */}
                     Close
                 </IconButton>
 

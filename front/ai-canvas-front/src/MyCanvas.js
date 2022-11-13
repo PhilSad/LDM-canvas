@@ -24,6 +24,7 @@ import PanToolIcon from '@mui/icons-material/PanTool';
 import HighlightAltIcon from '@mui/icons-material/HighlightAlt';
 import CoordsModal from "./coordsModal";
 import {useTour} from "@reactour/tour";
+import MyDrawer from "./headerAppBar/MyDrawer"
 
 Amplify.configure(gen.config)
 
@@ -116,15 +117,22 @@ const MyCanvas = (props) => {
   const [cameraZoomStart, setCameraZoomStart] = React.useState(1);
 
   const [user, loading, error] = useAuthState(auth);
-
   const {setIsOpen, currentStep, isOpen, setCurrentStep} = useTour()
 
+//   Refresh client token
+  useEffect(()=>{
+      const interval = setInterval(() => {
+          if (user){
+            const expiration_time = user.stsTokenManager.expirationTime;
+            if (Date.now() > expiration_time){
+                    console.log('Refreshing token');
+                    user.getIdToken(true)
+                }
+        }
 
-  // useEffect(()=>{
-  //   if(currentStep === 6 && isOpen){
-  //     setIsOpen(false);
-  //   }
-  // }, [currentStep])
+          
+      }, 10 * 1000)
+  })
 
   useEffect(() => {
     let initial_tour_done = localStorage.getItem("initial_tour_done")
@@ -136,6 +144,7 @@ const MyCanvas = (props) => {
 
 
   function onClickImage(prompt){
+      console.log(user)
       toast.info(<div onClick={() => {
         navigator.clipboard.writeText(prompt)
         toast.success(<p>Prompt copied to clipboard</p>, {
@@ -677,7 +686,7 @@ const MyCanvas = (props) => {
     document.getElementById('prompt_input').value = ''
 
     hideSelectionRect();
-
+    user.getIdToken(true);
     var imageParamsDict = {
       'credential': user.accessToken,
       'prompt': btoa(prompt),
@@ -768,13 +777,13 @@ const MyCanvas = (props) => {
           </Fab>
         </Box>
 
-      {/*<MyDrawer*/}
-      {/*    camera={props.camera}*/}
-      {/*    setModifiers={props.setModifiers}*/}
-      {/*    history={props.history}*/}
-      {/*    canvasMeta={props.canvasMeta}*/}
+      {/* <MyDrawer
+          camera={props.camera}
+          setModifiers={props.setModifiers}
+          history={props.history}
+          canvasMeta={props.canvasMeta}
 
-      {/*/>*/}
+      /> */}
 
       <Stage
 

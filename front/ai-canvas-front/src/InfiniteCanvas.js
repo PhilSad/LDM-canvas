@@ -173,6 +173,9 @@ const InfiniteCanvas = (props) => {
                     isMobile={isMobile}
                     room={room}
                     canvasMeta={canvasMeta}
+                    
+                    setModifiers={setModifiers}
+                    history={history}
 
                 />
 
