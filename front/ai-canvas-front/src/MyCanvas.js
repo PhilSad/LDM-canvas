@@ -710,6 +710,9 @@ const MyCanvas = (props) => {
     }
 
     var url_function_imagen_with_action = URL_FUNCTION_IMAGEN + '?action=' + generation_type;
+    if (process.env.REACT_APP_TOPIC_ID !== undefined){
+        url_function_imagen_with_action += "&topic_id=" + process.env.REACT_APP_TOPIC_ID;
+    }
     fetch(url_function_imagen_with_action, {
       method: 'POST',
       headers: {

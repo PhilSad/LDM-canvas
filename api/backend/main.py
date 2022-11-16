@@ -32,7 +32,7 @@ def imagen():
         topic_id = DEFAULT_TOPIC_ID
     
     
-    err = gpu_operations.imagen(action, params)
+    err = gpu_operations.imagen(action, params, topic_id)
 
     if err == -1:
         return('Unable to verify auth token. Did you login?', 501)
