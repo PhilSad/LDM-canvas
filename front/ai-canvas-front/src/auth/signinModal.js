@@ -12,7 +12,7 @@ export default function SignInModalButton(props) {
   return (
     <>
         <Button onClick={handleShow} color={'inherit'} variant={"outlined"} size="large" >
-            Log In
+            Login
         </Button>
 
       <Modal show={showModal} onHide={handleClose} style={{marginTop: "50px"}}>

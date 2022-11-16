@@ -91,10 +91,10 @@ export default function ProfileMenu(props) {
                 </Modal.Body>
             </Modal>
 
-            <IconButton onClick={handleClickProfile} style={{color: 'inherit'}}>
+            <Button onClick={handleClickProfile} style={{color: 'inherit', border:'1px solid white', borderRadius:"10px"}}>
                 {/* <Typography sx={{marginRight: "5px"}} variant={'h5'}>{user.displayName}</Typography> */}
                 <AccountCircleIcon fontSize={'large'}/>
-            </IconButton>
+            </Button>
             <Menu
                 id="basic-menu"
                 anchorEl={anchorEl}
