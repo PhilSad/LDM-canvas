@@ -12,6 +12,7 @@ import {useAuthState} from "react-firebase-hooks/auth";
 import AddIcon from '@mui/icons-material/Add';
 import Modal from "react-bootstrap/Modal";
 import ProfileMenu from "./ProfileMenu";
+import SocialMenu from "./SocialMenu";
 
 function useForceUpdate() {
     const [value, setValue] = useState(0); // integer state
@@ -107,10 +108,12 @@ export default function HeaderAppBar(props) {
                                 <Tab icon={<AddIcon/>} value={"+"}/>
                             </TabList>
                         </TabContext>
-
+                        
+                        <SocialMenu />
 
                         {/* LOGIN / LOGOUT Button */}
-                        <Box className={"ProfilButton"}>
+                        <div className={"ProfilButton"}>
+
                             {!user ? (
                                 <SignInModalButton onSuccess={(pseudo) => setDisplayedName(pseudo)}
                                                    onUserChange={forceUpdate}/>
@@ -120,7 +123,7 @@ export default function HeaderAppBar(props) {
                                              onUserChange={forceUpdate}/>
                             )}
 
-                        </Box>
+                        </div>
 
                     </Toolbar>
                 </AppBar>
