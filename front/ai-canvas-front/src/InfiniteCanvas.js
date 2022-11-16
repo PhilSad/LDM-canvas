@@ -12,7 +12,7 @@ const InfiniteCanvas = (props) => {
         setSideBarOpen(!sidebarOpen);
     };
 
-    const [modifiers, setModifiers] = useState("")
+    const [modifiers, setModifiers] = useState({positive:"", negative:"lowres, blurry"})
     const [history, setHistory] = useState([])
 
     const [isLogged, setIsLogged] = useState(false);
@@ -44,7 +44,7 @@ const InfiniteCanvas = (props) => {
     const tourSteps = [
         {
             selector: ".HelpButton",
-            content: "Welcome to Koll.ai Infinite Canvas! Take a tour or click the cross to exit (you can show me later by click the ? button)"
+            content: "Welcome to Koll.ai Infinite Canvas! Take a tour or click the cross to exit (you can show me later by click this button)"
         },
         {
             selector: ".ImageCanvas",
@@ -52,7 +52,7 @@ const InfiniteCanvas = (props) => {
         },
         {
             selector: ".ModeSelectionButtons",
-            content: "There you can switch to selection mode to generate an image (Require login)"
+            content: "Here you can switch to selection mode to generate an image (Require login)"
         },
         {
             selector: ".RoomTabs",
@@ -60,7 +60,7 @@ const InfiniteCanvas = (props) => {
         },
         {
             selector: ".ButtonCoordModal",
-            content: "Clic the current position to get a shareble link to you current room and position"
+            content: "Click the current position to get a shareable link to you current room and position"
         },
         {
             selector: ".sidebar-toggle",
@@ -108,10 +108,10 @@ const InfiniteCanvas = (props) => {
         }
 
         const onPageResize = () => {
-            setCanvasMeta({
-                w: window.innerWidth,
-                h: window.innerHeight,
-            });
+            // setCanvasMeta({
+            //     w: window.innerWidth,
+            //     h: window.innerHeight,
+            // });
         }
         window.addEventListener("resize", onPageResize);
         window.addEventListener("load", onPageLoad);
@@ -120,6 +120,7 @@ const InfiniteCanvas = (props) => {
     return (
         <>
             <TourProvider steps={tourSteps}
+                          showDots={false}
                           nextButton={({
                                            Button: TourButton,
                                            currentStep,
@@ -172,6 +173,9 @@ const InfiniteCanvas = (props) => {
                     isMobile={isMobile}
                     room={room}
                     canvasMeta={canvasMeta}
+                    
+                    setModifiers={setModifiers}
+                    history={history}
 
                 />
 

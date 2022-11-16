@@ -24,6 +24,7 @@ import PanToolIcon from '@mui/icons-material/PanTool';
 import HighlightAltIcon from '@mui/icons-material/HighlightAlt';
 import CoordsModal from "./coordsModal";
 import {useTour} from "@reactour/tour";
+import MyDrawer from "./headerAppBar/MyDrawer"
 
 Amplify.configure(gen.config)
 
@@ -54,7 +55,7 @@ const CHOOSE_TYPE = "CHOOSE_TYPE";
 //camera speed
 const CAMERA_ZOOM_SPEED = 1.1;
 const MIN_ZOOM = 0.01;
-const MAX_ZOOM = 10;
+const MAX_ZOOM = 1;
 
 let generation_type;
 let cursor_pos = [0, 0];
@@ -116,15 +117,24 @@ const MyCanvas = (props) => {
   const [cameraZoomStart, setCameraZoomStart] = React.useState(1);
 
   const [user, loading, error] = useAuthState(auth);
-
   const {setIsOpen, currentStep, isOpen, setCurrentStep} = useTour()
 
 
-  // useEffect(()=>{
-  //   if(currentStep === 6 && isOpen){
-  //     setIsOpen(false);
-  //   }
-  // }, [currentStep])
+
+//   Refresh client token
+  useEffect(()=>{
+      const interval = setInterval(() => {
+          if (user){
+            const expiration_time = user.stsTokenManager.expirationTime;
+            if (Date.now() > expiration_time){
+                    console.log('Refreshing token');
+                    user.getIdToken(true)
+                }
+        }
+
+          
+      }, 10 * 1000)
+  })
 
   useEffect(() => {
     let initial_tour_done = localStorage.getItem("initial_tour_done")
@@ -133,6 +143,36 @@ const MyCanvas = (props) => {
       localStorage.setItem("initial_tour_done", true)
     }
   }, []);
+
+
+  function onClickImage(prompt){
+      console.log(user)
+      toast.info(<div onClick={() => {
+        navigator.clipboard.writeText(prompt)
+        toast.success(<p>Prompt copied to clipboard</p>, {
+            position: "bottom-center",
+            autoClose: 2000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+      
+        })
+      }}>
+
+      Prompt: {prompt}
+    </div >, {
+      position: "bottom-center",
+      autoClose: 5000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+    });
+  }
+
 
   function handle_receive_from_socket(data) {
     data = JSON.parse(data)
@@ -398,6 +438,9 @@ const MyCanvas = (props) => {
     // setImageDivList(prevState => [img, ...prevState]);
     // setImageDivList([img])
 
+    //add to history
+    props.setHistory(prevState => [ img, ...prevState,])
+
   }
 
   function handleDown() {
@@ -458,7 +501,7 @@ const MyCanvas = (props) => {
           // Display automaticaly the tour helper
           let initial_tour_done = localStorage.getItem("generation_tour_done")
           if (initial_tour_done === null) {
-            setCurrentStep(6);
+            setCurrentStep(7);
             setIsOpen(true);
             localStorage.setItem("generation_tour_done", true)
           }
@@ -644,11 +687,11 @@ const MyCanvas = (props) => {
     var w = Math.floor(width)
     var h = Math.floor(height)
 
-    var prompt = document.getElementById('prompt_input').value + ' ' + props.modifiers
+    var prompt = document.getElementById('prompt_input').value + ' ' + props.modifiers.positive
     document.getElementById('prompt_input').value = ''
 
     hideSelectionRect();
-
+    user.getIdToken(true);
     var imageParamsDict = {
       'credential': user.accessToken,
       'prompt': btoa(prompt),
@@ -656,7 +699,8 @@ const MyCanvas = (props) => {
       'posX': x,
       'posY': y,
       'width': w,
-      'height': h
+      'height': h,
+      'negative_prompt': props.modifiers.negative
     }
 
     if (generation_type === "outpainting" || generation_type === "img_to_img") {
@@ -708,17 +752,17 @@ const MyCanvas = (props) => {
           }
 
 
-        {/*<button onClick={() => handleClickRefresh()}> Refresh</button>*/}
-      </div>
+          {/*<button onClick={() => handleClickRefresh()}> Refresh</button>*/}
+        </div>
 
-      <Box style={{position: "absolute", bottom: 1, left: 1, zIndex: 99}}>
-        <CoordsModal className={"ButtonCoordModal"}
-                     x={Math.round(camera.x)}
-                     y={Math.round(camera.y)}
-                     zoom={Math.round(camera.zoom * 100)}
-                     room={room}
-        />
-      </Box>
+        <Box className={"ButtonCoordModal"} style={{position: "absolute", bottom: 1, left: 1, zIndex: 99}}>
+          <CoordsModal
+              x={Math.round(camera.x)}
+              y={Math.round(camera.y)}
+              zoom={Math.round(camera.zoom * 100)}
+              room={room}
+          />
+        </Box>
 
 
         <Box style={{position: "absolute", bottom: 1, right: 1}}>
@@ -738,14 +782,15 @@ const MyCanvas = (props) => {
             <HighlightAltIcon color={currentMode === EDIT ? "primary" : "disabled"}/>
           </Fab>
         </Box>
+{/* 
+      <MyDrawer
+          camera={props.camera}
+          modifiers={props.modifiers}
+          setModifiers={props.setModifiers}
+          history={props.history}
+          canvasMeta={props.canvasMeta}
 
-      {/*<MyDrawer*/}
-      {/*    camera={props.camera}*/}
-      {/*    setModifiers={props.setModifiers}*/}
-      {/*    history={props.history}*/}
-      {/*    canvasMeta={props.canvasMeta}*/}
-
-      {/*/>*/}
+      /> */}
 
       <Stage
 
@@ -801,6 +846,7 @@ const MyCanvas = (props) => {
                         mode={currentMode}
                         pseudo={img.pseudo}
                         timestamp={img.timestamp}
+                        onClickImage={onClickImage}
                     />)
                 }
               }
