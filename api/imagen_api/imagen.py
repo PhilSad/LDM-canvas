@@ -105,6 +105,7 @@ def push_to_clients(channel, data):
 
 def callback(message: pubsub_v1.subscriber.message.Message) -> None:
     # print(f"Received {message}.")
+    print("[DEBUG] Received message")
     data = json.loads(message.data)
 
     action = data['action']
@@ -115,34 +116,38 @@ def callback(message: pubsub_v1.subscriber.message.Message) -> None:
     b64prompt = params['prompt']
     prompt = base64.b64decode(b64prompt)
     prompt = prompt.decode("utf-8")
+    negative_prompt = params.get('negative_prompt')
+
+    print("[DEBUG] prompt=" + prompt)
+    print("[DEBUG] negative=" + str(negative_prompt))
 
     width = abs(int(params['width']))
     height = abs(int(params['height']))
 
     # todo send ws with cur image uuid
-
+    print("[DEBUG] Doing generation")
     if   action == 'new_image':
-        generated = imagen.new_image(prompt, width, height)
+        generated = imagen.new_image(prompt, width, height, negative_prompt=negative_prompt)
         is_safe = not check_not_safe(generated)
     
     elif action == 'img_to_img':
         init_image = params['init_image']
-        generated = imagen.image_to_image(prompt, width, height, init_image)
+        generated = imagen.image_to_image(prompt, width, height, init_image, negative_prompt=negative_prompt)
         is_safe = not check_not_safe(generated)
 
 
     elif action == 'outpainting':
         init_image = params['init_image']
-        generated, full_image  = imagen.outpainting(prompt, width, height, init_image, strength=0.2)
+        generated, full_image  = imagen.outpainting(prompt, width, height, init_image, strength=0.2, negative_prompt=negative_prompt)
         is_safe = not check_not_safe(full_image)
     
     elif action == 'inpaint_mask':
         init_image = params['init_image']
         mask = params['mask']
-        generated, full_image = imagen.inpaint_mask(prompt, width, height, init_image, mask)
+        generated, full_image = imagen.inpaint_mask(prompt, width, height, init_image, mask, negative_prompt=negative_prompt)
         is_safe = not check_not_safe(full_image)
 
-
+    print("[DEBUG] check safety done")
     # Get params
     posX = int(params['posX'])
     posY = int(params['posY'])
@@ -150,12 +155,22 @@ def callback(message: pubsub_v1.subscriber.message.Message) -> None:
     b64prompt = params['prompt']
     prompt = base64.b64decode(b64prompt)
     prompt = prompt.decode("utf-8")
-    
+    prompt = prompt.replace("\n", "")
+    print("[DEBUG] prompt=" + prompt)
+    print("[DEBUG] room="+room)
+    print("[DEBUG] posX="+str(posX))
+    print("[DEBUG] posY=" + str(posY))
+    print("[DEBUG] isSafe=" + str(is_safe))
+    print("[DEBUG] width=" + str(width))
+    print("[DEBUG] height=" + str(height))
+
     # Save to Bucket
     ts = str(datetime.datetime.now().strftime("%Y%m%d%H%M%S%f"))
+    if len(prompt) > 100:
+        prompt=prompt[:100]
     bucket_path = f'{room}/{ts}-{prompt}.webp'
     save_path = f'/tmp/{ts}.webp'
-
+    print("[DEBUG] save_path " + save_path)
     save_to_bucket(save_path, generated, bucket_path)
 
     # Send websocket to client
