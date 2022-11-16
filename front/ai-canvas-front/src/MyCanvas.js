@@ -439,7 +439,7 @@ const MyCanvas = (props) => {
     // setImageDivList([img])
 
     //add to history
-    props.setHistory(prevState => [ img, ...prevState,])
+    props.setHistory(prevState => [ {posX:x, posY:y, width:w, height:h, prompt:prompt}, ...prevState,])
 
   }
 
