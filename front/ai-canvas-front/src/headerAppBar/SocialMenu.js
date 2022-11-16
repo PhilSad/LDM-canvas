@@ -37,8 +37,8 @@ export default function SocialMenu(){
             MenuListProps={{'aria-labelledby': 'basic-button'}}>
 
             <MenuItem>Join the community for updates</MenuItem>
-            <a href="https://discord.gg/HjVbPNWB"> <MenuItem > <img style={{maxHeight: "auto", maxWidth:"40px", marginRight:"5px"}} src="images/discorde.png"></img> Join Discord </MenuItem> </a>
-            <a href="https://twitter.com/koll_ai"> <MenuItem > <img style={{maxHeight: "auto", maxWidth:"40px", marginRight:"5px"}} src="images/twitter.png"></img> Follow Twitter </MenuItem> </a>
+            <a style={{color:"inherit", textDecoration:"none"}} href="https://discord.gg/HjVbPNWB"> <MenuItem > <img style={{maxHeight: "auto", maxWidth:"40px", marginRight:"5px"}} src="images/discorde.png"></img> Join Discord </MenuItem> </a>
+            <a style={{color:"inherit", textDecoration:"none"}} href="https://twitter.com/koll_ai"> <MenuItem > <img style={{maxHeight: "auto", maxWidth:"40px", marginRight:"5px"}} src="images/twitter.png"></img> Follow Twitter </MenuItem> </a>
         </Menu>
 
 </>
