@@ -782,7 +782,7 @@ const MyCanvas = (props) => {
             <HighlightAltIcon color={currentMode === EDIT ? "primary" : "disabled"}/>
           </Fab>
         </Box>
-
+{/* 
       <MyDrawer
           camera={props.camera}
           modifiers={props.modifiers}
@@ -790,7 +790,7 @@ const MyCanvas = (props) => {
           history={props.history}
           canvasMeta={props.canvasMeta}
 
-      />
+      /> */}
 
       <Stage
 
