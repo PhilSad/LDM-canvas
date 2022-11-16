@@ -9,6 +9,9 @@ from flask import request
 from operations import *
 import random
 
+DEFAULT_TOPIC_ID = "imagen-queue"
+
+
 app = Flask(__name__)
 CORS(app)
 
@@ -24,6 +27,10 @@ def imagen():
     
     action = request.args.get('action')
     params = request.get_json()
+    topic_id = request.args.get('topic_id')
+    if topic_id == None:
+        topic_id = DEFAULT_TOPIC_ID
+    
     
     err = gpu_operations.imagen(action, params)
 

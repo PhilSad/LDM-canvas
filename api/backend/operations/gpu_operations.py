@@ -9,7 +9,7 @@ from . import appsync_operations
 
 
 
-def imagen(action, params):
+def imagen(action, params, topic_id):
     # send to gpu
 
 
@@ -25,7 +25,7 @@ def imagen(action, params):
     image_uuid = str(uuid.uuid4())
     params['uuid'] = image_uuid
 
-    pubsub_operations.send_pubsub(action = action, params = params)
+    pubsub_operations.send_pubsub(action = action, params = params, topic_id=topic_id)
    
     # alert fronts that a new image is generating
 

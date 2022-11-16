@@ -4,16 +4,13 @@ import os
 
 project_id = "ai-canvas"
 
-topic_id = "imagen-queue-dev"
-if "LISTENING_QUEUE" in os.environ:
-    topic_id = os.environ["LISTENING_QUEUE"]
 
 client_publisher = pubsub_v1.PublisherClient()
-topic_path = client_publisher.topic_path(project_id, topic_id)
 
 
-def send_pubsub(action, params):
+def send_pubsub(action, params, topic_id):
     data_to_send = dict(action = action,  params=params)
+    topic_path = client_publisher.topic_path(project_id, topic_id)
 
     data_str = json.dumps(data_to_send)
     data = data_str.encode("utf-8")
