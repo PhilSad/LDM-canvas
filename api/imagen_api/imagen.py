@@ -17,7 +17,7 @@ import datetime
 from diffusers.pipelines.stable_diffusion.safety_checker import StableDiffusionSafetyChecker
 from transformers import AutoFeatureExtractor
 import numpy as np
-
+import sys
 
 # load safety model
 safety_model_id = "CompVis/stable-diffusion-safety-checker"
@@ -32,6 +32,9 @@ def check_not_safe(pil_image):
 
 project_id = "732264051436"
 subscription_id = "imagen-queue-sub"
+if len(sys.argv) == 2 and sys.argv[1] == "debug":
+    subscription_id = "imagen-queue-dev-sub"
+
 timeout = 20.0
 
 subscriber = pubsub_v1.SubscriberClient()
