@@ -72,6 +72,17 @@ def diffuse(prompt, n_images=1, width=512, height=512, steps=50, init_image=None
 
     return generated
 
+
+def adjust_image(image, width, height):
+    width, height, round_width, round_height = adjust_size(width, height)
+    image = image.crop((0,0,width, height))
+    image = image.resize((round_width, round_height), PIL.Image.ANTIALIAS)
+    image = image.convert('RGB')
+
+    return image,width, height
+    
+
+
 def generate_image(prompt, w, h, init_image=None, mask=None):
     width, height, round_width, round_height = adjust_size(w, h)
 
@@ -114,20 +125,23 @@ def generate_image(prompt, w, h, init_image=None, mask=None):
     
     return generated
 
-def new_image(prompt, width, height):
-    gen = pipe.text2img(prompt, )
+def new_image(prompt, width, height, negative_prompt=""):
+    gen = pipe.text2img(prompt, negative_prompt=negative_prompt)
     image = gen.images[0]
     return image
 
-def image_to_image(prompt, width, height, init_image):
+def image_to_image(prompt, width, height, init_image, negative_prompt=""):
     im = PIL.Image.open(BytesIO(base64.b64decode(init_image))).convert('RGB')
+    init_image, _, _ = adjust_image(im, width, height)
+    print((width, height))
     im.save('im.png')
-    gen = pipe.img2img(prompt=prompt, init_image=im, strength=0.75, guidance_scale=7.5)
+    gen = pipe.img2img(prompt=prompt, negative_prompt=negative_prompt, init_image=init_image, strength=0.75, guidance_scale=7.5)
     image = gen.images[0]
     return image
 
-def outpainting(prompt, width, height, init_image, strength=0.2):
+def outpainting(prompt, width, height, init_image, strength=0.2, negative_prompt=""):
     im = PIL.Image.open(BytesIO(base64.b64decode(init_image)))
+    im.save('im.png')
 
     img, mask = get_img_mask(im)
     i = edge_pad(img,mask)
@@ -135,14 +149,17 @@ def outpainting(prompt, width, height, init_image, strength=0.2):
 
     noise = PIL.Image.fromarray(i).convert('RGB')
     mask = PIL.Image.fromarray(mask)
+    noise.save('noise.png')
+    mask.save('mask.png')
 
-    gen = pipe.inpaint(prompt=prompt, init_image=noise, mask_image=mask, strength=0.75)
+    noise,width, height = adjust_image(noise, width, height)
+    mask,width, height  = adjust_image(mask,  width, height)
+
+    gen = pipe.inpaint(prompt=prompt, negative_prompt=negative_prompt,init_image=noise, mask_image=mask, strength=0.75)
     generated = gen.images[0]
 
     ga = np.array(generated.convert('RGBA'))
-    print(ga.shape)
-    print(np.array(mask).shape)
-    ga[:, :, -1] = np.array(mask)[:, :]
+    ga[:, :, -1] = np.array(mask)[:, :, -1]
     generated_with_transparency = PIL.Image.fromarray(ga)
     generated_with_transparency = generated_with_transparency.resize((width, height), PIL.Image.ANTIALIAS)
 
@@ -151,7 +168,7 @@ def outpainting(prompt, width, height, init_image, strength=0.2):
 
     return generated_with_transparency, generated
 
-def inpaint_mask(prompt, width, height, init_image, mask):
+def inpaint_mask(prompt, width, height, init_image, mask, negative_prompt):
     im = PIL.Image.open(BytesIO(base64.b64decode(init_image)))
     mask = PIL.Image.open(BytesIO(base64.b64decode(mask)))
 
