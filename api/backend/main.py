@@ -36,8 +36,13 @@ def imagen():
 
     if err == -1:
         return('Unable to verify auth token. Did you login?', 501)
-    else:
+    
+    already_running = gpu_operations.start_vm_if_not_started()
+
+    if already_running:
         return ('generating, ....', 201)
+    else:
+        return ('allocating vm', 202)
 
 
 @app.route("/update_bdd_after_image_generation/")

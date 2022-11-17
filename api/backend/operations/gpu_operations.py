@@ -5,8 +5,20 @@ from . import db_operations
 import requests
 import uuid
 from . import appsync_operations
+from googleapiclient import discovery
+from googleapiclient import discovery
+compute = discovery.build('compute', 'v1')
 
 
+
+def start_vm_if_not_started():
+    """return boolean true if vm was already started"""
+    result = compute.instances().get(project='ai-canvas', zone='us-central1-a', instance='template-imagen-gpu-auto-1').execute()
+
+    if result["status"] != "RUNNING":
+        compute.instances().start(project='ai-canvas', zone='us-central1-a', instance='template-imagen-gpu-auto-1').execute()
+        return False
+    return True
 
 
 def imagen(action, params, topic_id):
