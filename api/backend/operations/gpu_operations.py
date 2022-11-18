@@ -6,13 +6,21 @@ import requests
 import uuid
 from . import appsync_operations
 from googleapiclient import discovery
+import google.auth
+
 compute = discovery.build('compute', 'v1')
+
+credentials, project_id = google.auth.default()
 
 
 
 def start_vm_if_not_started():
     """return boolean true if vm was already started """
     result = compute.instances().get(project='ai-canvas', zone='us-central1-a', instance='template-imagen-gpu-auto-1').execute()
+    if hasattr(credentials, "service_account_email"):
+        print('[DEBUG] SERVICE ACCOUNT')
+        print(credentials.service_account_email)
+
 
     if result["status"] != "RUNNING":
         compute.instances().start(project='ai-canvas', zone='us-central1-a', instance='template-imagen-gpu-auto-1').execute()
