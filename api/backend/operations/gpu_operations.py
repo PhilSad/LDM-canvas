@@ -16,9 +16,8 @@ credentials, project_id = google.auth.default()
 
 def start_vm_if_not_started():
     """return boolean true if vm was already started """
-    if hasattr(credentials, "service_account_email"):
-        print('[DEBUG] SERVICE ACCOUNT')
-        print(credentials.service_account_email)
+
+    print(credentials.to_json())
 
     result = compute.instances().get(project='ai-canvas', zone='us-central1-a', instance='template-imagen-gpu-auto-1').execute()
 
