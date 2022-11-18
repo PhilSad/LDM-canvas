@@ -37,8 +37,8 @@ def imagen():
     if err == -1:
         return('Unable to verify auth token. Did you login?', 501)
     
-    # already_running = gpu_operations.start_vm_if_not_started()
-    already_running = True
+    already_running = gpu_operations.start_vm_if_not_started()
+    # already_running = True
 
     if already_running:
         return ('generating, ....', 201)
