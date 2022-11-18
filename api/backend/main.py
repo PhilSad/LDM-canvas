@@ -45,6 +45,11 @@ def imagen():
     else:
         return ('allocating vm', 202)
 
+@app.route("/get_vm_status/")
+def update_bdd_after_image_generation():
+    
+    return gpu_operations.get_vm_status()
+
 
 @app.route("/update_bdd_after_image_generation/")
 def update_bdd_after_image_generation():

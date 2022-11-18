@@ -14,6 +14,10 @@ credentials, project_id = google.auth.default()
 
 
 
+def get_vm_status():
+    result = compute.instances().get(project='ai-canvas', zone='us-central1-a', instance='template-imagen-gpu-auto-1').execute()
+    return result
+
 def start_vm_if_not_started():
     """return boolean true if vm was already started """
 
