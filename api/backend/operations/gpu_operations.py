@@ -32,7 +32,7 @@ def imagen(action, params, topic_id):
     # send to gpu
 
 
-    idinfo = users_operations.validate_access_token_and_get_user(params['credential'])
+    idinfo = users_operations.validate_access_token_and_get_user(params['credential'], verify = True)
     print('[DEBUG] user info')
     print(idinfo)
     if idinfo == False:
@@ -40,6 +40,8 @@ def imagen(action, params, topic_id):
 
     if not db_operations.user_can_generate(idinfo['email']):
         return -1
+    
+
 
     image_uuid = str(uuid.uuid4())
     params['uuid'] = image_uuid

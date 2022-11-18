@@ -8,12 +8,17 @@ def get_userinfo_for_credential(credential):
     idinfo = id_token.verify_firebase_token(credential, requests.Request())
     return idinfo
 
-def validate_access_token_and_get_user(credential):
+def validate_access_token_and_get_user(credential, verify):
     try:
         idinfo = get_userinfo_for_credential(credential)
-        if idinfo['email_verified'] == True:
-            return idinfo
-        return False
+
+        if verify:
+            if idinfo['email_verified'] == True:
+                return idinfo
+            return False
+        
+        return idinfo
+        
     except ValueError as e:
         print(e)
         return False

@@ -37,7 +37,8 @@ def imagen():
     if err == -1:
         return('Unable to verify auth token. Did you login?', 501)
     
-    already_running = gpu_operations.start_vm_if_not_started()
+    # already_running = gpu_operations.start_vm_if_not_started()
+    already_running = True
 
     if already_running:
         return ('generating, ....', 201)
@@ -60,7 +61,7 @@ def register_user():
     if pseudo is None:
         pseudo = f"user_{str(random.randint(1000000000, 9000000000))}"
 
-    idinfo = users_operations.validate_access_token_and_get_user(token)
+    idinfo = users_operations.validate_access_token_and_get_user(token, verify = False)
     if idinfo == False:
         return ('invalid token' , 502)
     if db_operations.check_if_user_exist(idinfo['email']):
@@ -80,7 +81,7 @@ def update_user_pseudo():
     params = request.get_json()
     token = params['credential']
     pseudo = params['pseudo']
-    idinfo = users_operations.validate_access_token_and_get_user(token)
+    idinfo = users_operations.validate_access_token_and_get_user(token, verify=False)
     if idinfo == False:
         return ('invalid token', 502)
     data_to_bdd = dict(email = idinfo['email'], pseudo = pseudo)
