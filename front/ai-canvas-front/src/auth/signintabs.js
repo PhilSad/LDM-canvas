@@ -93,7 +93,7 @@ return (
                 <br/>
                 You'll need to verify your email (check your spam folder)
 
-                <Button onClick={() => registerWithEmailAndPassword(pseudoCreate, emailCreate, passwordCreate)}>
+                <Button variant="outlined" onClick={() => registerWithEmailAndPassword(pseudoCreate, emailCreate, passwordCreate)}>
                     Register
                 </Button>
             </Box>

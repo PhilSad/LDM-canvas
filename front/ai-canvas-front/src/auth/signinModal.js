@@ -26,9 +26,9 @@ export default function SignInModalButton(props) {
           </Modal.Body>
 
           <Modal.Footer>
-          <button onClick={handleClose}>
+          <Button variant="outlined" onClick={handleClose}>
             Close
-          </button>
+          </Button>
         </Modal.Footer>
       </Modal>
     </>
