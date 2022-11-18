@@ -6,7 +6,6 @@ import requests
 import uuid
 from . import appsync_operations
 from googleapiclient import discovery
-from googleapiclient import discovery
 compute = discovery.build('compute', 'v1')
 
 
