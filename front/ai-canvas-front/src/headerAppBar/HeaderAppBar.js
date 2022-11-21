@@ -62,10 +62,8 @@ export default function HeaderAppBar(props) {
             return [...prevState, roomName]
         })
         let prev_rooms = localStorage.getItem("EXTRA_ROOMS");
-        if (prev_rooms === null){
-            prev_rooms = ""
+        if (prev_rooms === null || prev_rooms === ""){
             localStorage.setItem("EXTRA_ROOMS", roomName)        
-
         }
         else{
             localStorage.setItem("EXTRA_ROOMS", prev_rooms + EXTRA_ROOM_SEPARATOR + roomName)        
@@ -91,7 +89,14 @@ export default function HeaderAppBar(props) {
         setRooms(rooms)
         if(props.room === tabRoom){
             props.setRoom(rooms[rooms.length - 1])
+            localStorage.setItem('cur_room', rooms[rooms.length - 1]);
+
         }
+
+        var extra_rooms = localStorage.getItem("EXTRA_ROOMS").split(EXTRA_ROOM_SEPARATOR)
+        extra_rooms.splice(i - DEFAULT_ROOMS.length, 1)
+        localStorage.setItem('EXTRA_ROOMS', extra_rooms.join(EXTRA_ROOM_SEPARATOR));
+
         forceUpdate()
     }
 
