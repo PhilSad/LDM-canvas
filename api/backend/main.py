@@ -96,16 +96,6 @@ def update_user_pseudo():
 
 
 
-@app.route("/sch/")
-def hello():
-    return 'hello'
-
-
-
-
-
-
-
 
 
 
