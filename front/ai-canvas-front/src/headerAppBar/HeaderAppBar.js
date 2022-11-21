@@ -118,7 +118,7 @@ export default function HeaderAppBar(props) {
 
 
             <Box sx={{flexGrow: 1}}>
-                <AppBar position="absolute">
+                <AppBar position="absolute" >
                     <Toolbar style={{justifyContent: 'space-between'}}>
                         {/*<IconButton*/}
                         {/*    size="large"*/}
@@ -136,7 +136,7 @@ export default function HeaderAppBar(props) {
                              style={{maxWidth: 'auto', maxHeight: '50px', marginRight: '10px'}}/>
 
                         {/*TAB LIST*/}
-                        <TabContext value={props.room} color={'inherit'} style={{}}>
+                        <TabContext value={props.room} color={'inherit'} >
                             <TabList variant="scrollable"
                                      onChange={(e, value) => handleTabsOnChange(value)}
                                      textColor={"inherit"}
