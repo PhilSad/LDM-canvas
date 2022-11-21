@@ -52,7 +52,7 @@ const SideBar = props => {
             <textarea
                 placeholder="digital art, high resolution"
                 rows="5"
-                onChange={e => props.setModifiers(e.target.value)}
+                onChange={e => props.setModifiers({positive: e.target.value})}
                 className="modifiersTextArea"
             ></textarea>
 

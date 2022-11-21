@@ -690,6 +690,7 @@ const MyCanvas = (props) => {
     var h = Math.floor(height)
 
     var prompt = document.getElementById('prompt_input').value + ' ' + props.modifiers.positive
+    console.log(prompt)
     document.getElementById('prompt_input').value = ''
 
     hideSelectionRect();
