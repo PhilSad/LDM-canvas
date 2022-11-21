@@ -23,9 +23,10 @@ const InfiniteCanvas = (props) => {
     const [room, setRoom] = useState(searchParams.get("room") !== null ? searchParams.get("room") : (localStorage.getItem('cur_room') !== null) ? localStorage.getItem('cur_room') : "default");
 
     const [camera, setCamera] = useState({
-        x: 0,
-        y: 0,
-        zoom: 1,
+        x: searchParams.get("x") !== null ? parseInt(searchParams.get("x")) : (localStorage.getItem('cur_posX') !== null) ? parseInt(localStorage.getItem('cur_posX')) : 0,
+        y: searchParams.get("y") !== null ? parseInt(searchParams.get("y")) : (localStorage.getItem('cur_posY') !== null) ? parseInt(localStorage.getItem('cur_posY')) : 0,
+        zoom: searchParams.get("zoom") !== null ? parseInt(searchParams.get("zoom")) / 100 : (localStorage.getItem('cur_zoom') !== null) ? parseInt(localStorage.getItem('cur_zoom')) / 100 : 0,
+       
         move: (x, y, zoom) => {
             setCamera(prevState => {
                 return {
@@ -116,6 +117,9 @@ const InfiniteCanvas = (props) => {
         window.addEventListener("resize", onPageResize);
         window.addEventListener("load", onPageLoad);
     })
+
+
+
 
     return (
         <>

@@ -41,7 +41,6 @@ export default function HeaderAppBar(props) {
     const [user, loading, error] = useAuthState(auth);
     const [rooms, setRooms] = useState(initial_rooms);
 
-    console.log(rooms)
     const [showModalTabs, setShowModalTabs] = useState(false);
     const handleCloseTabs = () => setShowModalTabs(false);
     const handleShowTabs = () => setShowModalTabs(true);

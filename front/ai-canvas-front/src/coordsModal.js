@@ -1,5 +1,5 @@
 import Modal from 'react-bootstrap/Modal';
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import Button from "@mui/material/Button";
 import {TextField} from "@mui/material";
 
@@ -9,8 +9,22 @@ export default function CoordsModal(props) {
 
     const [showCoordModal, setShowCoordModal] = useState(false);
 
-    const handleClose = () => setShowCoordModal(false);
+    const handleClose = () => {
+        console.log(props.x)
+        setShowCoordModal(false)
+    };
     const handleShow = () => setShowCoordModal(true);
+
+    // Save position to localstorage every 5 sec
+    useEffect(() => {
+        const interval = setInterval(() => {
+            localStorage.setItem('cur_posX', props.x);
+            localStorage.setItem('cur_posY', props.y);
+            localStorage.setItem('cur_zoom', props.zoom);
+
+        },  1000);
+        return () => clearInterval(interval);
+    }, [props.x, props.y, props.zoom]);
 
     function copyLink() {
         console.log("Link copied in clipboard");

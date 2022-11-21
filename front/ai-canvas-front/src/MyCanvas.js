@@ -121,6 +121,7 @@ const MyCanvas = (props) => {
 
 
 
+
 //   Refresh client token
   useEffect(()=>{
       const interval = setInterval(() => {
@@ -135,6 +136,7 @@ const MyCanvas = (props) => {
           
       }, 10 * 1000)
   })
+
 
   useEffect(() => {
     let initial_tour_done = localStorage.getItem("initial_tour_done")
@@ -264,7 +266,7 @@ const MyCanvas = (props) => {
 
       handleClickRefresh();
 
-      camera.move(x, y, zoom);
+    //   camera.move(x, y, zoom);
     };
 
     window.addEventListener('contextmenu', event => event.preventDefault());
