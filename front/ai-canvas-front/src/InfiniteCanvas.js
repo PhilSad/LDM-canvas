@@ -25,7 +25,7 @@ const InfiniteCanvas = (props) => {
     const [camera, setCamera] = useState({
         x: searchParams.get("x") !== null ? parseInt(searchParams.get("x")) : (localStorage.getItem('cur_posX') !== null) ? parseInt(localStorage.getItem('cur_posX')) : 0,
         y: searchParams.get("y") !== null ? parseInt(searchParams.get("y")) : (localStorage.getItem('cur_posY') !== null) ? parseInt(localStorage.getItem('cur_posY')) : 0,
-        zoom: searchParams.get("zoom") !== null ? parseInt(searchParams.get("zoom")) / 100 : (localStorage.getItem('cur_zoom') !== null) ? parseInt(localStorage.getItem('cur_zoom')) / 100 : 0,
+        zoom: searchParams.get("zoom") !== null ? parseInt(searchParams.get("zoom")) / 100 : (localStorage.getItem('cur_zoom') !== null) ? parseInt(localStorage.getItem('cur_zoom')) / 100 : 1,
        
         move: (x, y, zoom) => {
             setCamera(prevState => {
