@@ -13,6 +13,14 @@ import AddIcon from '@mui/icons-material/Add';
 import Modal from "react-bootstrap/Modal";
 import ProfileMenu from "./ProfileMenu";
 import SocialMenu from "./SocialMenu";
+import CloseIcon from '@mui/icons-material/Close';
+
+
+const DEFAULT_ROOMS = ["default", "demo", "test"];
+
+const EXTRA_ROOM_SEPARATOR = "#/"
+
+
 
 function useForceUpdate() {
     const [value, setValue] = useState(0); // integer state
@@ -21,10 +29,19 @@ function useForceUpdate() {
     // is better than directly setting `value + 1`
 }
 
-export default function HeaderAppBar(props) {
-    const [user, loading, error] = useAuthState(auth);
-    const [rooms, setRooms] = useState(["default", "demo", "test"])
+var EXTRA_ROOMS = []
+if (localStorage.getItem("EXTRA_ROOMS") !== null){
+    EXTRA_ROOMS = localStorage.getItem("EXTRA_ROOMS").split(EXTRA_ROOM_SEPARATOR)
+}
 
+var initial_rooms = DEFAULT_ROOMS.concat(EXTRA_ROOMS);
+
+export default function HeaderAppBar(props) {
+
+    const [user, loading, error] = useAuthState(auth);
+    const [rooms, setRooms] = useState(initial_rooms);
+
+    console.log(rooms)
     const [showModalTabs, setShowModalTabs] = useState(false);
     const handleCloseTabs = () => setShowModalTabs(false);
     const handleShowTabs = () => setShowModalTabs(true);
@@ -37,10 +54,23 @@ export default function HeaderAppBar(props) {
 
     function handleClickAccessRoom(roomName) {
         handleCloseTabs()
+        if(roomName === ""){
+            return
+        }
         props.setRoom(roomName)
         setRooms(prevState => {
             return [...prevState, roomName]
         })
+        let prev_rooms = localStorage.getItem("EXTRA_ROOMS");
+        if (prev_rooms === null){
+            prev_rooms = ""
+            localStorage.setItem("EXTRA_ROOMS", roomName)        
+
+        }
+        else{
+            localStorage.setItem("EXTRA_ROOMS", prev_rooms + EXTRA_ROOM_SEPARATOR + roomName)        
+        }
+        localStorage.setItem('cur_room', roomName)
     }
 
     function handleTabsOnChange(roomName) {
@@ -48,8 +78,21 @@ export default function HeaderAppBar(props) {
             handleShowTabs()
         } else {
             props.setRoom(roomName)
+            localStorage.setItem('cur_room', roomName)
+
         }
 
+    }
+
+    function handleCloseTab(i, tabRoom){
+        console.log("close tab")
+        console.log(i)
+        rooms.splice(i, 1)
+        setRooms(rooms)
+        if(props.room === tabRoom){
+            props.setRoom(rooms[rooms.length - 1])
+        }
+        forceUpdate()
     }
 
 
@@ -95,13 +138,23 @@ export default function HeaderAppBar(props) {
                                      TabIndicatorProps={{style: {background: 'pink'}}}
                                      style={{}}
                                      className={"RoomTabs"}
+                                     scrollButtons
+                                     allowScrollButtonsMobile
                             >
 
                                 {
                                     rooms.map((curRoom, i) => {
-                                        return (
-                                            <Tab label={curRoom} value={curRoom}/>
-                                        )
+                                        if (curRoom === ""){
+                                            return <></>
+                                        }
+                                        if (props.room === curRoom && DEFAULT_ROOMS.includes(curRoom) === false ){
+                                                return <Tab label={curRoom} value={curRoom} iconPosition='right' icon={<CloseIcon fontSize="small" onClick={() => handleCloseTab(i, curRoom)}/> } />       
+                                        }
+                                        else{
+                                            return <Tab label={curRoom} value={curRoom} />
+                                        }
+                                            
+                                        
                                     })
                                 }
 

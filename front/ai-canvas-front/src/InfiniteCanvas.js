@@ -20,7 +20,7 @@ const InfiniteCanvas = (props) => {
     const [credential, setCredential] = useState('');
 
     const [searchParams, setSearchParams] = useSearchParams();
-    const [room, setRoom] = useState(searchParams.get("room") !== null ? searchParams.get("room") : "default");
+    const [room, setRoom] = useState(searchParams.get("room") !== null ? searchParams.get("room") : (localStorage.getItem('cur_room') !== null) ? localStorage.getItem('cur_room') : "default");
 
     const [camera, setCamera] = useState({
         x: 0,
