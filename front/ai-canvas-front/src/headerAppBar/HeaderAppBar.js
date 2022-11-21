@@ -108,7 +108,13 @@ export default function HeaderAppBar(props) {
                 </Modal.Header>
                 <Modal.Body style={{margin: 'auto'}}>
                     <TextField autofocus label="Room Name" type="textbox"
-                               onChange={e => setNewRoomName(e.target.value)}/>
+                               onChange={e => setNewRoomName(e.target.value)}
+                               InputProps={{
+                                    autoFocus: true,
+                                }}
+                    />
+                               
+                               
                     <br/>
                     <br/>
                     <Button variant={"outlined"} onClick={() => handleClickAccessRoom(newRoomName)}>Access Room</Button>
@@ -166,10 +172,10 @@ export default function HeaderAppBar(props) {
                             </TabList>
                         </TabContext>
                         
-                        <SocialMenu />
 
                         {/* LOGIN / LOGOUT Button */}
-                        <div className={"ProfilButton"}>
+                        <div className={"ProfilButton"} style={{justifyContent: 'space-between', display: 'flex'}}>
+                            <SocialMenu />
 
                             {!user ? (
                                 <SignInModalButton onSuccess={(pseudo) => setDisplayedName(pseudo)}
