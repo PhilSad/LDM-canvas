@@ -70,7 +70,7 @@ function PromptRect(props) {
 
                             {props.currentState === "PROMPT" &&
                                 <div>
-                                    <input id="prompt_input" placeholder="Image prompt" autoFocus />
+                                    <input id="prompt_input" placeholder="Your prompt in english" autoFocus />
                                     <button onClick={() => props.handleSend()} >
                                         Send
                                     </button>

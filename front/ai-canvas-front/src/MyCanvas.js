@@ -719,7 +719,28 @@ const MyCanvas = (props) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(imageParamsDict),
-    }).then(handleFetchErrors)
+    }).then(handleFetchErrors).then((response) =>  {
+        console.log(response.status)
+        var toast_text = "";
+        if (response.status === 201){
+            toast_text = "Prompt added to queue"
+        }
+        if (response.status === 202){
+            toast_text = "Prompt added to queue, it's the first generation in a while, cold start take around 3 min"
+        }
+
+        if (toast_text !== ""){
+            toast.info(toast_text, {
+                position: "bottom-center",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+            });
+        }
+    })
 
     addNewPlaceholder(x, y, w, h);
   };
