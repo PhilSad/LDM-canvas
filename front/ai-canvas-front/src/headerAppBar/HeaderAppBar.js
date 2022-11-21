@@ -75,6 +75,7 @@ export default function HeaderAppBar(props) {
             handleShowTabs()
         } else {
             props.setRoom(roomName)
+            props.setHistory([])
             localStorage.setItem('cur_room', roomName)
 
         }
@@ -88,7 +89,9 @@ export default function HeaderAppBar(props) {
         setRooms(rooms)
         if(props.room === tabRoom){
             props.setRoom(rooms[rooms.length - 1])
+
             localStorage.setItem('cur_room', rooms[rooms.length - 1]);
+            props.setHistory([])
 
         }
 

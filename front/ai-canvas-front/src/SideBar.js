@@ -56,7 +56,7 @@ const SideBar = props => {
                 className="modifiersTextArea"
             ></textarea>
 
-            <h4>Last images</h4>
+            <h4>Room images ({props.history.length})</h4>
 
             <div className="history">
                 <table>

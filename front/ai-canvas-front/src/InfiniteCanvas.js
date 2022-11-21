@@ -166,6 +166,7 @@ const InfiniteCanvas = (props) => {
                 <HeaderAppBar
                     room={room}
                     setRoom={setRoom}
+                    setHistory={setHistory}
                 />
                 <MyCanvas
                     camera={camera}
