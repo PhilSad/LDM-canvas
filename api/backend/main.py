@@ -37,13 +37,8 @@ def imagen():
     if err == -1:
         return('Unable to verify auth token. Did you login?', 501)
     
-    already_running = gpu_operations.start_vm_if_not_started()
-    # already_running = True
-
-    if already_running:
-        return ('generating, ....', 201)
-    else:
-        return ('allocating vm', 202)
+    #todo: verify the image pass the content filter
+    
 
 @app.route("/get_vm_status/")
 def get_vm_status():
