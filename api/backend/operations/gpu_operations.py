@@ -92,10 +92,10 @@ def send_to_gpu(colab_url, action, params):
     # decode image from base64 response
     img = Image.open(io.BytesIO(base64.decodebytes(bytes(base64_str, "utf-8"))))
     
-    return result
+    return img
     
 
-def gpu_imagen(action, params, colab_url):
+def gpu_imagen(colab_url, action, params):
     """Send a request to the colab gpu to generate an image
     colab_url: url of the colab notebook
     params: dict with the parameters to send to the colab notebook
@@ -116,14 +116,8 @@ def gpu_imagen(action, params, colab_url):
     params['uuid'] = image_uuid
     params['action'] = "generating_image"
     
-    # alert fronts that a new image is generating
-    appsync_operations.push_to_clients(params['room'], params)
-
-    send_to_gpu(colab_url, action = action, params = params)
     
-    
-
-
+    # save waiting entry to bdd
     data_to_bdd = dict(
         uuid = image_uuid,
         posX = params['posX'],
@@ -135,8 +129,21 @@ def gpu_imagen(action, params, colab_url):
         status = 'waiting',
         email = idinfo['email']
     )
-
     db_operations.insert_to_sql("images", data_to_bdd)
 
 
+    # alert fronts that a new image is generating
+    appsync_operations.push_to_clients(params['room'], params)
+
+    # Send to gpu
+    send_to_gpu(colab_url, action = action, params = params)
+    
+    # todo: check image is safe
+    
+    # todo: save image to bucket
+    
+    # alert front that new image is ready
+    # todo: appsync call
+    
+    
     return 1

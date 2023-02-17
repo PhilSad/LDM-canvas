@@ -13,7 +13,7 @@ export default function ColablinkModal(props) {
         console.log(props.x)
         setShowModal(false)
     };
-    const handleShow = () => setModal(true);
+    const handleShow = () => setShowModal(true);
 
 
 
@@ -34,7 +34,7 @@ export default function ColablinkModal(props) {
                                  }}
                                 onChange = {(e) => props.setColabLink(e.target.value)}
                                  />
-                    <Button variant={"outlined"} onClick={copyLink} style={{marginLeft: '10px'}}>Validate</Button>
+                    <Button variant={"outlined"} style={{marginLeft: '10px'}}>Validate</Button>
 
                 </Modal.Body>
             </Modal>
