@@ -39,6 +39,7 @@ const InfiniteCanvas = (props) => {
         }
     })
 
+    const [colabLink, setColabLink] = useState("");
 
 
 
@@ -167,6 +168,8 @@ const InfiniteCanvas = (props) => {
                     room={room}
                     setRoom={setRoom}
                     setHistory={setHistory}
+                    colabLink={colabLink}
+                    setColabLink={setColabLink}
                 />
                 <MyCanvas
                     camera={camera}
@@ -181,6 +184,7 @@ const InfiniteCanvas = (props) => {
                     
                     setModifiers={setModifiers}
                     history={history}
+                    colabLink={colabLink}
 
                 />
 

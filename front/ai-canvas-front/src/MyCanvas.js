@@ -712,7 +712,7 @@ const MyCanvas = (props) => {
       imageParamsDict['init_image'] = uri;
     }
 
-    var url_function_imagen_with_action = URL_FUNCTION_IMAGEN + '?action=' + generation_type;
+    var url_function_imagen_with_action = URL_FUNCTION_IMAGEN + '?action=' + generation_type + '&colabLink=' + props.colabLink ;
     if (process.env.REACT_APP_TOPIC_ID !== undefined){
         url_function_imagen_with_action += "&topic_id=" + process.env.REACT_APP_TOPIC_ID;
     }

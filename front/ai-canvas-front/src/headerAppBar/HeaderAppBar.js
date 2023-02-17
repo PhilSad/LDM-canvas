@@ -14,7 +14,7 @@ import Modal from "react-bootstrap/Modal";
 import ProfileMenu from "./ProfileMenu";
 import SocialMenu from "./SocialMenu";
 import CloseIcon from '@mui/icons-material/Close';
-
+import ColablinkModal from '../colablinkModal';
 
 const DEFAULT_ROOMS = ["default", "demo", "test"];
 
@@ -142,6 +142,11 @@ export default function HeaderAppBar(props) {
                         {/*</Typography>*/}
                         <img src="./android-chrome-384x384.png" sx={{mr: 2}}
                              style={{maxWidth: 'auto', maxHeight: '50px', marginRight: '10px'}}/>
+
+                        <ColablinkModal
+                            colabLink = {props.colabLink}
+                            setColabLink = {props.setColabLink}
+                        />
 
                         {/*TAB LIST*/}
                         <TabContext value={props.room} color={'inherit'} >
