@@ -27,12 +27,9 @@ def imagen():
     
     action = request.args.get('action')
     params = request.get_json()
-    topic_id = request.args.get('topic_id')
-    if topic_id == None:
-        topic_id = DEFAULT_TOPIC_ID
+    colab_link = params['colabLink']
     
-    
-    err = gpu_operations.imagen(action, params, topic_id)
+    err = gpu_operations.gpu_imagen(colab_link, action, params)
 
     if err == -1:
         return('Unable to verify auth token. Did you login?', 501)
