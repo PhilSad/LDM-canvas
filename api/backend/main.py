@@ -28,8 +28,8 @@ def imagen():
     action = request.args.get('action')
     params = request.get_json()
     print(type(params))
-    colab_link_protocol = request.args.get('colab_link_protocol')
-    colab_link_adress = request.args.get('colab_link_adress')
+    colab_link_protocol = request.args.get('colabLinkProtocol')
+    colab_link_adress = request.args.get('colabLinkAdress')
     colab_link = f"{colab_link_protocol}://{colab_link_adress}"
     
     err = gpu_operations.gpu_imagen(colab_link, action, params)
@@ -38,6 +38,8 @@ def imagen():
         return('Unable to verify auth token. Did you login?', 501)
     
     #todo: verify the image pass the content filter
+    
+    return "ok"
 
 
 @app.route("/get_vm_status/")

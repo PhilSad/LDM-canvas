@@ -1,13 +1,15 @@
 import base64
 from . import users_operations
 from . import pubsub_operations
-from . import db_operations
+#from . import db_operations
 import requests
 import uuid
 from . import appsync_operations
 from googleapiclient import discovery
 import google.auth
 from PIL import Image
+import io
+from io import BytesIO
 
 compute = discovery.build('compute', 'v1')
 
@@ -90,8 +92,9 @@ def send_to_gpu(colab_url, action, params):
 
     result = requests.post(colab_url, json = dict(action = action, params = params))
     # decode image from base64 response
-    img = Image.open(io.BytesIO(base64.decodebytes(bytes(base64_str, "utf-8"))))
-    
+    content = result.content.decode('utf-8')
+    print(content)
+    img = Image.open(BytesIO(base64.b64decode(content)))    
     return img
     
 
@@ -107,8 +110,8 @@ def gpu_imagen(colab_url, action, params):
     if idinfo == False:
         return -1
 
-    if not db_operations.user_can_generate(idinfo['email']):
-        return -1
+    # if not db_operations.user_can_generate(idinfo['email']):
+    #     return -1
     
 
 
@@ -129,7 +132,7 @@ def gpu_imagen(colab_url, action, params):
         status = 'waiting',
         email = idinfo['email']
     )
-    db_operations.insert_to_sql("images", data_to_bdd)
+    #db_operations.insert_to_sql("images", data_to_bdd)
 
 
     # alert fronts that a new image is generating
@@ -143,7 +146,7 @@ def gpu_imagen(colab_url, action, params):
     # todo: save image to bucket
     
     # alert front that new image is ready
-    # todo: appsync call
     
+    # todo: appsync call
     
     return 1
