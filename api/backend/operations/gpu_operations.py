@@ -105,6 +105,7 @@ def send_to_gpu(colab_url, action, params):
     result = requests.post(colab_url, json = dict(action = action, params = params))
     # decode image from base64 response
     content = result.content.decode('utf-8')
+    print(content)
     img = Image.open(BytesIO(base64.b64decode(content))) 
     return img
     
@@ -148,6 +149,7 @@ def gpu_imagen(colab_url, action, params):
     appsync_operations.push_to_clients(params['room'], params)
 
     # Send to gpu
+    print(colab_url)
     generated_image = send_to_gpu(colab_url, action = action, params = params)
     
     # todo: check image is safe
