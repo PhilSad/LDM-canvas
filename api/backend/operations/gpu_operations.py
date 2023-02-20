@@ -150,6 +150,9 @@ def gpu_imagen(colab_url, action, params):
 
     # Send to gpu
     print(colab_url)
+    #decode base64 prompt
+    print(params['prompt'])
+    params['prompt'] = base64.b64decode(params['prompt']).decode('utf-8')
     generated_image = send_to_gpu(colab_url, action = action, params = params)
     
     # todo: check image is safe
@@ -158,7 +161,7 @@ def gpu_imagen(colab_url, action, params):
     # todo: save image to bucket
     ts = str(datetime.datetime.now().strftime("%Y%m%d%H%M%S%f"))
     room = params['room']
-    prompt = base64.b64decode(params['prompt']).decode('utf-8')
+    prompt = params['prompt']
     save_path = f'/tmp/{ts}.webp'
     bucket_path = f'{room}/{ts}-{prompt}.webp'
     
